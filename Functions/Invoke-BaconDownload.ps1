@@ -5,12 +5,29 @@ function Invoke-BaconDownload {
         [uri]
         $Uri,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter()]
         [IO.FileInfo]
-        $OutFile
+        $OutFile,
+
+        [Parameter()]
+        [IO.DirectoryInfo]
+        $OutFolder,
+
+        [Parameter()]
+        [hashtable]
+        $Checksum
     )
 
-    Write-Verbose ('[Invoke-BaconDownload] MyInvocation: {0}' -f ($MyInvocation | Out-String))
+    Write-Debug ('[Invoke-BaconDownload] MyInvocation: {0}' -f ($MyInvocation | Out-String))
+
+    if (-not $OutFile.Directory.Exists -and -not $OutFolder.Exists) {
+        $directory = if ($OutFile) { $OutFile.DirectoryName } else { $OutFolder.FullName }
+        New-Item -Path $directory -ItemType Directory
+    }
+
+    if ($OutFolder) {
+        [IO.FileInfo] $OutFile = Join-Path $OutFolder.FullName $Uri.Segments[-1]
+    }
     
     $startBitsTransfer = @{
         Source      = $Uri.AbsoluteUri
@@ -18,7 +35,7 @@ function Invoke-BaconDownload {
         ErrorAction = 'Stop'
     }
     Write-Verbose ('[Invoke-BaconDownload] startBitsTransfer: {0}' -f ($startBitsTransfer | ConvertTo-Json))
-
+    
     try {
         Start-BitsTransfer @startBitsTransfer
     } catch {
@@ -30,4 +47,17 @@ function Invoke-BaconDownload {
             Invoke-WebRequest -Uri $startBitsTransfer.Source -OutFile $startBitsTransfer.Destination
         }
     }
+    
+    if ($Checksum) {
+        $hash = Get-FileHash -LiteralPath $startBitsTransfer.Destination -Algorithm $Checksum.Algorithm
+        Write-Verbose ('[Invoke-BaconDownload] Downloaded File Hash: {0}' -f ($hash | ConvertTo-Json))
+        
+        if ($Checksum.Hash -ne $hash.Hash) {
+            Remove-Item -LiteralPath $startBitsTransfer.Destination -Force
+            Throw ('Unexpected Hash; Downloaded file deleted!')
+        }
+    }
+
+    $OutFile.Refresh()
+    return $OutFile
 }
