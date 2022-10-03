@@ -1,0 +1,12 @@
+{
+    "ModuleName": "PSBacon",
+    "ModuleVersion": "",
+    "Description": "PSBacon is Endpoint is a collection of functions to streamline endpoint management coding.",
+    "Author": "Raymond Piller",
+    "CompanyName": "Endpoint Solutions Engineering, Tech Solutions, University of Texas at San Antonio",
+    "Copyright": "(c) {0} University of Texas at San Antonio. All rights reserved.",
+    "GUID": "3357cc90-9e07-441d-993c-ff07ab24a9ef",
+    "RootModule": "PSBacon.psm1",
+    "PowerShellVersion": "5.0",
+    "HelpInfoURI": "https://utsa.edu/techsolutions"
+}
