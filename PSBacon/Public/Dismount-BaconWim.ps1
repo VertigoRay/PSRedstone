@@ -1,4 +1,4 @@
-function Dismount-BaconWim {
+function global:Dismount-BaconWim {
     [CmdletBinding()]
     param (
         # Specifies a path to one or more locations.

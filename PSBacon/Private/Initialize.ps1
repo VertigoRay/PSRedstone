@@ -3,10 +3,10 @@
 # . "${PSScriptRoot}\..\Public\Get-BaconRegistryValueDoNotExpandEnvironmentNames.ps1"
 
 class Bacon {
-    [string] $Publisher = $Publisher
-    [string] $Product = $Product
-    [string] $Version = $Version
-    [string] $RunFile = $Action
+    hidden [string] $_Publisher = $null
+    hidden [string] $_Product = $null
+    hidden [string] $_Version = $null
+    hidden [string] $_Action = $null
     [hashtable] $Settings = @{}
     [bool] $IsElevated = (New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
     # Use the default settings, don't read any of the settings in from the registry. In production this is never set.
@@ -19,14 +19,59 @@ class Bacon {
     # Bacon([Management.Automation.InvocationInfo] $ParentMyInvocation) {
     #     $this.MyInvocation = $ParentMyInvocation
     # }
+
+    static Bacon() {
+        # Creating some custom setters that update other properties, like Log Paths, when related properties are changed.
+        Update-TypeData -TypeName 'Bacon' -MemberName 'Publisher' -MemberType 'ScriptProperty' -Value {
+            # Getter
+            return $this._Publisher
+        } -SecondValue {
+            param($value)
+            # Setter
+            $this._Publisher = $value
+            $this.LogSetUp()
+        } -Force
+        Update-TypeData -TypeName 'Bacon' -MemberName 'Product' -MemberType 'ScriptProperty' -Value {
+            # Getter
+            return $this._Product
+        } -SecondValue {
+            param($value)
+            # Setter
+            $this._Product = $value
+            $this.LogSetUp()
+        } -Force
+        Update-TypeData -TypeName 'Bacon' -MemberName 'Version' -MemberType 'ScriptProperty' -Value {
+            # Getter
+            return $this._Version
+        } -SecondValue {
+            param($value)
+            # Setter
+            $this._Version = $value
+            $this.LogSetUp()
+        } -Force
+        Update-TypeData -TypeName 'Bacon' -MemberName 'Action' -MemberType 'ScriptProperty' -Value {
+            # Getter
+            return $this._Action
+        } -SecondValue {
+            param($value)
+            # Setter
+            $this._Action = $value
+            $this.LogSetUp()
+        } -Force
+    }
     
-    Bacon($Publisher, $Product, $Version, $Action) {
-        $this.Publisher = [string] $Publisher
-        $this.Product = [string] $Product
-        $this.Version = [string] $Version
-        $this.RunFile = [string] $Action
+    Bacon([string] $Publisher, [string] $Product, [string] $Version, [string] $Action) {
+        $global:InformationPreference = 'Continue'
+        
         $this.SettingsSetUp()
         $this.SetDefaultSettingsFromRegistry($this.Settings.Registry.Key)
+        $this.SetPSDefaultParameterValues($this.Settings.Functions)
+        
+        $this.set__Publisher($Publisher)
+        $this.set__Product($Product)
+        $this.set__Version($Version)
+        $this.set__Action($Action)
+
         $this.LogSetUp()
     }
 
@@ -42,8 +87,6 @@ class Bacon {
                 RegistryKeyRoot = $this.Settings.Registry.Key
             }
         }
-
-        
     }
 
     hidden [void] LogSetUp() {
@@ -60,7 +103,10 @@ class Bacon {
             $private:Directory.Refresh()
         }
 
-        $this.Settings.Log.File = [IO.FileInfo] (Join-Path $private:Directory ('{0} {1} {2} {3}.log' -f $this.Publisher, $this.Product, $this.Version, $this.Action))
+        $this.Settings.Log.File = [IO.FileInfo] (Join-Path $private:Directory.FullName ('{0} {1} {2} {3}.log' -f $this.Publisher, $this.Product, $this.Version, $this.Action))
+        $this.Settings.Log.FileF = (Join-Path $private:Directory.FullName ('{0} {1} {2} {3}{{0}}.log' -f $this.Publisher, $this.Product, $this.Version, $this.Action)) -as [string]
+        
+        $global:PSDefaultParameterValues.Set_Item('Write-Log:FilePath', $global:Bacon.Settings.Log.File.FullName)
     }
 
     hidden [psobject] GetRegOrDefault($RegistryKey, $RegistryValue, $DefaultValue) {
@@ -102,14 +148,6 @@ class Bacon {
     There's a fundamental flaw that I haven't addressed yet.
     - if there's a value and sub-key with the same name at the same key level, the sub-key won't be processed.
     #>
-    hidden [void] SetDefaultSettingsFromRegistrySubKey([hashtable] $Hash, [string] $Key) {
-        Get-Item $Key |
-            Select-Object -ExpandProperty Property |
-            ForEach-Object {
-                $Hash.Set_Item($_, (Get-ItemProperty -Path $key -Name $_).$_)
-            }
-    }
-
     hidden [void] SetDefaultSettingsFromRegistry([string] $Key) {
         $this.SetDefaultSettingsFromRegistrySubKey($this.Settings, $this.Settings.Registry.Key)
 
@@ -126,8 +164,33 @@ class Bacon {
             $this.SetDefaultSettingsFromRegistrySubKey($node, $item.PSPath)
         }
     }
-}
 
+    hidden [void] SetDefaultSettingsFromRegistrySubKey([hashtable] $Hash, [string] $Key) {
+        foreach ($regValue in (Get-Item $Key).Property) {
+            $Hash.Set_Item($regValue, (Get-ItemProperty -Path $Key -Name $regValue).$regValue)
+        }
+        
+
+    }
+
+    hidden [void] SetPSDefaultParameterValues([hashtable] $FunctionParameters) {
+        foreach ($function in $FunctionParameters.GetEnumerator()) {
+            Write-Debug ('[Bacon::SetPSDefaultParameterValues] Function: {0}: {1}' -f $function.Name, ($function.Value | ConvertTo-Json))
+            foreach ($parameter in $function.GetEnumerator()) {
+                Write-Debug ('[Bacon::SetPSDefaultParameterValues] Parameter: {0}: {1}' -f $parameter.Name, ($parameter.Value | ConvertTo-Json))
+                $global:PSDefaultParameterValues.Set_Item(('{0}:{1}' -f $function.Name, $parameter.Name), $parameter.Value)
+            }
+        }
+    }
+}
 
 $bacon = [Bacon]::new('Mozilla', 'Firefox', '1.2.3', 'test')
 $bacon
+
+# Class Sausage:Bacon {
+#     Sausage([string] $Publisher, [string] $Product, [string] $Version, [string] $Action):base([string] $Publisher, [string] $Product, [string] $Version, [string] $Action) {
+#     }
+# }
+
+# $sausage = [Sausage]::new('Mozilla', 'Firefox', '1.2.3', 'test')
+# $sausage

@@ -8,7 +8,7 @@ MSI error code
 .PARAMETER MsiLog
 MSI Log File. Parsed if ErrorCode is 1603.
 .EXAMPLE
-Get-MsiExitCodeMessage -MsiErrorCode 1618
+Get-BaconMsiExitCodeMessage -MsiExitCode 1618
 .NOTES
 This is an internal script function and should typically not be called directly.
 .LINK
@@ -105,3 +105,7 @@ function Global:Get-BaconMsiExitCodeMessage {
         Write-Information "Return: ${return}"
         return $return
 }
+
+
+Get-BaconMsiExitCodeMessage -MsiExitCode 1622
+# Get-BaconMsiExitCodeMessage -MsiExitCode 1635

@@ -15,7 +15,7 @@ The product code of the application to retrieve information for.
 .PARAMETER IncludeUpdatesAndHotfixes
 Include matches against updates and hotfixes in results.
 .PARAMETER UninstallRegKeys
-Default: `$global:Winstall.Settings.Functions.GetInstalledApplication.UninstallRegKeys`
+Default: `$global:bacon.Settings.Functions.Get-InstalledApplication.UninstallRegKeys`
 
 Private Parameter; used for debug overrides.
 .EXAMPLE

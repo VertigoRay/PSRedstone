@@ -7,7 +7,7 @@ Wait, up to a timeout (default is 1 millisecond), for the mutex to become availa
 .PARAMETER MutexName
 The name of the system mutex.
 .PARAMETER MutexWaitTimeInMilliseconds
-The number of milliseconds the current thread should wait to acquire an exclusive lock of a named mutex. Default is: $global:Winstall.Settings.IsMutexAvailable.MutexWaitTimeInMilliseconds
+The number of milliseconds the current thread should wait to acquire an exclusive lock of a named mutex. Default is: $global:bacon.Settings.'Test-BaconIsMutexAvailable'.MutexWaitTimeInMilliseconds
 A wait time of -1 milliseconds means to wait indefinitely. A wait time of zero does not acquire an exclusive lock but instead tests the state of the wait handle and returns immediately.
 .EXAMPLE
 Test-IsMutexAvailable -MutexName 'Global\_MSIExecute' -MutexWaitTimeInMilliseconds 500
@@ -21,7 +21,7 @@ This is an internal script function and should typically not be called directly.
 http://msdn.microsoft.com/en-us/library/aa372909(VS.85).asp
 http://psappdeploytoolkit.com
 #>
-function Global:Test-IsMutexAvailable {
+function Global:Test-BaconIsMutexAvailable {
 	[CmdletBinding()]
 	Param (
 		[Parameter(Mandatory=$true)]
@@ -32,7 +32,7 @@ function Global:Test-IsMutexAvailable {
 		[Parameter(Mandatory=$false)]
 		[ValidateRange(-1,[int32]::MaxValue)]
 		[int32]
-		$MutexWaitTimeInMilliseconds = $global:Winstall.Settings.Functions.TestIsMutexAvailable.MutexWaitTimeInMilliseconds
+		$MutexWaitTimeInMilliseconds = 300000 #5min
 	)
 	
     Write-Information "> $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"

@@ -22,19 +22,19 @@ Specifies the location of the executable file or document that runs in the proce
 
 Passes Directly to `Start-Process`; see `Get-Help Start-Process`.
 .PARAMETER PassThru
-Default: $global:Winstall.Settings.Functions.InvokeRun.PassThru
+Default: $$true
 
 Returns a process object for each process that the cmdlet started. By default, this cmdlet does generate output.
 
 Passes Directly to `Start-Process`; see `Get-Help Start-Process`.
 .PARAMETER Wait
-Default: $global:Winstall.Settings.Functions.InvokeRun.Wait
+Default: $true
 
 Indicates that this cmdlet waits for the specified process to complete before accepting more input. This parameter suppresses the command prompt or retains the window until the process finishes.
 
 Passes Directly to `Start-Process`; see `Get-Help Start-Process`.
 .PARAMETER WindowStyle
-Default: $global:Winstall.Settings.Functions.InvokeRun.WindowStyle
+Default: Hidden
 
 Specifies the state of the window that is used for the new process. The acceptable values for this parameter are: Normal, Hidden, Minimized, and Maximized.
 
@@ -64,31 +64,35 @@ function Global:Invoke-Run {
     param (
         [Parameter(Mandatory=$true, Position=0, ParameterSetName='Cmd')]
         [string]
-        $Cmd
-        ,
+        $Cmd,
+
         [Parameter(Mandatory=$true, ParameterSetName='FilePath')]
         [string]
-        $FilePath
-        ,
+        $FilePath,
+
         [Parameter(Mandatory=$false, ParameterSetName='FilePath')]
         [string[]]
-        $ArgumentList
-        ,
+        $ArgumentList,
+
         [Parameter(Mandatory=$false)]
         [string]
-        $WorkingDirectory
-        ,
+        $WorkingDirectory,
+
         [Parameter(Mandatory=$false)]
         [boolean]
-        $PassThru = $true
-        ,
+        $PassThru = $true,
+
         [Parameter(Mandatory=$false)]
         [boolean]
-        $Wait = $true
-        ,
+        $Wait = $true,
+
         [Parameter(Mandatory=$false)]
         [string]
-        $WindowStyle = 'Hidden'
+        $WindowStyle = 'Hidden',
+
+        [Parameter(Mandatory=$false)]
+        [IO.FileInfo]
+        $LogFile
     )
 
     Write-Information "> $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
@@ -121,8 +125,8 @@ function Global:Invoke-Run {
     }
 
     [string] $process_guid = New-Guid
-    [string] $stdout = (New-Item "$($env:Temp)\${process_guid}.stdout" -ItemType 'File' -ErrorAction 'Stop').FullName
-    [string] $stderr = (New-Item "$($env:Temp)\${process_guid}.stderr" -ItemType 'File' -ErrorAction 'Stop').FullName
+    [string] $stdout = New-TemporaryFile
+    [string] $stderr = New-TemporaryFile
 
     [hashtable] $start_process = @{
         'FilePath'                  = $FilePath;
@@ -141,29 +145,33 @@ function Global:Invoke-Run {
         [void] $start_process.Add('WorkingDirectory', $WorkingDirectory)
     }
 
-    # Monitor STDOUT and send to Log
-    $stdout_job = Start-Job -Name "StdOut ${process_guid}" -ScriptBlock {
-        param(
-            $stdout
-        )
-        while (-not (Test-Path $stdout)) {
-            Start-Sleep -Milliseconds 100
-        }
-        Write-Verbose "Monitoring STDOUT!"
-        Get-Content $stdout -Wait | %{ Write-Information "STDOUT: $_" }
-    } -ArgumentList @($stdout)
+    if ($LogFile) {
+        # Monitor STDOUT and send to Log
+        $stdout_job = Start-Job -Name "StdOut ${process_guid}" -ScriptBlock {
+            param($stdout,$logFile)
 
-    # Monitor STDERR and send to Log
-    $stderr_job = Start-Job -Name "StdErr ${process_guid}" -ScriptBlock {
-        param(
-            $stderr
-        )
-        while (-not (Test-Path $stderr)) {
-            Start-Sleep -Milliseconds 100
-        }
-        Write-Verbose "Monitoring STDERR!"
-        Get-Content $stderr -Wait | %{ Write-Error "STDERR: $_" -ErrorAction 'Ignore' }
-    } -ArgumentList @($stderr)
+            while (-not (Test-Path $stdout)) {
+                Start-Sleep -Milliseconds 100
+            }
+            Write-Verbose "Monitoring STDOUT!"
+            Get-Content $stdout.FullName -Wait | ForEach-Object{
+                "STDOUT: $_"  | Out-File -Encoding 'utf8' -LiteralPath $logFile.FullName -Append -Force
+            }
+        } -ArgumentList @($stdout, $LogFile)
+    
+        # Monitor STDERR and send to Log
+        $stderr_job = Start-Job -Name "StdErr ${process_guid}" -ScriptBlock {
+            param($stderr,$logFile)
+
+            while (-not (Test-Path $stderr)) {
+                Start-Sleep -Milliseconds 100
+            }
+            Write-Verbose "Monitoring STDERR!"
+            Get-Content $stderr.FullName -Wait | ForEach-Object{
+                "STDERR: $_" | Out-File -Encoding 'utf8' -LiteralPath $logFile.FullName -Append -Force
+            }
+        } -ArgumentList @($stderr, $LogFile)
+    }
 
     Write-Information "Start-Process: $(ConvertTo-Json $start_process)"
     $proc = Start-Process @start_process
@@ -177,6 +185,10 @@ function Global:Invoke-Run {
         'StdOut'  = Get-Content $stdout;
         'StdErr'  = Get-Content $stderr;
     }
+
+    $stdout | Remove-Item -Force
+    $stderr | Remove-Item -Force
+
     try {
         Write-Information "Return (converted to json): $(ConvertTo-Json $return -Depth 1 -ErrorAction 'Stop')"
     } catch {

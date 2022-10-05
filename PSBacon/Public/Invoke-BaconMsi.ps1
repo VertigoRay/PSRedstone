@@ -139,7 +139,7 @@ function Global:Invoke-BaconMSI {
         [Parameter(Mandatory=$false, HelpMessage="Private Parameter; used for debug overrides.")]
         [ValidateNotNullorEmpty()]
         [string]
-        $LogsPathF = "$([System.Environment]::GetFolderPath('Windows'))\Logs\Bacon\$($global:Settings.Publisher)-$($global:Settings.Product)-$($global:Settings.Version).log"
+        $LogsPathF = $global:Bacon.Settings.Log.FileF
     )
 
     Write-Information "[Invoke-BaconMsi] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
@@ -305,16 +305,16 @@ function Global:Invoke-BaconMSI {
 
         #  Call the Invoke-Run function
         if ($PassThru) {
-            $result = Invoke-Run @invoke_run
+            $result = Invoke-BaconRun @invoke_run
             if ($result.Process.ExitCode -ne 0) {
                 $global:Winstall.ExitCode = $result.Process.ExitCode
-                $msg = Get-MsiExitCodeMessage $global:Winstall.ExitCode -MsiLog $msiLogFile
+                $msg = Get-BaconMsiExitCodeMessage $global:Winstall.ExitCode -MsiLog $msiLogFile
                 Write-Warning "[Invoke-BaconMsi] $($result.Process.ExitCode): ${msg}"
             }
             Write-Information "[Invoke-BaconMsi] Return: $($result | Out-String)"
             return $result
         } else {
-            Invoke-Run @invoke_run
+            Invoke-BaconRun @invoke_run
         }
     } else {
         Write-Warning "[Invoke-BaconMsi] The MSI is not installed on this system. Skipping action [${Action}]..."
