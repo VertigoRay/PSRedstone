@@ -139,7 +139,7 @@ function Global:Invoke-BaconMSI {
         [Parameter(Mandatory=$false, HelpMessage="Private Parameter; used for debug overrides.")]
         [ValidateNotNullorEmpty()]
         [string]
-        $LogsPathF = $global:Bacon.Settings.Log.FileF
+        $LogFileF = "${env:Temp}\{Invoke-BaconMsi_{1}_{0}.log"
     )
 
     Write-Information "[Invoke-BaconMsi] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
@@ -171,13 +171,14 @@ function Global:Invoke-BaconMSI {
             $option = '/fups'
         }
     }
-    [string] $msiLogFile = $LogsPathF -f ".msi.${Action}"
 
     ## If the MSI is in the Files directory, set the full path to the MSI
     if ($PathIsProductCode) {
         [string] $msiFile = $Path
+        [string] $msiLogFile = $LogsPathF -f ".msi.${Action}", ($Path -as [guid]).Guid
     } else {
         [string] $msiFile = (Resolve-Path $Path -ErrorAction 'Stop').Path
+        [string] $msiLogFile = $LogsPathF -f ".msi.${Action}", ($Path -as [IO.FileInfo]).BaseName
     }
 
     ## Set the working directory of the MSI

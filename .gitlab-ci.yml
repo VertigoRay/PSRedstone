@@ -1,0 +1,49 @@
+stages:
+  - syntax
+  - test
+  - build
+  - deploy
+
+syntax_json:
+  stage: syntax
+  tags:
+    - WindowsPowerShell
+  script:
+    - . .\.build\syntax\json.ps1
+
+syntax_posh:
+  stage: syntax
+  tags:
+    - WindowsPowerShell
+  script:
+    - . .\.build\syntax\posh.ps1
+
+pester_tests:
+  stage: test
+  tags:
+    - WindowsPowerShell
+  script:
+    - cd Tests
+    - Invoke-Pester -EnableExit
+
+
+
+
+# build_script:
+# - ps: Invoke-psake '.\.scripts\build.ps1' -Properties @{'SkipBootStrap' = $true}
+
+
+# - ps: |
+#     Install-PackageProvider -Name NuGet -MinimumVersion '2.8.5.201' -Force
+#     Install-Module -Name PSDepend -Scope CurrentUser -Force
+#     Import-Module -Name PSDepend
+#     Invoke-PSDepend '.\REQUIREMENTS.psd1' -Force
+
+
+
+
+# on_success:
+# # If build was started by pushed tag; deploy it.
+# - ps: |
+#     Write-Host "[AppVeyor] On Success; deploying ..." -Foregroundcolor Green
+#     Invoke-PSDeploy -Path '.\.scripts\deploy.ps1' -Force

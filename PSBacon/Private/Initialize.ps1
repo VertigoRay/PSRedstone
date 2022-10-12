@@ -105,8 +105,13 @@ class Bacon {
 
         $this.Settings.Log.File = [IO.FileInfo] (Join-Path $private:Directory.FullName ('{0} {1} {2} {3}.log' -f $this.Publisher, $this.Product, $this.Version, $this.Action))
         $this.Settings.Log.FileF = (Join-Path $private:Directory.FullName ('{0} {1} {2} {3}{{0}}.log' -f $this.Publisher, $this.Product, $this.Version, $this.Action)) -as [string]
-        
-        $global:PSDefaultParameterValues.Set_Item('Write-Log:FilePath', $global:Bacon.Settings.Log.File.FullName)
+        $this.PSDefaultParameterValuesSetUp()
+    }
+
+    hidden [void] PSDefaultParameterValuesSetUp() {
+        $global:PSDefaultParameterValues.Set_Item('Invoke-BaconMsi:LogFileF', $this.Settings.Log.FileF)
+        $global:PSDefaultParameterValues.Set_Item('Invoke-BaconRun:LogFile', $this.Settings.Log.File.FullName)
+        $global:PSDefaultParameterValues.Set_Item('Write-Log:FilePath', $this.Settings.Log.File.FullName)
     }
 
     hidden [psobject] GetRegOrDefault($RegistryKey, $RegistryValue, $DefaultValue) {
@@ -156,7 +161,7 @@ class Bacon {
             $private:node = $this.Settings
             foreach ($child in ($private:psPath.Trim('\').Split('\'))) {
                 if (-not $node.$child) { 
-                    $node.$child = @{}
+                    [hashtable] $node.$child = @{}
                 }
                 $node = $node.$child
             }
@@ -175,17 +180,19 @@ class Bacon {
 
     hidden [void] SetPSDefaultParameterValues([hashtable] $FunctionParameters) {
         foreach ($function in $FunctionParameters.GetEnumerator()) {
+            Write-Debug ('[Bacon::SetPSDefaultParameterValues] Function Tyep: [{0}]' -f $function.GetType().FullName)
             Write-Debug ('[Bacon::SetPSDefaultParameterValues] Function: {0}: {1}' -f $function.Name, ($function.Value | ConvertTo-Json))
-            foreach ($parameter in $function.GetEnumerator()) {
+            foreach ($parameter in $function.Value.GetEnumerator()) {
                 Write-Debug ('[Bacon::SetPSDefaultParameterValues] Parameter: {0}: {1}' -f $parameter.Name, ($parameter.Value | ConvertTo-Json))
+                Write-Debug ('[Bacon::SetPSDefaultParameterValues] PSDefaultParameterValues: {0}:{1} :: {2}' -f $function.Name, $parameter.Name, $parameter.Value)
                 $global:PSDefaultParameterValues.Set_Item(('{0}:{1}' -f $function.Name, $parameter.Name), $parameter.Value)
             }
         }
     }
 }
 
-$bacon = [Bacon]::new('Mozilla', 'Firefox', '1.2.3', 'test')
-$bacon
+# $bacon = [Bacon]::new('Mozilla', 'Firefox', '1.2.3', 'test')
+# $bacon
 
 # Class Sausage:Bacon {
 #     Sausage([string] $Publisher, [string] $Product, [string] $Version, [string] $Action):base([string] $Publisher, [string] $Product, [string] $Version, [string] $Action) {

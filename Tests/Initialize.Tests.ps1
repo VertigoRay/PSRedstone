@@ -34,10 +34,31 @@ Describe 'Initialize' {
             }
         }
         It 'Settings Functions Get-BaconRegistryValueOrDefault RegistryKeyRoot' {
-            $Settings.Functions.'Get-BaconRegistryValueOrDefault'.RegistryKeyRoot | Should Be 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\PSBacon'
+            $bacon.Settings.Functions.'Get-BaconRegistryValueOrDefault'.RegistryKeyRoot | Should Be 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\PSBacon'
         }
         It 'Settings Functions Get-BaconRegistryValueOrDefault OnlyUseDefaultSettings' {
-            $Settings.Functions.'Get-BaconRegistryValueOrDefault'.OnlyUseDefaultSettings | Should Be 0
+            $bacon.Settings.Functions.'Get-BaconRegistryValueOrDefault'.OnlyUseDefaultSettings | Should Be 0
+        }
+        It 'PSDefaultParameterValues Write-Log:FilePath' {
+            if ($isElevated) {
+                $global:PSDefaultParameterValues.'Write-Log:FilePath' | Should Be "${env:SystemRoot}\Logs\Bacon\MyPublisher MyProduct 1.2.3 test.log"
+            } else {
+                $global:PSDefaultParameterValues.'Write-Log:FilePath' | Should Be "${env:Temp}\Logs\Bacon\MyPublisher MyProduct 1.2.3 test.log"
+            }
+        }
+        It 'PSDefaultParameterValues Invoke-BaconMsi:LogFileF' {
+            if ($isElevated) {
+                $global:PSDefaultParameterValues.'Invoke-BaconMsi:LogFileF' | Should Be "${env:SystemRoot}\Logs\Bacon\MyPublisher MyProduct 1.2.3 test{0}.log"
+            } else {
+                $global:PSDefaultParameterValues.'Invoke-BaconMsi:LogFileF' | Should Be "${env:Temp}\Logs\Bacon\MyPublisher MyProduct 1.2.3 test{0}.log"
+            }
+        }
+        It 'PSDefaultParameterValues Invoke-BaconRun:LogFile' {
+            if ($isElevated) {
+                $global:PSDefaultParameterValues.'Invoke-BaconRun:LogFile' | Should Be "${env:SystemRoot}\Logs\Bacon\MyPublisher MyProduct 1.2.3 test.log"
+            } else {
+                $global:PSDefaultParameterValues.'Invoke-BaconRun:LogFile' | Should Be "${env:Temp}\Logs\Bacon\MyPublisher MyProduct 1.2.3 test.log"
+            }
         }
     }
 
@@ -73,10 +94,24 @@ Describe 'Initialize' {
             }
         }
         It 'Settings Functions Get-BaconRegistryValueOrDefault RegistryKeyRoot' {
-            $Settings.Functions.'Get-BaconRegistryValueOrDefault'.RegistryKeyRoot | Should Be 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\PSBacon'
+            $bacon.Settings.Functions.'Get-BaconRegistryValueOrDefault'.RegistryKeyRoot | Should Be 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\PSBacon'
         }
         It 'Settings Functions Get-BaconRegistryValueOrDefault OnlyUseDefaultSettings' {
-            $Settings.Functions.'Get-BaconRegistryValueOrDefault'.OnlyUseDefaultSettings | Should Be 0
+            $bacon.Settings.Functions.'Get-BaconRegistryValueOrDefault'.OnlyUseDefaultSettings | Should Be 0
+        }
+        It 'PSDefaultParameterValues Write-Log:FilePath' {
+            if ($isElevated) {
+                $global:PSDefaultParameterValues.'Write-Log:FilePath' | Should Be "${env:SystemRoot}\Logs\Bacon\YourPublisher MyProduct 1.2.3 test.log"
+            } else {
+                $global:PSDefaultParameterValues.'Write-Log:FilePath' | Should Be "${env:Temp}\Logs\Bacon\YourPublisher MyProduct 1.2.3 test.log"
+            }
+        }
+        It 'PSDefaultParameterValues Invoke-BaconMsi:LogFileF' {
+            if ($isElevated) {
+                $global:PSDefaultParameterValues.'Invoke-BaconMsi:LogFileF' | Should Be "${env:SystemRoot}\Logs\Bacon\YourPublisher MyProduct 1.2.3 test{0}.log"
+            } else {
+                $global:PSDefaultParameterValues.'Invoke-BaconMsi:LogFileF' | Should Be "${env:Temp}\Logs\Bacon\YourPublisher MyProduct 1.2.3 test{0}.log"
+            }
         }
     }
 
@@ -112,10 +147,24 @@ Describe 'Initialize' {
             }
         }
         It 'Settings Functions Get-BaconRegistryValueOrDefault RegistryKeyRoot' {
-            $Settings.Functions.'Get-BaconRegistryValueOrDefault'.RegistryKeyRoot | Should Be 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\PSBacon'
+            $bacon.Settings.Functions.'Get-BaconRegistryValueOrDefault'.RegistryKeyRoot | Should Be 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\PSBacon'
         }
         It 'Settings Functions Get-BaconRegistryValueOrDefault OnlyUseDefaultSettings' {
-            $Settings.Functions.'Get-BaconRegistryValueOrDefault'.OnlyUseDefaultSettings | Should Be 0
+            $bacon.Settings.Functions.'Get-BaconRegistryValueOrDefault'.OnlyUseDefaultSettings | Should Be 0
+        }
+        It 'PSDefaultParameterValues Write-Log:FilePath' {
+            if ($isElevated) {
+                $global:PSDefaultParameterValues.'Write-Log:FilePath' | Should Be "${env:SystemRoot}\Logs\Bacon\YourPublisher YourProduct 1.2.3 test.log"
+            } else {
+                $global:PSDefaultParameterValues.'Write-Log:FilePath' | Should Be "${env:Temp}\Logs\Bacon\YourPublisher YourProduct 1.2.3 test.log"
+            }
+        }
+        It 'PSDefaultParameterValues Invoke-BaconMsi:LogFileF' {
+            if ($isElevated) {
+                $global:PSDefaultParameterValues.'Invoke-BaconMsi:LogFileF' | Should Be "${env:SystemRoot}\Logs\Bacon\YourPublisher YourProduct 1.2.3 test{0}.log"
+            } else {
+                $global:PSDefaultParameterValues.'Invoke-BaconMsi:LogFileF' | Should Be "${env:Temp}\Logs\Bacon\YourPublisher YourProduct 1.2.3 test{0}.log"
+            }
         }
     }
 
@@ -151,10 +200,24 @@ Describe 'Initialize' {
             }
         }
         It 'Settings Functions Get-BaconRegistryValueOrDefault RegistryKeyRoot' {
-            $Settings.Functions.'Get-BaconRegistryValueOrDefault'.RegistryKeyRoot | Should Be 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\PSBacon'
+            $bacon.Settings.Functions.'Get-BaconRegistryValueOrDefault'.RegistryKeyRoot | Should Be 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\PSBacon'
         }
         It 'Settings Functions Get-BaconRegistryValueOrDefault OnlyUseDefaultSettings' {
-            $Settings.Functions.'Get-BaconRegistryValueOrDefault'.OnlyUseDefaultSettings | Should Be 0
+            $bacon.Settings.Functions.'Get-BaconRegistryValueOrDefault'.OnlyUseDefaultSettings | Should Be 0
+        }
+        It 'PSDefaultParameterValues Write-Log:FilePath' {
+            if ($isElevated) {
+                $global:PSDefaultParameterValues.'Write-Log:FilePath' | Should Be "${env:SystemRoot}\Logs\Bacon\YourPublisher YourProduct 2.3.4 test.log"
+            } else {
+                $global:PSDefaultParameterValues.'Write-Log:FilePath' | Should Be "${env:Temp}\Logs\Bacon\YourPublisher YourProduct 2.3.4 test.log"
+            }
+        }
+        It 'PSDefaultParameterValues Invoke-BaconMsi:LogFileF' {
+            if ($isElevated) {
+                $global:PSDefaultParameterValues.'Invoke-BaconMsi:LogFileF' | Should Be "${env:SystemRoot}\Logs\Bacon\YourPublisher YourProduct 2.3.4 test{0}.log"
+            } else {
+                $global:PSDefaultParameterValues.'Invoke-BaconMsi:LogFileF' | Should Be "${env:Temp}\Logs\Bacon\YourPublisher YourProduct 2.3.4 test{0}.log"
+            }
         }
     }
 }

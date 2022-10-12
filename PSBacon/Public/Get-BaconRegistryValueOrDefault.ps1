@@ -52,11 +52,11 @@ function Get-BaconRegistryValueOrDefault {
         return $result
     } catch [System.Management.Automation.PSArgumentException] {
         Write-Verbose "[Get-BaconRegistryValueOrDefault] Registry Not Set; Returning Default: ${DefaultValue}"
-        $Error.RemoveAt(0) # This isn't a real error, so I don't want it in the error record.
+        if ($Error) { $Error.RemoveAt(0) } # This isn't a real error, so I don't want it in the error record.
         return $DefaultValue
     } catch [System.Management.Automation.ItemNotFoundException] {
         Write-Verbose "[Get-BaconRegistryValueOrDefault] Registry Not Set; Returning Default: ${DefaultValue}"
-        $Error.RemoveAt(0) # This isn't a real error, so I don't want it in the error record.
+        if ($Error) { $Error.RemoveAt(0) } # This isn't a real error, so I don't want it in the error record.
         return $DefaultValue
     }
 }
