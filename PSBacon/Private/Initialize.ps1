@@ -154,24 +154,26 @@ class Bacon {
     - if there's a value and sub-key with the same name at the same key level, the sub-key won't be processed.
     #>
     hidden [void] SetDefaultSettingsFromRegistry([string] $Key) {
-        $this.SetDefaultSettingsFromRegistrySubKey($this.Settings, $this.Settings.Registry.Key)
-
-        foreach ($item in (Get-ChildItem $this.Settings.Registry.Key -Recurse)) {
-            $private:psPath = $item.PSPath.Split(':')[-1].Replace($this.Settings.Registry.Key.Split(':')[-1], $null)
-            $private:node = $this.Settings
-            foreach ($child in ($private:psPath.Trim('\').Split('\'))) {
-                if (-not $node.$child) { 
-                    [hashtable] $node.$child = @{}
+        if (Test-Path $Key) {
+            $this.SetDefaultSettingsFromRegistrySubKey($this.Settings, $Key)
+    
+            foreach ($item in (Get-ChildItem $Key -Recurse -ErrorAction 'Ignore')) {
+                $private:psPath = $item.PSPath.Split(':')[-1].Replace($Key.Split(':')[-1], $null)
+                $private:node = $this.Settings
+                foreach ($child in ($private:psPath.Trim('\').Split('\'))) {
+                    if (-not $node.$child) { 
+                        [hashtable] $node.$child = @{}
+                    }
+                    $node = $node.$child
                 }
-                $node = $node.$child
+    
+                $this.SetDefaultSettingsFromRegistrySubKey($node, $item.PSPath)
             }
-
-            $this.SetDefaultSettingsFromRegistrySubKey($node, $item.PSPath)
         }
     }
 
     hidden [void] SetDefaultSettingsFromRegistrySubKey([hashtable] $Hash, [string] $Key) {
-        foreach ($regValue in (Get-Item $Key).Property) {
+        foreach ($regValue in (Get-Item $Key -ErrorAction 'Ignore').Property) {
             $Hash.Set_Item($regValue, (Get-ItemProperty -Path $Key -Name $regValue).$regValue)
         }
         
@@ -180,7 +182,7 @@ class Bacon {
 
     hidden [void] SetPSDefaultParameterValues([hashtable] $FunctionParameters) {
         foreach ($function in $FunctionParameters.GetEnumerator()) {
-            Write-Debug ('[Bacon::SetPSDefaultParameterValues] Function Tyep: [{0}]' -f $function.GetType().FullName)
+            Write-Debug ('[Bacon::SetPSDefaultParameterValues] Function Type: [{0}]' -f $function.GetType().FullName)
             Write-Debug ('[Bacon::SetPSDefaultParameterValues] Function: {0}: {1}' -f $function.Name, ($function.Value | ConvertTo-Json))
             foreach ($parameter in $function.Value.GetEnumerator()) {
                 Write-Debug ('[Bacon::SetPSDefaultParameterValues] Parameter: {0}: {1}' -f $parameter.Name, ($parameter.Value | ConvertTo-Json))

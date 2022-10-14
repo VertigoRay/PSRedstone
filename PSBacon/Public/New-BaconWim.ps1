@@ -59,10 +59,10 @@ function New-BaconWim {
     
     process {
         if ($PSCmdlet.ParameterSetName -eq 'Individual') {
-            New-WindowsImage -ImagePath $ImagePath -CapturePath $CapturePath -Name $Name
+            New-WindowsImage -ImagePath $ImagePath.FullName -CapturePath $CapturePath.FullName -Name $Name
         } else { # Piped
             foreach ($wimInstruction in $WimInstructions) {
-                New-WindowsImage @imageInstruction
+                New-WindowsImage @wimInstruction
             }
         }
     }
@@ -72,4 +72,4 @@ function New-BaconWim {
     }
 }
 
-New-BaconWim -ImagePath "PSBacon.wim" -CapturePath "PSBacon" -Name "PSBacon"
+# New-BaconWim -ImagePath "PSBacon.wim" -CapturePath "PSBacon" -Name "PSBacon"

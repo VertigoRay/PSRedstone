@@ -6,7 +6,7 @@ try {
     ... do some things ...
 } catch {
 
-} finall {
+} finally {
     Dismount-BaconWim
 }
 #>
@@ -114,4 +114,4 @@ function Mount-BaconWim {
     }
 }
 
-Mount-BaconWim -ImagePath "$pwd\PSBacon.wim"
+# Mount-BaconWim -ImagePath "$pwd\PSBacon.wim"

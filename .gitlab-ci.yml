@@ -4,21 +4,21 @@ stages:
   - build
   - deploy
 
-syntax_json:
+Syntax JSON:
   stage: syntax
   tags:
     - WindowsPowerShell
   script:
-    - . .\.build\syntax\json.ps1
+    - Invoke-Pester '.\Tests\001_SyntaxJson.Tests.ps1' -EnableExit
 
-syntax_posh:
+Syntax PowerShell:
   stage: syntax
   tags:
     - WindowsPowerShell
   script:
-    - . .\.build\syntax\posh.ps1
+    - Invoke-Pester '.\Tests\002_SyntaxPosh.Tests.ps1' -EnableExit
 
-pester_tests:
+Pester Tests:
   stage: test
   tags:
     - WindowsPowerShell
