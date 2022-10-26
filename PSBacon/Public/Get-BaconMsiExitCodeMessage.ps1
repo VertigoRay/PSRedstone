@@ -60,7 +60,7 @@ function Global:Get-BaconMsiExitCodeMessage {
         }
         3010 {
             Write-Information "Standard Message: Restart required. The installation or update for the product required a restart for all changes to take effect.  The restart was deferred to a later time."
-            $return = (Get-Content $MsiLog)[-10..-1] | ?{ $_.Trim() -ne '' } | Out-String
+            $return = (Get-Content $MsiLog)[-10..-1] | Where-Object { $_.Trim() -ne '' } | Out-String
         }
         default {
             $code = @'

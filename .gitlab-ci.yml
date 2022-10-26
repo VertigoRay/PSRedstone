@@ -39,7 +39,7 @@ Pester Tests:
 #     Import-Module -Name PSDepend
 #     Invoke-PSDepend '.\REQUIREMENTS.psd1' -Force
 
-
+Write-Out
 
 
 # on_success:

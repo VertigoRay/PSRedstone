@@ -14,7 +14,7 @@ function Global:Get-RegistryValueDoNotExpandEnvironmentName {
         [Parameter()]
         [string]
         $Key,
-        
+
         [Parameter()]
         [string]
         $Value

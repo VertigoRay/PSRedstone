@@ -1,7 +1,7 @@
 <#
 .DESCRIPTION
 Recursively probe registry key's sub-key's and values and output a sorted array.
-#> 
+#>
 function Get-BaconRecursiveRegistryKey {
     param(
         [Parameter(Mandatory = $true)]
@@ -24,7 +24,7 @@ function Get-BaconRecursiveRegistryKey {
             [Microsoft.Win32.RegistryKey] $Key
             )
 
-        #If it has no subkeys, retrieve the values and append to them to the global array. 
+        #If it has no subkeys, retrieve the values and append to them to the global array.
         if($Key.SubKeyCount-eq 0)
         {
             Foreach($value in $Key.GetValueNames())

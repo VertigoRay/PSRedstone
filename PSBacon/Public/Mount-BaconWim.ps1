@@ -1,8 +1,9 @@
+#Requires -RunAsAdministrator
 <#
 .EXAMPLE
 try {
     Mount-BaconWim
-    
+
     ... do some things ...
 } catch {
 
@@ -42,76 +43,39 @@ function Mount-BaconWim {
 
         [Parameter(Mandatory = $false)]
         [int]
-        $ImageIndex = 1
+        $ImageIndex = 1,
+
+        [Parameter(Mandatory = $true)]
+        [IO.FileInfo]
+        $LogFileF
     )
-    
+
     begin {
-        Write-Information "[Mount-BaconWim] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
+        Write-Verbose "[Mount-BaconWim] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
         Write-Debug "[Mount-BaconWim] Function Invocation: $($MyInvocation | Out-String)"
-
-        function Invoke-ForceEmptyDirectory {
-            [CmdletBinding()]
-            param (
-                [Parameter(
-                    Mandatory=$true,
-                    Position=0,
-                    ParameterSetName="ParameterSetName",
-                    ValueFromPipeline=$true,
-                    ValueFromPipelineByPropertyName=$true,
-                    HelpMessage="Path to one or more locations."
-                )]
-                [Alias("PSPath")]
-                [ValidateNotNullOrEmpty()]
-                [IO.DirectoryInfo]
-                $Path
-            )
-
-            if (-not $Path.Exists) {
-                New-Item -ItemType 'Directory' -Path $Path.FullName -Force | Out-Null
-                $Path.Refresh()
-            } else { # Path Exists
-                if ((Get-ChildItem 'BaconMount' | Measure-Object).Count) {
-                    # Path (Directory) is NOT empty.
-                    try {
-                        $Path.FullName | Remove-Item -Recurse -Force
-                    } catch [System.ComponentModel.Win32Exception] {
-                        if ($_.Exception.Message -eq 'Access to the cloud file is denied') {
-                            Write-Warning ('[{0}] {1}' -f $_.Exception.GetType().FullName, $_.Exception.Message)
-                            # It seems the problem comes from a directory, not the files themselves,
-                            # so using a small workaround using Get-ChildItem to list and then delete
-                            # all files helps to get rid of all files.
-                            foreach ($item in (Get-ChildItem -LiteralPath $Path.FullName -File -Recurse)) {
-                                Remove-Item -LiteralPath $item.Fullname -Recurse -Force
-                            }
-                        } else {
-                            Throw $_
-                        }
-                    }
-                    New-Item -ItemType 'Directory' -Path $Path.FullName -Force | Out-Null
-                    $Path.Refresh()
-                }
-            }
-        }
     }
-    
+
     process {
         # $MyInvocation
         # $MountPath.FullName
-        $MountPath.FullName | Invoke-ForceEmptyDirectory
+        $MountPath.FullName | Invoke-BaconForceEmptyDirectory
         $MountPath.Refresh()
 
         $windowsImage = @{
-            ImagePath = $ImagePath.FullName 
-            Index = $ImageIndex 
+            ImagePath = $ImagePath.FullName
+            Index = $ImageIndex
             Path = $MountPath.FullName
         }
+
+        if ($LogFileF) {
+            $windowsImage.Add('LogPath', ($LogFileF -f 'DISM'))
+        }
+
         Write-Verbose "[Mount-BaconWim] Mount-WindowImage: $($windowsImage | ConvertTo-Json)"
         Mount-WindowsImage @windowsImage
     }
-    
-    end {
-        
-    }
+
+    end {}
 }
 
 # Mount-BaconWim -ImagePath "$pwd\PSBacon.wim"

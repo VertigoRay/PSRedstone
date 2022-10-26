@@ -50,19 +50,19 @@ Function Global:Get-BaconInstalledApplication {
         [Parameter(Mandatory=$false)]
         [switch]
         $IncludeUpdatesAndHotfixes,
-        
+
         [Parameter(Mandatory=$false, HelpMessage="Private Parameter; used for debug overrides.")]
         [ValidateNotNullorEmpty()]
         [string[]]
         $UninstallRegKeys = @(
             'HKLM:SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall',
             'HKLM:SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall'
-        )    
+        )
     )
-    
+
     Write-Information "[Get-BaconInstalledApplication] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
     Write-Debug "[Get-BaconInstalledApplication] Function Invocation: $($MyInvocation | Out-String)"
-    
+
 
     if ($Name) {
         Write-Information "[Get-BaconInstalledApplication] Get information for installed Application Name(s) [$($name -join ', ')]..."
@@ -70,7 +70,7 @@ Function Global:Get-BaconInstalledApplication {
     if ($ProductCode) {
         Write-Information "[Get-BaconInstalledApplication] Get information for installed Product Code [$ProductCode]..."
     }
-    
+
     ## Enumerate the installed applications from the registry for applications that have the "DisplayName" property
     [psobject[]]$regKeyApplication = @()
     foreach ($regKey in $UninstallRegKeys) {
@@ -92,7 +92,7 @@ Function Global:Get-BaconInstalledApplication {
     if ($ErrorUninstallKeyPath) {
         Write-Warning "[Get-BaconInstalledApplication] The following error(s) took place while enumerating installed applications from the registry. `n$(Resolve-Error -ErrorRecord $ErrorUninstallKeyPath)"
     }
-    
+
     ## Create a custom object with the desired properties for the installed applications and sanitize property details
     [psobject[]]$installedApplication = @()
     foreach ($regKeyApp in $regKeyApplication) {
@@ -100,7 +100,7 @@ Function Global:Get-BaconInstalledApplication {
             [string]$appDisplayName = ''
             [string]$appDisplayVersion = ''
             [string]$appPublisher = ''
-            
+
             ## Bypass any updates or hotfixes
             if (-not $IncludeUpdatesAndHotfixes) {
                 if ($regKeyApp.DisplayName -match '(?i)kb\d+') { continue }
@@ -108,15 +108,15 @@ Function Global:Get-BaconInstalledApplication {
                 if ($regKeyApp.DisplayName -match 'Security Update') { continue }
                 if ($regKeyApp.DisplayName -match 'Hotfix') { continue }
             }
-            
+
             ## Remove any control characters which may interfere with logging and creating file path names from these variables
             $appDisplayName = $regKeyApp.DisplayName -replace '[^\u001F-\u007F]',''
             $appDisplayVersion = $regKeyApp.DisplayVersion -replace '[^\u001F-\u007F]',''
             $appPublisher = $regKeyApp.Publisher -replace '[^\u001F-\u007F]',''
-            
+
             ## Determine if application is a 64-bit application
             [boolean]$Is64BitApp = if (([System.Environment]::Is64BitOperatingSystem) -and ($regKeyApp.PSPath -notmatch '^Microsoft\.PowerShell\.Core\\Registry::HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node')) { $true } else { $false }
-            
+
             if ($ProductCode) {
                 ## Verify if there is a match with the product code passed to the script
                 if ($regKeyApp.PSChildName -match [regex]::Escape($productCode)) {
@@ -137,7 +137,7 @@ Function Global:Get-BaconInstalledApplication {
                     }
                 }
             }
-            
+
             if ($name) {
                 ## Verify if there is a match with the application name(s) passed to the script
                 foreach ($application in $Name) {
@@ -161,7 +161,7 @@ Function Global:Get-BaconInstalledApplication {
                         $applicationMatched = $true
                         Write-Information "[Get-BaconInstalledApplication] Found installed application [$appDisplayName] version [$appDisplayVersion] using regex matching for search term [$application]."
                     }
-                    
+
                     if ($applicationMatched) {
                         # $installedApplication += $regKeyApp
                         $installedApplication += New-Object -TypeName 'PSObject' -Property @{
@@ -186,7 +186,7 @@ Function Global:Get-BaconInstalledApplication {
             continue
         }
     }
-    
+
     return $installedApplication
 }
 

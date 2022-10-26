@@ -60,6 +60,7 @@ $result.Process.ExitCode
 https://git.cas.unt.edu/winstall/winstall/wikis/Invoke-Run
 #>
 function Global:Invoke-Run {
+    [OutputType([hashtable])]
     [CmdletBinding()]
     param (
         [Parameter(Mandatory=$true, Position=0, ParameterSetName='Cmd')]
@@ -124,66 +125,65 @@ function Global:Invoke-Run {
         }
     }
 
-    [string] $process_guid = New-Guid
-    [string] $stdout = New-TemporaryFile
-    [string] $stderr = New-TemporaryFile
+    [string] $processGuid = New-Guid
+    [IO.FileInfo] $stdout = New-TemporaryFile
+    [IO.FileInfo] $stderr = New-TemporaryFile
+    [string] $stdoutFullName = $stdout.FullName
+    [string] $stderrFullName = $stderr.FullName
+    [string] $logFileFullName = $logFile.FullName
 
-    [hashtable] $start_process = @{
-        'FilePath'                  = $FilePath;
-        'PassThru'                  = $PassThru;
-        'Wait'                      = $Wait;
-        'WindowStyle'               = $WindowStyle;
+    [hashtable] $startProcess = @{
+        'FilePath'                  = $FilePath
+        'PassThru'                  = $PassThru
+        'Wait'                      = $Wait
+        'WindowStyle'               = $WindowStyle
         'RedirectStandardError'     = $stderr
         'RedirectStandardOutput'    = $stdout
     }
-    
+
     if ($ArgumentList) {
-        [void] $start_process.Add('ArgumentList', $ArgumentList)
+        [void] $startProcess.Add('ArgumentList', $ArgumentList)
     }
-    
+
     if ($WorkingDirectory) {
-        [void] $start_process.Add('WorkingDirectory', $WorkingDirectory)
+        [void] $startProcess.Add('WorkingDirectory', $WorkingDirectory)
     }
 
     if ($LogFile) {
         # Monitor STDOUT and send to Log
-        $stdout_job = Start-Job -Name "StdOut ${process_guid}" -ScriptBlock {
-            param($stdout,$logFile)
-
-            while (-not (Test-Path $stdout)) {
+        $stdout_job = Start-Job -Name "StdOut ${processGuid}" -ScriptBlock {
+            while (-not (Test-Path $using:stdoutFullName)) {
                 Start-Sleep -Milliseconds 100
             }
             Write-Verbose "Monitoring STDOUT!"
-            Get-Content $stdout.FullName -Wait | ForEach-Object{
-                "STDOUT: $_"  | Out-File -Encoding 'utf8' -LiteralPath $logFile.FullName -Append -Force
+            Get-Content $using:stdoutFullName -Wait | ForEach-Object {
+                "STDOUT: $_"  | Out-File -Encoding 'utf8' -LiteralPath $using:logFileFullName -Append -Force
             }
-        } -ArgumentList @($stdout, $LogFile)
-    
-        # Monitor STDERR and send to Log
-        $stderr_job = Start-Job -Name "StdErr ${process_guid}" -ScriptBlock {
-            param($stderr,$logFile)
+        }
 
-            while (-not (Test-Path $stderr)) {
+        # Monitor STDERR and send to Log
+        $stderr_job = Start-Job -Name "StdErr ${processGuid}" -ScriptBlock {
+            while (-not (Test-Path $using:stderrFullName)) {
                 Start-Sleep -Milliseconds 100
             }
             Write-Verbose "Monitoring STDERR!"
-            Get-Content $stderr.FullName -Wait | ForEach-Object{
-                "STDERR: $_" | Out-File -Encoding 'utf8' -LiteralPath $logFile.FullName -Append -Force
+            Get-Content $using:stderrFullName -Wait | ForEach-Object {
+                "STDERR: $_" | Out-File -Encoding 'utf8' -LiteralPath $using:logFileFullName -Append -Force
             }
-        } -ArgumentList @($stderr, $LogFile)
-    }
+        }
+}
 
-    Write-Information "Start-Process: $(ConvertTo-Json $start_process)"
-    $proc = Start-Process @start_process
+    Write-Information "Start-Process: $(ConvertTo-Json $startProcess)"
+    $proc = Start-Process @startProcess
     Write-Verbose "ExitCode: $($proc.ExitCode)"
 
     $stdout_job | Stop-Job
     $stderr_job | Stop-Job
 
     $return = @{
-        'Process' = $proc;
-        'StdOut'  = Get-Content $stdout;
-        'StdErr'  = Get-Content $stderr;
+        'Process' = $proc
+        'StdOut'  = Get-Content $stdout
+        'StdErr'  = Get-Content $stderr
     }
 
     $stdout | Remove-Item -Force

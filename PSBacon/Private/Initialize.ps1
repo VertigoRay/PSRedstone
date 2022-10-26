@@ -7,15 +7,18 @@ class Bacon {
     hidden [string] $_Product = $null
     hidden [string] $_Version = $null
     hidden [string] $_Action = $null
+    [string] $ExitCode = 0
+    [System.Collections.ArrayList] $Exiting = @()
+
     [hashtable] $Settings = @{}
     [bool] $IsElevated = (New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
     # Use the default settings, don't read any of the settings in from the registry. In production this is never set.
     [bool] $OnlyUseDefaultSettings = $false
     [Management.Automation.InvocationInfo] $MyInvocation = $MyInvocation
-    
+
     # Bacon() {
     # }
-    
+
     # Bacon([Management.Automation.InvocationInfo] $ParentMyInvocation) {
     #     $this.MyInvocation = $ParentMyInvocation
     # }
@@ -59,14 +62,14 @@ class Bacon {
             $this.LogSetUp()
         } -Force
     }
-    
+
     Bacon([string] $Publisher, [string] $Product, [string] $Version, [string] $Action) {
         $global:InformationPreference = 'Continue'
-        
+
         $this.SettingsSetUp()
         $this.SetDefaultSettingsFromRegistry($this.Settings.Registry.Key)
         $this.SetPSDefaultParameterValues($this.Settings.Functions)
-        
+
         $this.set__Publisher($Publisher)
         $this.set__Product($Product)
         $this.set__Version($Version)
@@ -79,13 +82,6 @@ class Bacon {
         $this.Settings = @{}
         $this.Settings.Registry = @{
             Key = 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\PSBacon'
-        }
-
-        $this.Settings.Functions = @{
-            'Get-BaconRegistryValueOrDefault' = @{
-                OnlyUseDefaultSettings = Get-BaconRegistryValueOrDefault 'Settings\Functions\Get-BaconRegistryValueOrDefault' 'OnlyUseDefaultSettings' $false -RegistryKeyRoot $this.Settings.Registry.Key
-                RegistryKeyRoot = $this.Settings.Registry.Key
-            }
         }
     }
 
@@ -109,8 +105,11 @@ class Bacon {
     }
 
     hidden [void] PSDefaultParameterValuesSetUp() {
-        $global:PSDefaultParameterValues.Set_Item('Invoke-BaconMsi:LogFileF', $this.Settings.Log.FileF)
-        $global:PSDefaultParameterValues.Set_Item('Invoke-BaconRun:LogFile', $this.Settings.Log.File.FullName)
+        $global:PSDefaultParameterValues.Set_Item('*-Bacon*:LogFile', $this.Settings.Log.File.FullName)
+        $global:PSDefaultParameterValues.Set_Item('*-Bacon*:LogFileF', $this.Settings.Log.FileF)
+        $global:PSDefaultParameterValues.Set_Item('*-Bacon*:LogFileF', $this.Settings.Log.FileF)
+        $global:PSDefaultParameterValues.Set_Item('Get-BaconRegistryValueOrDefault:OnlyUseDefaultSettings', (Get-BaconRegistryValueOrDefault 'Settings\Functions\Get-BaconRegistryValueOrDefault' 'OnlyUseDefaultSettings' $false -RegistryKeyRoot $this.Settings.Registry.Key))
+        $global:PSDefaultParameterValues.Set_Item('Get-BaconRegistryValueOrDefault:RegistryKeyRoot', $this.Settings.Registry.Key)
         $global:PSDefaultParameterValues.Set_Item('Write-Log:FilePath', $this.Settings.Log.File.FullName)
     }
 
@@ -147,6 +146,38 @@ class Bacon {
         }
     }
 
+    [void] Quit($ExitCode = 0, [boolean] $ExitCodeAdd = $true , [int] $ExitCodeErrorBase = 55550000) {
+
+        Write-Verbose "[Bacon.Exit] ExitCode Orig : ${ExitCode}"
+        if ($ExitCode -eq 'line_number') {
+            [int] $this.ExitCode = $MyInvocation.ScriptLineNumber
+        }
+
+        try {
+            [int] $this.ExitCode = $ExitCode
+        } catch {
+            Write-Error "[Bacon.Exit] Cannot convert ExitCode to INT.`n`tExitCode: ${ExitCode}`n`tFrom: $($MyInvocation.ScriptName):$($MyInvocation.ScriptLineNumber)"
+        }
+
+        if ($ExitCodeAdd -and ($ExitCode -lt 0) -and ($ExitCodeErrorBase -gt 0)) {
+            $ExitCodeErrorBase = $ExitCodeErrorBase * -1
+        }
+
+        if ($ExitCodeAdd -and (([string] $ExitCode).Length -gt 4)) {
+            Write-Warning "[Bacon.Exit] ExitCode should not be added to Base when more than 4 digits. Doing it anyway ..."
+        }
+
+        if ($ExitCodeAdd -and ($ExitCode -eq 0)) {
+            Write-Warning "[Bacon.Exit] ExitCode 0 being added may cause failure; not sure if this is expected. Doing it anyway ..."
+        }
+
+        $this.ExitCode = if ($ExitCodeAdd) { $ExitCode + $ExitCodeErrorBase } else { $ExitCode }
+        Write-Verbose "[Bacon.Exit] ExitCode Final: ${ExitCode}"
+        $this.Bacon.ExitCode = $ExitCode
+        $global:Host.SetShouldExit($ExitCode)
+        Exit $ExitCode
+    }
+
     <#
     Dig through the Registry Key and import all the Keys and Values into the $global:Bacon objet.
 
@@ -156,17 +187,17 @@ class Bacon {
     hidden [void] SetDefaultSettingsFromRegistry([string] $Key) {
         if (Test-Path $Key) {
             $this.SetDefaultSettingsFromRegistrySubKey($this.Settings, $Key)
-    
+
             foreach ($item in (Get-ChildItem $Key -Recurse -ErrorAction 'Ignore')) {
                 $private:psPath = $item.PSPath.Split(':')[-1].Replace($Key.Split(':')[-1], $null)
                 $private:node = $this.Settings
                 foreach ($child in ($private:psPath.Trim('\').Split('\'))) {
-                    if (-not $node.$child) { 
+                    if (-not $node.$child) {
                         [hashtable] $node.$child = @{}
                     }
                     $node = $node.$child
                 }
-    
+
                 $this.SetDefaultSettingsFromRegistrySubKey($node, $item.PSPath)
             }
         }
@@ -176,7 +207,7 @@ class Bacon {
         foreach ($regValue in (Get-Item $Key -ErrorAction 'Ignore').Property) {
             $Hash.Set_Item($regValue, (Get-ItemProperty -Path $Key -Name $regValue).$regValue)
         }
-        
+
 
     }
 

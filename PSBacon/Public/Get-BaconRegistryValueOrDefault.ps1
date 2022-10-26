@@ -4,25 +4,25 @@ function Get-BaconRegistryValueOrDefault {
         [Parameter(Mandatory = $true, Position = 0)]
         [string]
         $RegistryKey,
-        
+
         [Parameter(Mandatory = $true, Position = 1)]
         [string]
         $RegistryValue,
-        
+
         [Parameter(Mandatory = $true, Position = 2)]
         $DefaultValue,
 
         [Parameter(Mandatory = $false)]
         [string]
-        $RegistryKeyRoot = $global:Bacon.Settings.Functions.'Get-BaconRegistryValueOrDefault'.RegistryKeyRoot,
-        
+        $RegistryKeyRoot,
+
         [Parameter(HelpMessage = 'Do Not Expand Environment Variables.')]
         [switch]
         $DoNotExpand,
-        
+
         [Parameter(HelpMessage = 'For development.')]
         [bool]
-        $OnlyUseDefaultSettings = ($global:Bacon.Settings.Functions.'Get-BaconRegistryValueOrDefault'.OnlyUseDefaultSettings -as [bool])
+        $OnlyUseDefaultSettings
     )
 
     Write-Verbose "[Get-BaconRegistryValueOrDefault] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"

@@ -45,7 +45,7 @@ Invoke-BaconMSI -Action 'Install' -Path 'Adobe_FlashPlayer_11.2.202.233_x64_EN.m
 Invoke-BaconMSI -Action 'Install' -Path 'Adobe_FlashPlayer_11.2.202.233_x64_EN.msi' -Transform 'Adobe_FlashPlayer_11.2.202.233_x64_EN_01.mst' -Parameters '/QN'
 .EXAMPLE
 # Installs an MSI and stores the result of the execution into a variable by using the -PassThru option
-[psobject]$ExecuteMSIResult = Invoke-BaconMSI -Action 'Install' -Path 'Adobe_FlashPlayer_11.2.202.233_x64_EN.msi' -PassThru
+[psobject] $ExecuteMSIResult = Invoke-BaconMSI -Action 'Install' -Path 'Adobe_FlashPlayer_11.2.202.233_x64_EN.msi' -PassThru
 .EXAMPLE
 # Uninstalls an MSI using a product code
 Invoke-BaconMSI -Action 'Uninstall' -Path '{26923b43-4d38-484f-9b9e-de460746276c}'
@@ -78,71 +78,71 @@ function Global:Invoke-BaconMSI {
         [ValidateSet('Install','Uninstall','Patch','Repair','ActiveSetup')]
         [string]
         $Action = 'Install',
-        
+
         [Parameter(Position=0, Mandatory=$true, HelpMessage='Please enter either the path to the MSI/MSP file or the ProductCode')]
         [ValidateNotNullorEmpty()]
         [Alias('FilePath')]
         [string]
         $Path,
-        
+
         [Parameter(Mandatory=$false)]
         [ValidateNotNullorEmpty()]
         [string[]]
         $Transforms,
-        
+
         [Parameter(Mandatory=$false)]
         [Alias('Arguments')]
         [ValidateNotNullorEmpty()]
         [string[]]
         $Parameters = @('REBOOT=ReallySuppress'),
-        
+
         [Parameter(Mandatory=$false)]
         [ValidateNotNullorEmpty()]
         [switch]
         $SecureParameters = $false,
-        
+
         [Parameter(Mandatory=$false)]
         [ValidateNotNullorEmpty()]
         [string[]]
         $Patches,
-        
+
         [Parameter(Mandatory=$false)]
         [ValidateNotNullorEmpty()]
         [string]
         $LoggingOptions = '/log',
-        
+
         [Parameter(Mandatory=$false)]
         [ValidateNotNullorEmpty()]
         [string]
         $WorkingDirectory,
-        
+
         [Parameter(Mandatory=$false)]
         [ValidateNotNullorEmpty()]
         [switch]
         $SkipMSIAlreadyInstalledCheck = $false,
-        
+
         [Parameter(Mandatory=$false)]
         [ValidateNotNullorEmpty()]
         [string]
         $MsiDisplay = '/qn',
-        
+
         [Parameter(Mandatory=$false)]
         [ValidateNotNullorEmpty()]
         [string]
         $WindowStyle = 'Hidden',
-        
+
         [Parameter(Mandatory=$false)]
         [ValidateNotNullorEmpty()]
         [switch]
         $PassThru,
-        
+
         [Parameter(Mandatory=$false, HelpMessage="Private Parameter; used for debug overrides.")]
         [ValidateNotNullorEmpty()]
         [string]
         $LogFileF = "${env:Temp}\{Invoke-BaconMsi_{1}_{0}.log"
     )
 
-    Write-Information "[Invoke-BaconMsi] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
+    Write-Verbose "[Invoke-BaconMsi] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
     Write-Debug "[Invoke-BaconMsi] Function Invocation: $($MyInvocation | Out-String)"
 
 
@@ -214,11 +214,11 @@ function Global:Invoke-BaconMSI {
             }
         }
     }
-    [string]$mspFile = "`"$($msp -join ';')`""
+    [string] $mspFile = "`"$($msp -join ';')`""
 
     ## Get the ProductCode of the MSI
     if ($PathIsProductCode) {
-        [string]$MSIProductCode = $Path
+        [string] $MSIProductCode = $Path
     } elseif ([IO.Path]::GetExtension($msiFile) -eq '.msi') {
         try {
             [hashtable] $Get_MsiTablePropertySplat = @{
@@ -232,8 +232,7 @@ function Global:Invoke-BaconMSI {
 
             [string] $MSIProductCode = Get-MsiTableProperty @Get_MsiTablePropertySplat | Select-Object -ExpandProperty 'ProductCode' -ErrorAction 'Stop'
             Write-Information "[Invoke-BaconMsi] Got the ProductCode from the MSI file: ${MSIProductCode}"
-        }
-        catch {
+        } catch {
             Write-Information "[Invoke-BaconMsi] Failed to get the ProductCode from the MSI file. Continuing with requested action [${Action}].$([Environment]::NewLine)$([Environment]::NewLine)$_"
         }
     }
@@ -262,15 +261,15 @@ function Global:Invoke-BaconMSI {
     $argsMSI.Add("`"$msiLogFile`"") | Out-Null
 
     ## Check if the MSI is already installed. If no valid ProductCode to check, then continue with requested MSI action.
-    [boolean]$IsMsiInstalled = $false
+    [boolean] $IsMsiInstalled = $false
     if ($MSIProductCode -and (-not $SkipMSIAlreadyInstalledCheck)) {
-        [psobject]$MsiInstalled = Get-InstalledApplication -ProductCode $MSIProductCode
+        [psobject] $MsiInstalled = Get-InstalledApplication -ProductCode $MSIProductCode
         if ($MsiInstalled) {
-            [boolean]$IsMsiInstalled = $true
+            [boolean] $IsMsiInstalled = $true
         }
     } else {
         if ($Action -ine 'Install') {
-            [boolean]$IsMsiInstalled = $true
+            [boolean] $IsMsiInstalled = $true
         }
     }
 
@@ -280,42 +279,42 @@ function Global:Invoke-BaconMSI {
         Write-Information "[Invoke-BaconMsi] Executing MSI action [${Action}]..."
 
         #  Build the hashtable with the options that will be passed to Invoke-Run using splatting
-        [hashtable]$invoke_run =  @{
+        [hashtable] $invokeRun =  @{
             'FilePath' = (Get-Command 'msiexec' -ErrorAction 'Stop').Source;
             'ArgumentList' = $argsMSI;
             'PassThru' = $PassThru;
         }
         if ($WorkingDirectory) {
-            $invoke_run.Add( 'WorkingDirectory', $WorkingDirectory)
+            $invokeRun.Add( 'WorkingDirectory', $WorkingDirectory)
         }
 
 
         ## If MSI install, check to see if the MSI installer service is available or if another MSI install is already underway.
         ## Please note that a race condition is possible after this check where another process waiting for the MSI installer
         ##  to become available grabs the MSI Installer mutex before we do. Not too concerned about this possible race condition.
-        [boolean]$MsiExecAvailable = Test-IsMutexAvailable -MutexName 'Global\_MSIExecute'
+        [boolean] $msiExecAvailable = Test-IsMutexAvailable -MutexName 'Global\_MSIExecute'
         Start-Sleep -Seconds 1
-        if (-not $MsiExecAvailable) {
+        if (-not $msiExecAvailable) {
             #  Default MSI exit code for install already in progress
             Write-Warning '[Invoke-BaconMsi] Please complete in progress MSI installation before proceeding with this install.'
-            $msg = Get-BaconMsiExitCodeMessage $global:Winstall.ExitCode
-            Write-Error "[Invoke-BaconMsi] $($global:Winstall.ExitCode): ${msg}"
-            &$global:Winstall.Exit 1618 $false
+            $msg = Get-BaconMsiExitCodeMessage 1618
+            Write-Error "[Invoke-BaconMsi] 1618: ${msg}"
+            & $bacon.Quit 1618 $false
         }
 
 
         #  Call the Invoke-Run function
         if ($PassThru) {
-            $result = Invoke-BaconRun @invoke_run
+            $result = Invoke-BaconRun @invokeRun
             if ($result.Process.ExitCode -ne 0) {
-                $global:Winstall.ExitCode = $result.Process.ExitCode
-                $msg = Get-BaconMsiExitCodeMessage $global:Winstall.ExitCode -MsiLog $msiLogFile
+                $bacon.ExitCode = $result.Process.ExitCode
+                $msg = Get-BaconMsiExitCodeMessage $bacon.ExitCode -MsiLog $msiLogFile
                 Write-Warning "[Invoke-BaconMsi] $($result.Process.ExitCode): ${msg}"
             }
             Write-Information "[Invoke-BaconMsi] Return: $($result | Out-String)"
             return $result
         } else {
-            Invoke-BaconRun @invoke_run
+            Invoke-BaconRun @invokeRun
         }
     } else {
         Write-Warning "[Invoke-BaconMsi] The MSI is not installed on this system. Skipping action [${Action}]..."

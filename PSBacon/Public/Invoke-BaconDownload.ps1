@@ -28,14 +28,14 @@ function Invoke-BaconDownload {
     if ($OutFolder) {
         [IO.FileInfo] $OutFile = Join-Path $OutFolder.FullName $Uri.Segments[-1]
     }
-    
+
     $startBitsTransfer = @{
         Source      = $Uri.AbsoluteUri
         Destination = $OutFile.FullName
         ErrorAction = 'Stop'
     }
     Write-Verbose ('[Invoke-BaconDownload] startBitsTransfer: {0}' -f ($startBitsTransfer | ConvertTo-Json))
-    
+
     try {
         Start-BitsTransfer @startBitsTransfer
     } catch {
@@ -47,11 +47,11 @@ function Invoke-BaconDownload {
             Invoke-WebRequest -Uri $startBitsTransfer.Source -OutFile $startBitsTransfer.Destination
         }
     }
-    
+
     if ($Checksum) {
         $hash = Get-FileHash -LiteralPath $startBitsTransfer.Destination -Algorithm $Checksum.Algorithm
         Write-Verbose ('[Invoke-BaconDownload] Downloaded File Hash: {0}' -f ($hash | ConvertTo-Json))
-        
+
         if ($Checksum.Hash -ne $hash.Hash) {
             Remove-Item -LiteralPath $startBitsTransfer.Destination -Force
             Throw ('Unexpected Hash; Downloaded file deleted!')

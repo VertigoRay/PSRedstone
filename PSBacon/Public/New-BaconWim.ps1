@@ -1,75 +1,57 @@
+#Requires -RunAsAdministrator
 <#
 .EXAMPLE
 New-BaconWim -ImagePath "PSBacon.wim" -CapturePath "PSBacon" -Name "PSBacon"
-
-.EXAMPLE
-$severalImages = @(
-    @{
-        ImagePath = "f:\CADWIM\Files.wim"
-        CapturePath = "f:\CADWIM\Files"
-        Name = "InstallerSources"
-    },
-    @{
-        ImagePath = "f:\CADWIM2\Files.wim"
-        CapturePath = "f:\CADWIM2\Files"
-        Name = "InstallerSources2"
-    }
-)
-
-$severalImages | New-BaconWim
 #>
 function New-BaconWim {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     param (
-        [Parameter(
-            Mandatory = $true,
-            ParameterSetName = 'Individual'
-        )]
+        [Parameter(Mandatory = $true)]
         [IO.FileInfo]
         $ImagePath,
 
-        [Parameter(
-            Mandatory = $true,
-            ParameterSetName = 'Individual'
-        )]
+        [Parameter(Mandatory = $true)]
         [IO.DirectoryInfo]
         $CapturePath,
 
-        [Parameter(
-            Mandatory = $true,
-            ParameterSetName = 'Individual'
-        )]
+        [Parameter(Mandatory = $true)]
         [String]
         $Name,
 
-        [Parameter(
-            Mandatory = $true,
-            ParameterSetName = 'Piped',
-            ValueFromPipeline = $true
-        )]
-        [hashtable[]]
-        $WimInstructions
+        [Parameter(Mandatory = $true)]
+        [IO.FileInfo]
+        $LogFileF
     )
 
-    
     begin {
-        Write-Information "[New-BaconWim] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
+        Write-Verbose "[New-BaconWim] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
         Write-Debug "[New-BaconWim] Function Invocation: $($MyInvocation | Out-String)"
     }
-    
+
     process {
-        if ($PSCmdlet.ParameterSetName -eq 'Individual') {
-            New-WindowsImage -ImagePath $ImagePath.FullName -CapturePath $CapturePath.FullName -Name $Name
-        } else { # Piped
-            foreach ($wimInstruction in $WimInstructions) {
-                New-WindowsImage @wimInstruction
-            }
+        if (-not $ImagePath.Directory.Exists) {
+            New-Item -ItemType 'Directory' -Path $ImagePath.FullName -Force | Out-Null
+            $ImagePath.Refresh()
+        }
+
+        $windowsImage = @{
+            ImagePath = $ImagePath.FullName
+            CapturePath = $CapturePath.FullName
+            Name = $Name
+        }
+
+        if ($LogFileF) {
+            $windowsImage.Add('LogPath', ($LogFileF -f 'DISM'))
+        }
+
+        if ($WhatIf.IsPresent) {
+            Write-Host ('What if: Performing the operation "New-WindowsImage" with parameters: {0}' -f ($windowsImage | ConvertTo-Json))
+        } else {
+            New-WindowsImage @windowsImage
         }
     }
-    
-    end {
-        
-    }
+
+    end {}
 }
 
 # New-BaconWim -ImagePath "PSBacon.wim" -CapturePath "PSBacon" -Name "PSBacon"

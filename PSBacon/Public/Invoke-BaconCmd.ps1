@@ -39,28 +39,28 @@ function Global:Invoke-BaconCmd {
     param (
         [Parameter(Mandatory=$true, Position=1)]
         [string]
-        $Cmd
-        ,
+        $Cmd,
+
         [Parameter(Mandatory=$false)]
         [switch]
-        $KeepOpen
-        ,
+        $KeepOpen,
+
         [Parameter(Mandatory=$false)]
         [switch]
-        $StringMod
-        ,
+        $StringMod,
+
         [Parameter(Mandatory=$false)]
         [switch]
-        $Quiet
-        ,
+        $Quiet,
+
         [Parameter(Mandatory=$false)]
         [switch]
-        $DisableAutoRun
-        ,
+        $DisableAutoRun,
+
         [Parameter(Mandatory=$false)]
         [switch]
-        $ANSI
-        ,
+        $ANSI,
+
         [Parameter(Mandatory=$false)]
         [switch]
         $Unicode
