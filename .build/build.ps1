@@ -50,19 +50,19 @@ if ((Get-Module 'Pester' -ErrorAction 'Ignore') -and ((Get-Module 'Pester' -Erro
 # Install all of the modules in the $installModules hashtable.
 foreach ($module in $installModules.GetEnumerator()) {
     # if (-not (Get-Module -Name $module.Name -ListAvailable -ErrorAction 'Ignore')) {
-    #     if ($module.Value -is [hashtable]) {
-    #         $install = $module.Value
-    #         $install.Set_Item('Name', $module.Name)
-    #     } else {
-    #         $install = @{
-    #             Name = $module.Name
-    #         }
-    #         if ($module.Value -ne 'latest') {
-    #             $install.Set_Item('RequiredVersion', $module.Value)
-    #         }
-    #     }
+        if ($module.Value -is [hashtable]) {
+            $install = $module.Value
+            $install.Set_Item('Name', $module.Name)
+        } else {
+            $install = @{
+                Name = $module.Name
+            }
+            if ($module.Value -ne 'latest') {
+                $install.Set_Item('RequiredVersion', $module.Value)
+            }
+        }
         Install-Module @install -Scope 'CurrentUser' -Force
-        Get-Module -Name $module.Name -ListAvailable
+        Get-Module -Name $module.Name -ListAvailable | Format-Table
     # }
 }
 
