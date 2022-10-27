@@ -10,6 +10,12 @@ param(
     $NuGetPPMinVersion = '2.8.5.201'
 )
 
+trap {
+    if ($env:CI) {
+        $Host.SetShouldExit(1)
+    }
+}
+
 if (-not (Get-PackageProvider 'NuGet' | Where-Object { $_.Version -ge $NuGetPPMinVersion })) {
     Install-PackageProvider -Name 'NuGet' -MinimumVersion $NuGetPPMinVersion -Force | Out-Null
 }
