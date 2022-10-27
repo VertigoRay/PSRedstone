@@ -9,28 +9,28 @@ Syntax JSON:
   tags:
     - WindowsPowerShell
   script: |
-    & '.\.build\build.pd1' -Task SyntaxJSON
+    & '.\.build\build.ps1' -Task SyntaxJSON
 
 Syntax PowerShell:
   stage: syntax
   tags:
     - WindowsPowerShell
   script: |
-    & '.\.build\build.pd1' -Task SyntaxPoSh
+    & '.\.build\build.ps1' -Task SyntaxPoSh
 
 Pester Tests:
   stage: test
   tags:
     - WindowsPowerShell
   script: |
-    & '.\.build\build.pd1' -Task PreAnalyze
+    & '.\.build\build.ps1' -Task PreAnalyze
 
 Build Module:
   stage: build
   tags:
     - WindowsPowerShell
   script: |
-    & '.\.build\build.pd1' -Task Build
+    & '.\.build\build.ps1' -Task Build
 
 
 # - ps: |
