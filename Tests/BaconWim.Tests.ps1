@@ -1,7 +1,7 @@
 Describe 'BaconWim' -Tag 'WIM' {
-    [IO.FileInfo] $capturePath = '{0}\PSBacon' -f $psProjectRoot.FullName
-    [IO.FileInfo] $imagePath = '{0}\devPSBacon\PSBacon.wim' -f 'TestDrive:'
-    [IO.FileInfo] $mountPath = '{0}\dev\Mount_PSBacon' -f 'TestDrive:'
+    [IO.FileInfo] $capturePath = [IO.Path]::Combine($psProjectRoot.FullName, 'PSBacon')
+    $imagePath = [IO.Path]::Combine('TestDrive:', 'dev', 'PSBacon', 'PSBacon.wim')
+    $mountPath = [IO.Path]::Combine('TestDrive:', 'dev', 'Mount_PSBacon')
     [bool] $isElevated = (New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
 
     BeforeAll {

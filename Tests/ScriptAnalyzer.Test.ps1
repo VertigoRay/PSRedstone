@@ -13,7 +13,7 @@ $skipRules = @(
     'PSUseUsingScopeModifierInNewRunspaces'
 )
 
-Describe 'PSScriptAnalyzer analysis' -Tag 'Syntax' {
+Describe 'PSScriptAnalyzer analysis' -Tag 'Syntax','PSScriptAnalyzer' {
     It "<IncludeRule>: <RelativePath>" -TestCases @(
         foreach ($p in $ps1s) {
             foreach ($r in (Get-ScriptAnalyzerRule | Where-Object { $_.RuleName -notin $skipRules })) {

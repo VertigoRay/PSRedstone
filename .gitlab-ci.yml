@@ -8,29 +8,29 @@ Syntax JSON:
   stage: syntax
   tags:
     - WindowsPowerShell
-  script:
-    - Invoke-Pester '.\Tests\001_SyntaxJson.Tests.ps1' -EnableExit
+  script: |
+    & '.\.build\build.pd1' -Task SyntaxJSON
 
 Syntax PowerShell:
   stage: syntax
   tags:
     - WindowsPowerShell
-  script:
-    - Invoke-Pester '.\Tests\002_SyntaxPosh.Tests.ps1' -EnableExit
+  script: |
+    & '.\.build\build.pd1' -Task SyntaxPoSh
 
 Pester Tests:
   stage: test
   tags:
     - WindowsPowerShell
-  script:
-    - cd Tests
-    - Invoke-Pester -EnableExit
+  script: |
+    & '.\.build\build.pd1' -Task PreAnalyze
 
-
-
-
-# build_script:
-# - ps: Invoke-psake '.\.scripts\build.ps1' -Properties @{'SkipBootStrap' = $true}
+Build Module:
+  stage: build
+  tags:
+    - WindowsPowerShell
+  script: |
+    & '.\.build\build.pd1' -Task Build
 
 
 # - ps: |
@@ -38,9 +38,6 @@ Pester Tests:
 #     Install-Module -Name PSDepend -Scope CurrentUser -Force
 #     Import-Module -Name PSDepend
 #     Invoke-PSDepend '.\REQUIREMENTS.psd1' -Force
-
-Write-Out
-
 
 # on_success:
 # # If build was started by pushed tag; deploy it.

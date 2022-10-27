@@ -1,4 +1,4 @@
-Describe 'Syntax: JSON' -Tag 'Syntax' {
+Describe 'Syntax: JSON' -Tag 'Syntax','SyntaxJSON' {
     $psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
     Write-Debug ('PSProjectRoot: {0}' -f $psProjectRoot.FullName)
 

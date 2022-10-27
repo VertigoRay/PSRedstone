@@ -1,4 +1,4 @@
-Describe 'Syntax: PowerShell' -Tag 'Syntax' {
+Describe 'Syntax: PowerShell' -Tag 'Syntax','SyntaxPoSh' {
     $psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
     Write-Debug ('[posh.ps1] PSProjectRoot: {0}' -f $psProjectRoot.FullName)
     $poshFiles = Get-ChildItem $psProjectRoot.FullName -Filter '*.ps1' -Recurse -File | Where-Object {
