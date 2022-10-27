@@ -10,18 +10,31 @@ param(
     $NuGetPPMinVersion = '2.8.5.201'
 )
 
+$installModules = @{
+    Pester = @{
+        RequiredVersion = $PesterVersion
+        SkipPublisherCheck = $true
+    }
+    psake = 'latest'
+    PSDeploy = 'latest'
+}
+
+$ErrorActionPreference = 'Stop'
 trap {
+    Write-Error $_ -ErrorAction 'Continue'
     if ($env:CI) {
         $Host.SetShouldExit(1)
     }
 }
 
-if (-not (Get-PackageProvider 'NuGet' | Where-Object { $_.Version -ge $NuGetPPMinVersion })) {
-    Install-PackageProvider -Name 'NuGet' -MinimumVersion $NuGetPPMinVersion -Force | Out-Null
+# Setup NuGet PP
+if (-not (Get-PackageProvider 'NuGet' -ErrorAction 'Ignore' | Where-Object { $_.Version -ge $NuGetPPMinVersion })) {
+    Install-PackageProvider -Name 'NuGet' -MinimumVersion $NuGetPPMinVersion -Force
 }
 
-if ((Get-Module 'Pester') -and ((Get-Module 'Pester').Version -ne $PesterVersion)) {
-    foreach ($pester in (Get-Module 'Pester')) {
+# Get rid of older MS Pester
+if ((Get-Module 'Pester' -ErrorAction 'Ignore') -and ((Get-Module 'Pester' -ErrorAction 'Ignore').Version -ne $PesterVersion)) {
+    foreach ($pester in (Get-Module 'Pester' -ErrorAction 'Ignore')) {
         if (([IO.DirectoryInfo] $pester.ModuleBase).Parent.Exists) {
             # https://pester.dev/docs/introduction/installation#removing-the-built-in-version-of-pester
             $oldPesterModule = ([IO.DirectoryInfo] $pester.ModuleBase).Parent.FullName
@@ -32,11 +45,26 @@ if ((Get-Module 'Pester') -and ((Get-Module 'Pester').Version -ne $PesterVersion
         }
     }
     Remove-Module 'Pester' -Force
+}
 
+# Install all of the modules in the $installModules hashtable.
+foreach ($module in $installModules.GetEnumerator()) {
+    if (-not (Get-Module -Name $module.Name -ListAvailable -ErrorAction 'Ignore')) {
+        if ($module.Value -is [hashtable]) {
+            $install = $module.Value
+            $install.Set_Item('Name', $module.Name)
+        } else {
+            $install = @{
+                Name = $module.Name
+            }
+            if ($module.Value -ne 'latest') {
+                $install.Set_Item('RequiredVersion', $module.Value)
+            }
+        }
+        Install-Module @install -Scope 'CurrentUser' -Force
+    }
     Install-Module 'Pester' -RequiredVersion $PesterVersion -SkipPublisherCheck -Scope 'CurrentUser' -Force
 }
 
-if (!(Get-Module -Name 'psake' -ListAvailable)) { Install-Module -Name 'psake' -Scope 'CurrentUser' -Force }
-if (!(Get-Module -Name 'PSDeploy' -ListAvailable)) { Install-Module -Name 'PSDeploy' -Scope 'CurrentUser' -Force }
-
+# Run the *real* build script.
 Invoke-psake -BuildFile "$PSScriptRoot\buildPsake.ps1" -TaskList $Task -Verbose:$VerbosePreference
