@@ -62,8 +62,8 @@ foreach ($module in $installModules.GetEnumerator()) {
             }
         }
         Install-Module @install -Scope 'CurrentUser' -Force
+        Get-Module -Name $module.Name -ListAvailable
     }
-    Install-Module 'Pester' -RequiredVersion $PesterVersion -SkipPublisherCheck -Scope 'CurrentUser' -Force
 }
 
 # Run the *real* build script.
