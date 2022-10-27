@@ -4,8 +4,15 @@ param(
     $Task = 'default',
 
     [version]
-    $PesterVersion = '5.3.3'
+    $PesterVersion = '5.3.3',
+
+    [version]
+    $NuGetPPMinVersion = '2.8.5.201'
 )
+
+if (-not (Get-PackageProvider 'NuGet' | Where-Object { $_.Version -ge $NuGetPPMinVersion })) {
+    Install-PackageProvider -Name 'NuGet' -MinimumVersion $NuGetPPMinVersion -Force | Out-Null
+}
 
 if ((Get-Module 'Pester') -and ((Get-Module 'Pester').Version -ne $PesterVersion)) {
     foreach ($pester in (Get-Module 'Pester')) {
@@ -20,7 +27,6 @@ if ((Get-Module 'Pester') -and ((Get-Module 'Pester').Version -ne $PesterVersion
     }
     Remove-Module 'Pester' -Force
 
-    Install-PackageProvider -Name NuGet -MinimumVersion '2.8.5.201' -Force | Out-Null
     Install-Module 'Pester' -RequiredVersion $PesterVersion -SkipPublisherCheck -Scope 'CurrentUser' -Force
 }
 
