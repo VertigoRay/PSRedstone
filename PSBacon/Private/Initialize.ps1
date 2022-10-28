@@ -7,21 +7,23 @@ class Bacon {
     hidden [string] $_Product = $null
     hidden [string] $_Version = $null
     hidden [string] $_Action = $null
+    hidden [hashtable] $_CimInstance = $null
+    hidden [hashtable] $_OS = $null
+    hidden [hashtable] $_Env = $null
     [string] $ExitCode = 0
     [System.Collections.ArrayList] $Exiting = @()
 
+    # [hashtable] $Env = @{}
+    # [hashtable] $OS = @{}
     [hashtable] $Settings = @{}
+
     [bool] $IsElevated = (New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
     # Use the default settings, don't read any of the settings in from the registry. In production this is never set.
     [bool] $OnlyUseDefaultSettings = $false
-    [Management.Automation.InvocationInfo] $MyInvocation = $MyInvocation
-
-    # Bacon() {
-    # }
-
-    # Bacon([Management.Automation.InvocationInfo] $ParentMyInvocation) {
-    #     $this.MyInvocation = $ParentMyInvocation
-    # }
+    [hashtable] $Debug = @{
+        MyInvocation = $MyInvocation
+        PSCallStack = (Get-PSCallStack)
+    }
 
     static Bacon() {
         # Creating some custom setters that update other properties, like Log Paths, when related properties are changed.
@@ -61,12 +63,69 @@ class Bacon {
             $this._Action = $value
             $this.LogSetUp()
         } -Force
+        Update-TypeData -TypeName 'Bacon' -MemberName 'Env' -MemberType 'ScriptProperty' -Value {
+            # Getter
+            if (-not $this._Env) {
+                # This is the Lazy Loading logic.
+                if (-not $this._OS) {
+                    $this.SetUpOS()
+                }
+                $this.SetUpEnv()
+            }
+            return $this._Env
+        } -Force
+        Update-TypeData -TypeName 'Bacon' -MemberName 'OS' -MemberType 'ScriptProperty' -Value {
+            # Getter
+            if (-not $this._OS) {
+                # This is the Lazy Loading logic.
+                $this.SetUpOS()
+            }
+            return $this._OS
+        } -Force
+        Update-TypeData -TypeName 'Bacon' -MemberName 'CimInstance' -MemberType 'ScriptProperty' -Value {
+            # Getter
+            $className = $MyInvocation.Line.Split('.')[2]
+            if (-not $this._CimInstance) {
+                $this._CimInstance = @{}
+            }
+            if ($className -and -not $this._CimInstance.$className) {
+                # This is the Lazy Loading logic.
+                $this._CimInstance.Add($className, (Get-CimInstance -ClassName $className -ErrorAction 'Ignore'))
+            }
+            return $this._CimInstance
+        } -Force
+    }
+
+    Bacon() {
+        $this.SetUpSettings()
+
+        $this.Settings.JSON = @{}
+        $this.Settings.JSON.File = [IO.FileInfo] ([IO.Path]::Combine($PWD, 'settings.json'))
+        if ($this.Settings.JSON.File.Exists) {
+            $this.Settings.JSON.Data = Get-Content $this.Settings.JSON.File.FullName | ConvertFrom-Json
+        } else {
+            $this.Settings.JSON.File = [IO.FileInfo] ([IO.Path]::Combine(([IO.FileInfo] $this.Debug.PSCallStack[1].ScriptName).Directory.FullName, 'settings.json'))
+            if ($this.Settings.JSON.File.Exists) {
+                $this.Settings.JSON.Data = Get-Content $this.Settings.JSON.File.FullName | ConvertFrom-Json
+            } else {
+                Throw [System.IO.FileNotFoundException] $this.Settings.JSON.File.FullName
+            }
+        }
+        $_settings = $this.Settings.JSON.Data
+
+        $this.SetDefaultSettingsFromRegistry($this.Settings.Registry.Key)
+        $this.SetPSDefaultParameterValues($this.Settings.Functions)
+
+        $this.set__Publisher($_settings.Publisher)
+        $this.set__Product($_settings.Product)
+        $this.set__Version($_settings.Version)
+        $this.set__Action(([IO.FileInfo] $this.Debug.PSCallStack[1].ScriptName).BaseName)
+
+        $this.SetUpLog()
     }
 
     Bacon([string] $Publisher, [string] $Product, [string] $Version, [string] $Action) {
-        $global:InformationPreference = 'Continue'
-
-        $this.SettingsSetUp()
+        $this.SetUpSettings()
         $this.SetDefaultSettingsFromRegistry($this.Settings.Registry.Key)
         $this.SetPSDefaultParameterValues($this.Settings.Functions)
 
@@ -75,17 +134,85 @@ class Bacon {
         $this.set__Version($Version)
         $this.set__Action($Action)
 
-        $this.LogSetUp()
+        $this.SetUpLog()
     }
 
-    hidden [void] SettingsSetUp() {
-        $this.Settings = @{}
-        $this.Settings.Registry = @{
-            Key = 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\PSBacon'
+    hidden [void] SetUpEnv() {
+        $this._Env = @{}
+        if ($this.OS.Is64BitOperatingSystem) {
+            # x64 Os
+            if ($this.OS.Is64BitProcess) {
+                # x64 Process
+                $this._Env.CommonProgramFiles = $env:CommonProgramFiles
+                $this._Env.'CommonProgramFiles(x86)' = ${env:CommonProgramFiles(x86)}
+                $this._Env.ProgramFiles = $env:ProgramFiles
+                $this._Env.'ProgramFiles(x86)' = ${env:ProgramFiles(x86)}
+                $this._Env.System32 = "${env:SystemRoot}\System32"
+                $this._Env.SysWOW64 = "${env:SystemRoot}\SysWOW64"
+            } else {
+                # Running as x86 on x64 OS
+                $this._Env.CommonProgramFiles = $env:CommonProgramW6432
+                $this._Env.'CommonProgramFiles(x86)' = ${env:CommonProgramFiles(x86)}
+                $this._Env.ProgramFiles = $env:ProgramW6432
+                $this._Env.'ProgramFiles(x86)' = ${env:ProgramFiles(x86)}
+                $this._Env.System32 = "${env:SystemRoot}\SysNative"
+                $this._Env.SysWOW64 = "${env:SystemRoot}\SysWOW64"
+            }
+        } else {
+            # x86 OS
+            $this._Env.CommonProgramFiles = $env:CommonProgramFiles
+            $this._Env.'CommonProgramFiles(x86)' = $env:CommonProgramFiles
+            $this._Env.ProgramFiles = $env:ProgramFiles
+            $this._Env.'ProgramFiles(x86)' = $env:ProgramFiles
+            $this._Env.System32 = "${env:SystemRoot}\System32"
+            $this._Env.SysWOW64 = "${env:SystemRoot}\System32"
+        }
+
+        if ($env:PROCESSOR_ARCHITEW6432) {
+            # Running as x86 on x64 OS
+            $this._Env.PROCESSOR_ARCHITECTURE = $env:PROCESSOR_ARCHITEW6432
+        } else {
+            # x86 or x64
+            $this._Env.PROCESSOR_ARCHITECTURE = $env:PROCESSOR_ARCHITECTURE
+        }
+
+        [hashtable] $this._Env.ProfileList = @{}
+        $regProfileListPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList'
+        $regProfileList = Get-Item $regProfileListPath
+        foreach ($property in $regProfileList.Property) {
+            $this._Env.ProfileList.Add($property, (Get-ItemProperty -Path $regProfileListPath).$property)
+        }
+
+        [System.Collections.ArrayList] $this._Env.ProfileList.Profiles = @()
+        foreach ($userProfile in (Get-ChildItem $regProfileListPath)) {
+            [hashtable] $user = @{}
+            $user.Add('SID', $userProfile.PSChildName)
+            $user.Add('Path', (Get-ItemProperty "${regProfileListPath}\$($userProfile.PSChildName)").ProfileImagePath)
+            $objSID = New-Object System.Security.Principal.SecurityIdentifier($user.SID)
+            try {
+                $objUser = $objSID.Translate([System.Security.Principal.NTAccount])
+                $domainUsername = $objUser.Value
+            } catch [System.Management.Automation.MethodInvocationException] {
+                Write-Warning "Unable to translate the SID ($($user.SID)) to a Username."
+                $domainUsername = $null
+            }
+
+            $domain, $username = $domainUsername.Split('\')
+            try {
+                $user.Add('Domain', $domain.Trim())
+            } catch {
+                $user.Add('Domain', $null)
+            }
+            try {
+                $user.Add('Username', $username.Trim())
+            } catch {
+                $user.Add('Username', $domainUsername)
+            }
+            ($this._Env.ProfileList.Profiles).Add($user) | Out-Null
         }
     }
 
-    hidden [void] LogSetUp() {
+    hidden [void] SetUpLog() {
         $this.Settings.Log = @{}
 
         if (Assert-BaconIsElevated) {
@@ -102,6 +229,60 @@ class Bacon {
         $this.Settings.Log.File = [IO.FileInfo] (Join-Path $private:Directory.FullName ('{0} {1} {2} {3}.log' -f $this.Publisher, $this.Product, $this.Version, $this.Action))
         $this.Settings.Log.FileF = (Join-Path $private:Directory.FullName ('{0} {1} {2} {3}{{0}}.log' -f $this.Publisher, $this.Product, $this.Version, $this.Action)) -as [string]
         $this.PSDefaultParameterValuesSetUp()
+    }
+
+    hidden [void] SetUpSettings() {
+        $this.Settings = @{}
+        $this.Settings.Registry = @{
+            Key = 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\PSBacon'
+        }
+    }
+
+    hidden [void] SetUpOS() {
+        $this._OS = @{}
+        [psobject]  $this._OS.WMI = $this.CimInstance.Win32_OperatingSystem
+        [boolean]   $this._OS.Is64BitOperatingSystem = [System.Environment]::Is64BitOperatingSystem
+        [boolean]   $this._OS.Is64BitProcess = [System.Environment]::Is64BitProcess
+        [boolean]   $this._OS.Is64BitProcessor = (($this.CimInstance.Win32_Processor | Where-Object { $_.DeviceID -eq 'CPU0' } | Select-Object -ExpandProperty AddressWidth) -eq '64')
+        [boolean]   $this._OS.IsMachinePartOfDomain = ($this.CimInstance.Win32_ComputerSystem).PartOfDomain
+
+        [string]    $this._OS.MachineWorkgroup = $null
+        [string]    $this._OS.MachineADDomain = $null
+        [string]    $this._OS.LogonServer = $null
+        [string]    $this._OS.MachineDomainController = $null
+        if ($this._OS.IsMachinePartOfDomain) {
+            [string] $this._OS.MachineADDomain = ($this.CimInstance.Win32_ComputerSystem).Domain | Where-Object { $_ } | ForEach-Object { $_.ToLower() }
+            try {
+                [string] $this._OS.LogonServer = $env:LOGONSERVER | Where-Object { (($_) -and (-not $_.Contains('\\MicrosoftAccount'))) } | ForEach-Object { $_.TrimStart('\') } | ForEach-Object { ([System.Net.Dns]::GetHostEntry($_)).HostName }
+                [string]$MachineDomainController = [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain().FindDomainController().Name
+            } catch {}
+        } else {
+            [string] $this._OS.MachineWorkgroup = ($this.CimInstance.Win32_ComputerSystem).Domain | Where-Object { $_ } | ForEach-Object { $_.ToUpper() }
+        }
+        [string]    $this._OS.MachineDNSDomain = [System.Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties().DomainName | Where-Object { $_ } | ForEach-Object { $_.ToLower() }
+        [string]    $this._OS.UserDNSDomain = $env:USERDNSDOMAIN | Where-Object { $_ } | ForEach-Object { $_.ToLower() }
+        [string]    $this._OS.UserDomain = $env:USERDOMAIN | Where-Object { $_ } | ForEach-Object { $_.ToUpper() }
+        [string]    $this._OS.Name = $this._OS.WMI.Name.Trim()
+        [string]    $this._OS.ShortName = (($this._OS.Name).Split('|')[0] -replace '\w+\s+(Windows [\d\.]+\s+\w+)', '$1').Trim()
+        [string]    $this._OS.ShorterName = (($this._OS.Name).Split('|')[0] -replace '\w+\s+(Windows [\d\.]+)\s+\w+', '$1').Trim()
+        [string]    $this._OS.ServicePack = $this._OS.WMI.CSDVersion
+        [version]   $this._OS.Version = [System.Environment]::OSVersion.Version
+        #  Get the operating system type
+        [int32]     $this._OS.ProductType = $this._OS.WMI.ProductType
+        [boolean]   $this._OS.IsServerOS = [boolean]($this._OS.ProductType -eq 3)
+        [boolean]   $this._OS.IsDomainControllerOS = [boolean]($this._OS.ProductType -eq 2)
+        [boolean]   $this._OS.IsWorkStationOS = [boolean]($this._OS.ProductType -eq 1)
+        Switch ($this._OS.ProductType) {
+            1       { [string] $this._OS.ProductTypeName = 'Workstation' }
+            2       { [string] $this._OS.ProductTypeName = 'Domain Controller' }
+            3       { [string] $this._OS.ProductTypeName = 'Server' }
+            Default { [string] $this._OS.ProductTypeName = 'Unknown' }
+        }
+    }
+
+    hidden [void] SetUpVars() {
+        $this.SetUpOS()
+        $this.SetUpEnv()
     }
 
     hidden [void] PSDefaultParameterValuesSetUp() {
@@ -212,15 +393,29 @@ class Bacon {
     }
 
     hidden [void] SetPSDefaultParameterValues([hashtable] $FunctionParameters) {
-        foreach ($function in $FunctionParameters.GetEnumerator()) {
-            Write-Debug ('[Bacon::SetPSDefaultParameterValues] Function Type: [{0}]' -f $function.GetType().FullName)
-            Write-Debug ('[Bacon::SetPSDefaultParameterValues] Function: {0}: {1}' -f $function.Name, ($function.Value | ConvertTo-Json))
-            foreach ($parameter in $function.Value.GetEnumerator()) {
-                Write-Debug ('[Bacon::SetPSDefaultParameterValues] Parameter: {0}: {1}' -f $parameter.Name, ($parameter.Value | ConvertTo-Json))
-                Write-Debug ('[Bacon::SetPSDefaultParameterValues] PSDefaultParameterValues: {0}:{1} :: {2}' -f $function.Name, $parameter.Name, $parameter.Value)
-                $global:PSDefaultParameterValues.Set_Item(('{0}:{1}' -f $function.Name, $parameter.Name), $parameter.Value)
+        if ($FunctionParameters) {
+            foreach ($function in $FunctionParameters.GetEnumerator()) {
+                Write-Debug ('[Bacon::SetPSDefaultParameterValues] Function Type: [{0}]' -f $function.GetType().FullName)
+                Write-Debug ('[Bacon::SetPSDefaultParameterValues] Function: {0}: {1}' -f $function.Name, ($function.Value | ConvertTo-Json))
+                foreach ($parameter in $function.Value.GetEnumerator()) {
+                    Write-Debug ('[Bacon::SetPSDefaultParameterValues] Parameter: {0}: {1}' -f $parameter.Name, ($parameter.Value | ConvertTo-Json))
+                    Write-Debug ('[Bacon::SetPSDefaultParameterValues] PSDefaultParameterValues: {0}:{1} :: {2}' -f $function.Name, $parameter.Name, $parameter.Value)
+                    $global:PSDefaultParameterValues.Set_Item(('{0}:{1}' -f $function.Name, $parameter.Name), $parameter.Value)
+                }
             }
         }
+    }
+
+    [psobject] GetSpecialFolders() {
+        $specialFolders = [ordered] @{}
+        foreach ($folder in ([Environment+SpecialFolder]::GetNames([Environment+SpecialFolder]) | Sort-Object)) {
+            $specialFolders.Add($folder, $this.GetSpecialFolder($folder))
+        }
+        return ([psobject] $specialFolders)
+    }
+
+    [IO.DirectoryInfo] GetSpecialFolder([string] $Name) {
+        return ([Environment]::GetFolderPath($Name) -as [IO.DirectoryInfo])
     }
 }
 
