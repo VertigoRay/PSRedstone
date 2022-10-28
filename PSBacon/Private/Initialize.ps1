@@ -13,11 +13,7 @@ class Bacon {
     hidden [hashtable] $_ProfileList = $null
     [string] $ExitCode = 0
     [System.Collections.ArrayList] $Exiting = @()
-
-    # [hashtable] $Env = @{}
-    # [hashtable] $OS = @{}
     [hashtable] $Settings = @{}
-
     [bool] $IsElevated = (New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
     # Use the default settings, don't read any of the settings in from the registry. In production this is never set.
     [bool] $OnlyUseDefaultSettings = $false
@@ -73,9 +69,6 @@ class Bacon {
             # Getter
             if (-not $this._Env) {
                 # This is the Lazy Loading logic.
-                if (-not $this._OS) {
-                    $this.SetUpOS()
-                }
                 $this.SetUpEnv()
             }
             return $this._Env
@@ -90,43 +83,9 @@ class Bacon {
         } -Force
         Update-TypeData -TypeName 'Bacon' -MemberName 'ProfileList' -MemberType 'ScriptProperty' -Value {
             # Getter
-            Write-Debug 'GETTER: ProfileList'
             if (-not $this._ProfileList) {
-                Write-Debug 'GETTER: Setting up ProfileList'
-                $this._ProfileList = @{}
-                $regProfileListPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList'
-                $regProfileList = Get-Item $regProfileListPath
-                foreach ($property in $regProfileList.Property) {
-                    $this.ProfileList.Add($property, (Get-ItemProperty -Path $regProfileListPath).$property)
-                }
-
-                [System.Collections.ArrayList] $this.ProfileList.Profiles = @()
-                foreach ($userProfile in (Get-ChildItem $regProfileListPath)) {
-                    [hashtable] $user = @{}
-                    $user.Add('SID', $userProfile.PSChildName)
-                    $user.Add('Path', (Get-ItemProperty "${regProfileListPath}\$($userProfile.PSChildName)").ProfileImagePath)
-                    $objSID = New-Object System.Security.Principal.SecurityIdentifier($user.SID)
-                    try {
-                        $objUser = $objSID.Translate([System.Security.Principal.NTAccount])
-                        $domainUsername = $objUser.Value
-                    } catch [System.Management.Automation.MethodInvocationException] {
-                        Write-Warning "Unable to translate the SID ($($user.SID)) to a Username."
-                        $domainUsername = $null
-                    }
-
-                    $domain, $username = $domainUsername.Split('\')
-                    try {
-                        $user.Add('Domain', $domain.Trim())
-                    } catch {
-                        $user.Add('Domain', $null)
-                    }
-                    try {
-                        $user.Add('Username', $username.Trim())
-                    } catch {
-                        $user.Add('Username', $domainUsername)
-                    }
-                    ($this.ProfileList.Profiles).Add($user) | Out-Null
-                }
+                # This is the Lazy Loading logic.
+                $this.SetUpProfileList()
             }
             return $this._ProfileList
         } -Force
@@ -173,17 +132,21 @@ class Bacon {
         $this.SetUpLog()
     }
 
-    hidden [object] GetCimInstance($ClassName) {
-        return $this.GetCimInstance($ClassName, $false)
+    [object] GetCimInstance($ClassName) {
+        return $this.GetCimInstance($ClassName, $false, $false)
     }
 
-    hidden [object] GetCimInstance($ClassName, $ReturnCimInstanceNotClass) {
+    [object] GetCimInstance($ClassName, $ReturnCimInstanceNotClass) {
+        return $this.GetCimInstance($ClassName, $ReturnCimInstanceNotClass, $false)
+    }
+
+    [object] GetCimInstance($ClassName, $ReturnCimInstanceNotClass, $Refresh) {
         # This is the Lazy Loading logic.
         if (-not $this._CimInstance) {
             $this._CimInstance = @{}
         }
-        if ($ClassName -and -not $this._CimInstance.$ClassName) {
-            $this._CimInstance.Add($ClassName, (Get-CimInstance -ClassName $ClassName -ErrorAction 'Ignore'))
+        if ($Refresh -or ($ClassName -and -not $this._CimInstance.$ClassName)) {
+            $this._CimInstance.Set_Item($ClassName, (Get-CimInstance -ClassName $ClassName -ErrorAction 'Ignore'))
         }
         if ($ReturnCimInstanceNotClass) {
             return $this._CimInstance
@@ -194,9 +157,9 @@ class Bacon {
 
     hidden [void] SetUpEnv() {
         $this._Env = @{}
-        if ($this.OS.Is64BitOperatingSystem) {
+        if ([System.Environment]::Is64BitOperatingSystem) {
             # x64 OS
-            if ($this.OS.Is64BitProcess) {
+            if ([System.Environment]::Is64BitProcess) {
                 # x64 Process
                 $this._Env.CommonProgramFiles = $env:CommonProgramFiles
                 $this._Env.'CommonProgramFiles(x86)' = ${env:CommonProgramFiles(x86)}
@@ -263,7 +226,6 @@ class Bacon {
         [bool]   $this._OS.Is64BitOperatingSystem = [System.Environment]::Is64BitOperatingSystem
         [bool]   $this._OS.Is64BitProcess = [System.Environment]::Is64BitProcess
 
-        $win32Processor = $this.GetCimInstance('Win32_Processor')
         [bool] $this._OS.Is64BitProcessor = ($this.GetCimInstance('Win32_Processor')| Where-Object { $_.DeviceID -eq 'CPU0' }).AddressWidth -eq '64'
         [bool]      $this._OS.IsMachinePartOfDomain = $this.GetCimInstance('Win32_ComputerSystem').PartOfDomain
 
@@ -298,6 +260,47 @@ class Bacon {
             2       { [string] $this._OS.ProductTypeName = 'Domain Controller' }
             3       { [string] $this._OS.ProductTypeName = 'Server' }
             Default { [string] $this._OS.ProductTypeName = 'Unknown' }
+        }
+    }
+
+    hidden [void] SetUpProfileList() {
+        Write-Debug 'GETTER: ProfileList'
+        if (-not $this._ProfileList) {
+            Write-Debug 'GETTER: Setting up ProfileList'
+            $this._ProfileList = @{}
+            $regProfileListPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList'
+            $regProfileList = Get-Item $regProfileListPath
+            foreach ($property in $regProfileList.Property) {
+                $this._ProfileList.Add($property, (Get-ItemProperty -Path $regProfileListPath).$property)
+            }
+
+            [System.Collections.ArrayList] $this._ProfileList.Profiles = @()
+            foreach ($userProfile in (Get-ChildItem $regProfileListPath)) {
+                [hashtable] $user = @{}
+                $user.Add('SID', $userProfile.PSChildName)
+                $user.Add('Path', (Get-ItemProperty "${regProfileListPath}\$($userProfile.PSChildName)").ProfileImagePath)
+                $objSID = New-Object System.Security.Principal.SecurityIdentifier($user.SID)
+                try {
+                    $objUser = $objSID.Translate([System.Security.Principal.NTAccount])
+                    $domainUsername = $objUser.Value
+                } catch [System.Management.Automation.MethodInvocationException] {
+                    Write-Warning "Unable to translate the SID ($($user.SID)) to a Username."
+                    $domainUsername = $null
+                }
+
+                $domain, $username = $domainUsername.Split('\')
+                try {
+                    $user.Add('Domain', $domain.Trim())
+                } catch {
+                    $user.Add('Domain', $null)
+                }
+                try {
+                    $user.Add('Username', $username.Trim())
+                } catch {
+                    $user.Add('Username', $domainUsername)
+                }
+                ($this._ProfileList.Profiles).Add($user) | Out-Null
+            }
         }
     }
 
