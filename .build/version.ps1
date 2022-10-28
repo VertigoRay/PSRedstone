@@ -23,7 +23,7 @@ if (-not $env:MODULE_VERSION) {
     Write-Debug ('[version.ps1] versionMMB: {0}' -f $versionMMB)
     $versionR = (New-TimeSpan -Start ([datetime]::Today)).TotalSeconds -as [int]
     Write-Debug ('[version.ps1] versionR: {0}' -f $versionR)
-    
+
     $env:MODULE_VERSION = '{0}.{1}' -f $versionMMB, $versionR
 } else {
     Write-Debug ('[version.ps1] env:MODULE_VERSION already set.')

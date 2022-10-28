@@ -103,5 +103,5 @@ task Test {
 }
 
 task Deploy -depends Analyze, Test {
-    Invoke-PSDeploy -Path '.\ServerInfo.psdeploy.ps1' -Force -Verbose:$VerbosePreference
+    Invoke-PSDeploy -Path ([IO.Path]::Combine($PSScriptRoot, 'deploy.ps1')) -Force -Verbose:$VerbosePreference
 }
