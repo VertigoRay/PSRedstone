@@ -39,7 +39,7 @@ function Mount-BaconWim {
         )]
         [ValidateNotNullOrEmpty()]
         [IO.DirectoryInfo]
-        $MountPath = (Join-Path $PWD 'BaconMount'),
+        $MountPath = ([IO.Path]::Combine($env:Temp, 'BaconMount')),
 
         [Parameter(Mandatory = $false)]
         [int]

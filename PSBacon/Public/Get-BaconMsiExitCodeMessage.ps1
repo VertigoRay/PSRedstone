@@ -15,7 +15,7 @@ This is an internal script function and should typically not be called directly.
 http://msdn.microsoft.com/en-us/library/aa368542(v=vs.85).aspx
 http://psappdeploytoolkit.com
 #>
-function Global:Get-BaconMsiExitCodeMessage {
+function Get-BaconMsiExitCodeMessage {
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory=$true)]

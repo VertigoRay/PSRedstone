@@ -2,7 +2,7 @@ Describe 'BaconWim' -Tag 'WIM' {
     [IO.FileInfo] $capturePath = [IO.Path]::Combine($psProjectRoot.FullName, 'PSBacon')
     $imagePath = [IO.Path]::Combine('TestDrive:', 'dev', 'PSBacon', 'PSBacon.wim')
     $mountPath = [IO.Path]::Combine('TestDrive:', 'dev', 'Mount_PSBacon')
-    [bool] $isElevated = (New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
+    [bool] $script:isElevated = (New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
 
     BeforeAll {
         $psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
@@ -18,7 +18,7 @@ Describe 'BaconWim' -Tag 'WIM' {
 
     Context 'NEW' {
         It 'Should be elevated to create WIMs' {
-            $isElevated | Should -Be $true
+            (New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator) | Should -Be $true
         }
 
         if ((New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)) {

@@ -31,7 +31,7 @@ class Bacon {
             param($value)
             # Setter
             $this._Publisher = $value
-            $this.LogSetUp()
+            $this.SetUpLog()
         } -Force
         Update-TypeData -TypeName 'Bacon' -MemberName 'Product' -MemberType 'ScriptProperty' -Value {
             # Getter
@@ -40,7 +40,7 @@ class Bacon {
             param($value)
             # Setter
             $this._Product = $value
-            $this.LogSetUp()
+            $this.SetUpLog()
         } -Force
         Update-TypeData -TypeName 'Bacon' -MemberName 'Version' -MemberType 'ScriptProperty' -Value {
             # Getter
@@ -49,7 +49,7 @@ class Bacon {
             param($value)
             # Setter
             $this._Version = $value
-            $this.LogSetUp()
+            $this.SetUpLog()
         } -Force
         Update-TypeData -TypeName 'Bacon' -MemberName 'Action' -MemberType 'ScriptProperty' -Value {
             # Getter
@@ -58,7 +58,7 @@ class Bacon {
             param($value)
             # Setter
             $this._Action = $value
-            $this.LogSetUp()
+            $this.SetUpLog()
         } -Force
         Update-TypeData -TypeName 'Bacon' -MemberName 'CimInstance' -MemberType 'ScriptProperty' -Value {
             # Getter
@@ -132,15 +132,15 @@ class Bacon {
         $this.SetUpLog()
     }
 
-    [object] GetCimInstance($ClassName) {
+    hidden [object] GetCimInstance($ClassName) {
         return $this.GetCimInstance($ClassName, $false, $false)
     }
 
-    [object] GetCimInstance($ClassName, $ReturnCimInstanceNotClass) {
+    hidden [object] GetCimInstance($ClassName, $ReturnCimInstanceNotClass) {
         return $this.GetCimInstance($ClassName, $ReturnCimInstanceNotClass, $false)
     }
 
-    [object] GetCimInstance($ClassName, $ReturnCimInstanceNotClass, $Refresh) {
+    hidden [object] GetCimInstance($ClassName, $ReturnCimInstanceNotClass, $Refresh) {
         # This is the Lazy Loading logic.
         if (-not $this._CimInstance) {
             $this._CimInstance = @{}
@@ -155,7 +155,13 @@ class Bacon {
         }
     }
 
+    [object] CimInstanceRefreshed($ClassName) {
+        return $this.GetCimInstance($ClassName, $false, $true)
+    }
+
     hidden [void] SetUpEnv() {
+        # This section
+
         $this._Env = @{}
         if ([System.Environment]::Is64BitOperatingSystem) {
             # x64 OS
@@ -238,7 +244,9 @@ class Bacon {
             try {
                 [string] $this._OS.LogonServer = $env:LOGONSERVER | Where-Object { (($_) -and (-not $_.Contains('\\MicrosoftAccount'))) } | ForEach-Object { $_.TrimStart('\') } | ForEach-Object { ([System.Net.Dns]::GetHostEntry($_)).HostName }
                 [string] $this._OS.MachineDomainController = [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain().FindDomainController().Name
-            } catch {}
+            } catch {
+                Write-Verbose 'Not in AD'
+            }
         } else {
             [string] $this._OS.MachineWorkgroup = $this.GetCimInstance('Win32_ComputerSystem').Domain | Where-Object { $_ } | ForEach-Object { $_.ToUpper() }
         }

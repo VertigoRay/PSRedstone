@@ -71,7 +71,7 @@ if ($global:Winstall.Vars.OS.Is64BitOperatingSystem) {
 .LINK
 http://psappdeploytoolkit.com
 #>
-function Global:Invoke-BaconMSI {
+function Invoke-BaconMSI {
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory=$false)]

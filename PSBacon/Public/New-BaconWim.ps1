@@ -45,7 +45,7 @@ function New-BaconWim {
         }
 
         if ($WhatIf.IsPresent) {
-            Write-Host ('What if: Performing the operation "New-WindowsImage" with parameters: {0}' -f ($windowsImage | ConvertTo-Json))
+            Write-Information ('What if: Performing the operation "New-WindowsImage" with parameters: {0}' -f ($windowsImage | ConvertTo-Json)) -InformationAction Continue
         } else {
             New-WindowsImage @windowsImage
         }

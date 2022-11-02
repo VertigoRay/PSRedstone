@@ -48,18 +48,18 @@ Passes Directly to `Start-Process`; see `Get-Help Start-Process`.
 }
 .EXAMPLE
 # Use `Cmd` parameter
-$result = Invoke-Run """${firefox_setup_exe}"" /INI=""${ini}"""
+$result = Invoke-BaconRun """${firefox_setup_exe}"" /INI=""${ini}"""
 .EXAMPLE
 # Use `FilePath` and `ArgumentList` parameters
-$result = Invoke-Run -FilePath $firefox_setup_exe -ArgumentList @("/INI=""${ini}""")
+$result = Invoke-BaconRun -FilePath $firefox_setup_exe -ArgumentList @("/INI=""${ini}""")
 .EXAMPLE
 # Get the ExitCode
-$result = Invoke-Run """${firefox_setup_exe}"" /INI=""${ini}"""
+$result = Invoke-BaconRun """${firefox_setup_exe}"" /INI=""${ini}"""
 $result.Process.ExitCode
 .LINK
-https://git.cas.unt.edu/winstall/winstall/wikis/Invoke-Run
+https://git.cas.unt.edu/winstall/winstall/wikis/Invoke-BaconRun
 #>
-function Global:Invoke-Run {
+function Invoke-BaconRun {
     [OutputType([hashtable])]
     [CmdletBinding()]
     param (

@@ -1,6 +1,6 @@
 #Requires -RunAsAdministrator
 
-function global:Dismount-BaconWim {
+function Dismount-BaconWim {
     [CmdletBinding()]
     param (
         # Specifies a path to one or more locations.

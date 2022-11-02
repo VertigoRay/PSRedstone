@@ -26,7 +26,7 @@ Get-BaconInstalledApplication -ProductCode '{1AD147D0-BE0E-3D6C-AC11-64F6DC4163F
 .LINK
 http://psappdeploytoolkit.com
 #>
-Function Global:Get-BaconInstalledApplication {
+Function Get-BaconInstalledApplication {
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory=$false)]
@@ -190,5 +190,5 @@ Function Global:Get-BaconInstalledApplication {
     return $installedApplication
 }
 
-$VerbosePreference = 'c'
-Get-BaconInstalledApplication -Name '*PowerShell*' -WildCard
+# $VerbosePreference = 'c'
+# Get-BaconInstalledApplication -Name '*PowerShell*' -WildCard

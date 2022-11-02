@@ -16,12 +16,12 @@ $installModules = @{
         SkipPublisherCheck = $true
     }
     psake = 'latest'
-    PSDeploy = 'latest'
+    # PSDeploy = 'latest'
 }
 
 $ErrorActionPreference = 'Stop'
 trap {
-    Write-Error $_ -ErrorAction 'Continue'
+    Write-Error ('( ಥ ͜ʖ ͡ಥ) {0}' -f $_) -ErrorAction 'Continue'
     if ($env:CI) {
         $Host.SetShouldExit(1)
     }

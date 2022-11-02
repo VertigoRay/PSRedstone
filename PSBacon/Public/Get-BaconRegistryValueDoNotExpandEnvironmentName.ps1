@@ -1,13 +1,13 @@
 <#
 .SYNOPSIS
-Is the current process elevated (running as administrator)?
+Get a registry value without expanding environment variables.
 .OUTPUTS
 [bool]
 .EXAMPLE
-PS > Assert-BaconIsElevated
+PS > Get-BaconRegistryValueDoNotExpandEnvironmentName HKCU:\Thing Foo
 True
 #>
-function Global:Get-RegistryValueDoNotExpandEnvironmentName {
+function Get-BaconRegistryValueDoNotExpandEnvironmentName {
     [OutputType([bool])]
     [CmdletBinding()]
     Param(
@@ -20,8 +20,8 @@ function Global:Get-RegistryValueDoNotExpandEnvironmentName {
         $Value
     )
 
-    Write-Verbose ('[Get-RegistryValueDoNotExpandEnvironmentName] >')
-    Write-Debug ('[Get-RegistryValueDoNotExpandEnvironmentName] > {0}' -f ($MyInvocation | Out-String))
+    Write-Verbose ('[Get-BaconRegistryValueDoNotExpandEnvironmentName] >')
+    Write-Debug ('[Get-BaconRegistryValueDoNotExpandEnvironmentName] > {0}' -f ($MyInvocation | Out-String))
 
     $item = Get-Item $Key
     if ($item) {

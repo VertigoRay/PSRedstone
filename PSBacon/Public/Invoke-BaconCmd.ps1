@@ -34,7 +34,7 @@ Invoke-BaconCmd "MKLINK /D Temp C:\Temp"
 .LINK
 https://git.cas.unt.edu/winstall/winstall/wikis/Invoke-BaconCmd
 #>
-function Global:Invoke-BaconCmd {
+function Invoke-BaconCmd {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory=$true, Position=1)]

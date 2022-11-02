@@ -7,7 +7,7 @@ Is the current process elevated (running as administrator)?
 PS > Assert-BaconIsElevated
 True
 #>
-function global:Assert-BaconIsElevated {
+function Assert-BaconIsElevated {
     [OutputType([bool])]
     [CmdletBinding()]
     Param()

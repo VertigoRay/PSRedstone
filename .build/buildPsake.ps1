@@ -1,11 +1,20 @@
+#Requires -Modules Pester,psake,PowerShellGet
+$ErrorActionPreference = 'Stop'
+trap {
+    Write-Error ('( ͡° ͜ʖ ͡°) {0}' -f $_) -ErrorAction 'Continue'
+    if ($env:CI) {
+        $Host.SetShouldExit(1)
+    }
+}
+
 properties {
     $script:thisModuleName = 'PSBacon'
     $script:PSScriptRootParent = ([IO.DirectoryInfo] $PSScriptRoot).Parent
     $script:ManifestJsonFile = [IO.Path]::Combine($script:PSScriptRootParent.FullName, $script:thisModuleName, 'Manifest.json')
-    $Script:BuildOutput = [IO.Path]::Combine($script:PSScriptRootParent.FullName, 'dev', 'BuildOutput')
+    $script:BuildOutput = [IO.Path]::Combine($script:PSScriptRootParent.FullName, 'dev', 'BuildOutput')
 
     $script:ParentDevModulePath = [IO.Path]::Combine($script:PSScriptRootParent.FullName, $script:thisModuleName)
-    $script:ParentModulePath = [IO.Path]::Combine($Script:BuildOutput, $script:thisModuleName)
+    $script:ParentModulePath = [IO.Path]::Combine($script:BuildOutput, $script:thisModuleName)
 
     $PSModulePath1 = $env:PSModulePath.Split(';')[1]
     $script:SystemModuleLocation = [IO.Path]::Combine($PSModulePath1, $thisModuleName)
@@ -55,7 +64,31 @@ task BuildManifest {
 
     $Manifest.Copyright = $Manifest.Copyright -f [DateTime]::Now.Year
     Write-Verbose ('$script:ParentDevModulePath: {0}' -f $script:ParentDevModulePath)
-    $Manifest.CmdletsToExport = (Get-ChildItem -Path ([IO.Path]::Combine($script:ParentDevModulePath, 'Public', '*.ps1')) -ErrorAction SilentlyContinue).BaseName
+    [System.Collections.ArrayList] $cmdletsToExport = @()
+    [System.Collections.ArrayList] $functionsToExport = @()
+
+    foreach ($public in (Get-ChildItem -Path ([IO.Path]::Combine($script:ParentDevModulePath, 'Public', '*.ps1')) -ErrorAction SilentlyContinue)) {
+        $fullName = $public.FullName
+        $baseName = $public.BaseName
+        $cmdletBinding = Invoke-Command -ScriptBlock {
+            . "${fullName}"
+            (Get-Command "$baseName").CmdletBinding
+        }
+        if ($cmdletBinding) {
+            $cmdletsToExport.Add($baseName) | Out-Null
+        } else {
+            $functionsToExport.Add($baseName) | Out-Null
+        }
+    }
+
+    if (-not $manifestJsonData.AliasesToExport) {
+        $Manifest.AliasesToExport = @()
+    }
+    $Manifest.CmdletsToExport = $cmdletsToExport
+    $Manifest.FunctionsToExport = $functionsToExport
+    if (-not $manifestJsonData.VariablesToExport) {
+        $Manifest.VariablesToExport = @()
+    }
 
     $Manifest.Remove('ModuleName')
 
@@ -87,7 +120,7 @@ task Build -Depends BuildManifest {
 }
 
 task PostAnalyze {
-    $saResults = Invoke-ScriptAnalyzer -Path ([IO.Path]::Combine($Script:BuildOutput, $script:thisModuleName)) -Severity @('Error', 'Warning') -Recurse -Verbose:$false
+    $saResults = Invoke-ScriptAnalyzer -Path ([IO.Path]::Combine($script:BuildOutput, $script:thisModuleName)) -Severity @('Error', 'Warning') -Recurse -Verbose:$false
     if ($saResults) {
         $saResults | Format-Table
         Write-Error -Message 'One or more Script Analyzer errors/warnings where found. Build cannot continue!'
@@ -95,13 +128,32 @@ task PostAnalyze {
 }
 
 task Test {
-    $testResults = Invoke-Pester -Path $PSScriptRoot -PassThru
+    $testResults = Invoke-Pester -Path ([IO.Path]::Combine($script:PSScriptRootParent, 'Tests')) -PassThru
     if ($testResults.FailedCount -gt 0) {
         $testResults | Format-List
         Write-Error -Message 'One or more Pester tests failed. Build cannot continue!'
     }
 }
 
-task Deploy -depends Analyze, Test {
-    Invoke-PSDeploy -Path ([IO.Path]::Combine($PSScriptRoot, 'deploy.ps1')) -Force -Verbose:$VerbosePreference
+# task Deploy -depends PostAnalyze,Test {
+task Deploy {
+    $registerPSRepo = @{
+        Name = 'PowerShell-ESE'
+        SourceLocation = 'http://ese-inedo.utsarr.net:8624/nuget/powershell-ese/'
+        PublishLocation = 'http://ese-inedo.utsarr.net:8624/nuget/powershell-ese/'
+    }
+    if (-not (Get-PSRepository $registerPSRepo.Name)) {
+        Write-Host "[PSAKE Deploy] Register-PSRepository: $($registerPSRepo | ConvertTo-Json)" -ForegroundColor 'DarkMagenta'
+        Register-PSRepository @registerPSRepo
+    }
+
+    $publishModule = @{
+        Path = ([IO.Path]::Combine($script:BuildOutput, $script:thisModuleName))
+        NuGetApiKey = $env:PROGET_POWERSHELL_ESE
+        Repository = 'PowerShell-ESE'
+        Force = $true
+        Verbose = $true
+    }
+    Write-Host "[PSAKE Deploy] Publish-Module: $($publishModule | ConvertTo-Json)" -ForegroundColor 'DarkMagenta'
+    Publish-Module @publishModule
 }

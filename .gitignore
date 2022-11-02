@@ -1,3 +1,4 @@
 *.wim
 BaconMount/*
 dev/*
+.build/env.ps1
