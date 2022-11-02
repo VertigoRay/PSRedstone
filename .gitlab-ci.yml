@@ -37,4 +37,4 @@ Deploy Module:
   tags:
     - WindowsPowerShell
   script: |
-    & '.\.build\build.ps1' -Task Deploy
+    & '.\.build\build.ps1' -Task Build,Deploy
