@@ -67,4 +67,7 @@ foreach ($module in $installModules.GetEnumerator()) {
 }
 
 # Run the *real* build script.
+if ($env:CI) {
+    $psake.use_exit_on_error = $true
+}
 Invoke-psake -BuildFile "$PSScriptRoot\buildPsake.ps1" -TaskList $Task -Verbose:$VerbosePreference
