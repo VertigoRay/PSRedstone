@@ -1,6 +1,9 @@
+#region DEVONLY
 . "${PSScriptRoot}\..\Public\Assert-BaconIsElevated.ps1"
 . "${PSScriptRoot}\..\Public\Get-BaconRegistryValueOrDefault.ps1"
 # . "${PSScriptRoot}\..\Public\Get-BaconRegistryValueDoNotExpandEnvironmentNames.ps1"
+#endregion
+
 
 class Bacon {
     hidden [string] $_Publisher = $null

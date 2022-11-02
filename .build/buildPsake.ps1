@@ -92,30 +92,56 @@ task BuildManifest {
 
     $Manifest.Remove('ModuleName')
 
-    $Manifest.Path = "${ParentModulePath}\${thisModuleName}.psd1"
+    $Manifest.Path = "${script:ParentModulePath}\${script:thisModuleName}.psd1"
     $Manifest.ModuleVersion = [version] $Version
     Write-Host "[PSAKE BuildManifest] New-ModuleManifest: $($Manifest | ConvertTo-Json)" -ForegroundColor 'DarkMagenta'
     New-ModuleManifest @Manifest
 }
 
 task Build -Depends BuildManifest {
-    $copyItem = @{
-        LiteralPath = [IO.Path]::Combine($script:ParentDevModulePath, ('{0}.psm1' -f $thisModuleName))
-        Destination = $script:ParentModulePath
-        Force       = $true
+    $modulePSM1 = [IO.Path]::Combine($script:ParentModulePath, ('{0}.psm1' -f $script:thisModuleName))
+    if (Test-Path $modulePSM1) {
+        Remove-Item -LiteralPath $modulePSM1 -Confirm:$false -Force
     }
-    Write-Host "[PSAKE Build] Copy-Item: $($copyItem | ConvertTo-Json)" -ForegroundColor 'DarkMagenta'
-    Copy-Item @copyItem
-
-    foreach ($directory in (Get-ChildItem ([IO.Path]::Combine($script:PSScriptRootParent.FullName, $script:thisModuleName)) -Directory)) {
-        $copyItem = @{
-            LiteralPath = $directory.FullName
-            Destination = $script:ParentModulePath
-            Recurse     = $true
-            Force       = $true
+    Write-Host "[PSAKE Build] Adding to:`t$($modulePSM1 | ConvertTo-Json)" -ForegroundColor 'DarkMagenta'
+    $ps1s = @(Get-ChildItem ([IO.Path]::Combine($script:PSScriptRootParent.FullName, $script:thisModuleName)) -Recurse -Filter '*.ps1' -File)
+    $psm1s = @(Get-ChildItem ([IO.Path]::Combine($script:PSScriptRootParent.FullName, $script:thisModuleName)) -Filter '*.psm1' -File)
+    foreach ($file in ($ps1s + $psm1s)) {
+        Write-Host "[PSAKE Build] `tAdding:`t`t$($file.FullName | ConvertTo-Json)" -ForegroundColor 'DarkMagenta'
+        $regionDevOnly = $false
+        $allLines = foreach ($line in (Get-Content $file.FullName)) {
+            if ($regionDevOnly) {
+                if ($line.StartsWith('#endregion')) {
+                    $regionDevOnly = $false
+                }
+                Write-Host "[PSAKE Build] `tRemoving Line:`t`t`t$(($line | Out-String).Trim())" -ForegroundColor 'DarkMagenta'
+                continue
+            } else {
+                if ($line.StartsWith('#region DEVONLY')) {
+                    $regionDevOnly = $true
+                    Write-Host "[PSAKE Build] `tRemoving Line:`t`t`t$(($line | Out-String).Trim())" -ForegroundColor 'DarkMagenta'
+                    continue
+                }
+                Write-Output $line
+            }
         }
-        Write-Host "[PSAKE Build] Copy-Item: $($copyItem | ConvertTo-Json)" -ForegroundColor 'DarkMagenta'
-        Copy-Item @copyItem
+        $allLines | Out-File -LiteralPath $modulePSM1 -Encoding 'utf8' -Append -Force
+    }
+
+    [IO.Path]::Combine($script:ParentDevModulePath, ('{0}.psm1' -f $script:thisModuleName))
+
+    $pfxESE = [IO.Path]::Combine($env:Temp, 'ese.pfx')
+    Set-Content $pfxESE -Value ([System.Convert]::FromBase64String($env:ESE_CODE_SIGNING_CERT_PFXB64)) -Encoding 'Byte'
+    $certPass = ConvertTo-SecureString -String $env:ESE_CODE_SIGNING_CERT_PASS -AsPlainText -Force
+    $cert = (Get-PfxData -FilePath $pfxESE -Password $certPass).EndEntityCertificates[0]
+    foreach ($file in (Get-ChildItem $script:ParentModulePath -File)) {
+        $authenticodeSignature = @{
+            FilePath = $file.FullName
+            Certificate = $cert
+            TimeStampServer = 'http://timestamp.digicert.com'
+        }
+        Write-Host "[PSAKE Build] Set-AuthenticodeSignature: $($authenticodeSignature | ConvertTo-Json -Depth 1)" -ForegroundColor 'DarkMagenta'
+        Set-AuthenticodeSignature @authenticodeSignature
     }
 }
 

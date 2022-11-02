@@ -3,6 +3,9 @@ param(
     [string[]]
     $Task = 'default',
 
+    [hashtable]
+    $Parameters,
+
     [version]
     $PesterVersion = '5.3.3',
 
@@ -67,7 +70,15 @@ foreach ($module in $installModules.GetEnumerator()) {
 }
 
 # Run the *real* build script.
-Invoke-psake -BuildFile "$PSScriptRoot\buildPsake.ps1" -TaskList $Task -Verbose:$VerbosePreference
+$invokePsake = @{
+    BuildFile = "$PSScriptRoot\buildPsake.ps1"
+    TaskList = $Task
+    Verbose = $true
+}
+if ($Parameters) {
+    $invokePsake.Set_Item('parameters', $Parameters)
+}
+Invoke-psake @invokePsake
 
 if ($env:CI -and -not $psake.build_success) {
     $Host.SetShouldExit(1)

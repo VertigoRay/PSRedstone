@@ -1,19 +1,26 @@
+#region DEVONLY
 <#
-    .Synopsis
-        This is the main scaffolding the glues all the pieces together.
+.Synopsis
+This is the main scaffolding the glues all the pieces together.
 #>
-$public = @( Get-ChildItem -Path "${PSScriptRoot}\Public\*.ps1" -ErrorAction SilentlyContinue )
-$private = @( Get-ChildItem -Path "${PSScriptRoot}\Private\*.ps1" -ErrorAction SilentlyContinue )
+$ps1s = Get-ChildItem -Path "${PSScriptRoot}\*.ps1" -Recurse -ErrorAction SilentlyContinue
 
-foreach ($import in @($public + $private)) {
+foreach ($import in $ps1s) {
     try {
         . $import.FullName
-    }
-    catch {
+    } catch {
         Write-Error -Message "Failed to import function: $($import.FullName): $_"
     }
 }
+#endregion
 
-Get-Alias
-
-Export-ModuleMember -Function $public.BaseName -Alias *
+$psd1 = Import-PowerShellDataFile ([IO.Path]::Combine($PSScriptRoot, 'PSBacon.psd1'))
+$moduleMember = @{
+    Cmdlet = $psd1.CmdletsToExport
+    Function = $psd1.FunctionsToExport
+    Alias = $psd1.AliasesToExport
+}
+if ($psd1.VariablesToExport) {
+    $moduleMember.Set_Item('Variable', $psd1.VariablesToExport)
+}
+Export-ModuleMember @moduleMember
