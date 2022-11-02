@@ -31,10 +31,16 @@ Build Module:
     - WindowsPowerShell
   script: |
     & '.\.build\build.ps1' -Task Build
+  artifacts:
+    paths:
+    - dev/*
+    expire_in: 1 week
 
 Deploy Module:
   stage: deploy
+  dependencies:
+    - Build Module
   tags:
     - WindowsPowerShell
   script: |
-    & '.\.build\build.ps1' -Task Build,Deploy
+    & '.\.build\build.ps1' -Task Deploy
