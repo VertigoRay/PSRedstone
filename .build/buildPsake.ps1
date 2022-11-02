@@ -142,7 +142,7 @@ task Deploy {
         SourceLocation = 'http://ese-inedo.utsarr.net:8624/nuget/powershell-ese/'
         PublishLocation = 'http://ese-inedo.utsarr.net:8624/nuget/powershell-ese/'
     }
-    if (-not (Get-PSRepository $registerPSRepo.Name)) {
+    if (-not (Get-PSRepository $registerPSRepo.Name -ErrorAction 'Ignore')) {
         Write-Host "[PSAKE Deploy] Register-PSRepository: $($registerPSRepo | ConvertTo-Json)" -ForegroundColor 'DarkMagenta'
         Register-PSRepository @registerPSRepo
     }
