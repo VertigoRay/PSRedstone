@@ -1,4 +1,7 @@
+# Global
+.build/env.ps1
+dev/*
+
+# Module Specific
 *.wim
 BaconMount/*
-dev/*
-.build/env.ps1

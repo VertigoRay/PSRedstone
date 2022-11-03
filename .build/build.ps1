@@ -30,6 +30,10 @@ trap {
     }
 }
 
+if (Test-Path ([IO.Path]::Combine($PSScriptRoot, 'env.ps1'))) {
+    . ([IO.Path]::Combine($PSScriptRoot, 'env.ps1'))
+}
+
 # Setup NuGet PP
 if (-not (Get-PackageProvider 'NuGet' -ErrorAction 'Ignore' | Where-Object { $_.Version -ge $NuGetPPMinVersion })) {
     Install-PackageProvider -Name 'NuGet' -MinimumVersion $NuGetPPMinVersion -Force

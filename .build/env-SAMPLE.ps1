@@ -1,5 +1,5 @@
 # Sample Dev Environment Setup
-# I suggest copying this to env.ps1 and setting it up with real values.
+# Copy this to env.ps1 and setting it up with real values.
 
 # Key: http://ese-inedo.utsarr.net:8624/administration/api-keys/edit?apiKeyId=2
 $env:PROGET_POWERSHELL_ESE = '526f353998bd402ba50d71c955053265'

@@ -8,8 +8,8 @@ trap {
 }
 
 properties {
-    $script:thisModuleName = 'PSBacon'
     $script:PSScriptRootParent = ([IO.DirectoryInfo] $PSScriptRoot).Parent
+    $script:thisModuleName = $script:PSScriptRootParent.BaseName
     $script:ManifestJsonFile = [IO.Path]::Combine($script:PSScriptRootParent.FullName, $script:thisModuleName, 'Manifest.json')
     $script:BuildOutput = [IO.Path]::Combine($script:PSScriptRootParent.FullName, 'dev', 'BuildOutput')
 
