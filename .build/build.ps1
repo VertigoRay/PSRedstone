@@ -20,6 +20,7 @@ $installModules = @{
     }
     psake = 'latest'
     # PSDeploy = 'latest'
+    PSMinifier = 'latest'
 }
 
 $ErrorActionPreference = 'Stop'

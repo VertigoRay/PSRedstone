@@ -1,4 +1,4 @@
-#Requires -Modules Pester,psake,PowerShellGet
+#Requires -Modules Pester,psake,PowerShellGet,PSMinifier
 $ErrorActionPreference = 'Stop'
 trap {
     Write-Error ('( ͡° ͜ʖ ͡°) {0}' -f $_) -ErrorAction 'Continue'
@@ -56,7 +56,7 @@ task BuildManifest {
     }
 
     $Manifest = @{}
-    $manifestJsonData = Get-Content $script:ManifestJsonFile | ConvertFrom-Json
+    $manifestJsonData = Get-Content $script:ManifestJsonFile |  Where-Object { -not $_.StartsWith('//') } | ConvertFrom-Json
     Write-Host "[PSAKE BuildManifest] manifestJsonData: $($manifestJsonData | ConvertTo-Json)" -ForegroundColor 'DarkMagenta'
     $manifestJsonData.PSObject.Properties | ForEach-Object {
         $Manifest.Set_Item($_.Name, $_.Value)
@@ -85,20 +85,23 @@ task BuildManifest {
         $Manifest.AliasesToExport = @()
     }
     $Manifest.CmdletsToExport = $cmdletsToExport
-    $Manifest.FunctionsToExport = $functionsToExport
+    $Manifest.FunctionsToExport = $cmdletsToExport + $functionsToExport
     if (-not $manifestJsonData.VariablesToExport) {
         $Manifest.VariablesToExport = @()
     }
 
-    $Manifest.Remove('ModuleName')
-
     $Manifest.Path = "${script:ParentModulePath}\${script:thisModuleName}.psd1"
+    $Manifest.RootModule = "${script:thisModuleName}.psm1"
     $Manifest.ModuleVersion = [version] $Version
+
+    $Manifest.Remove('ModuleName') # Not a parameter.
+
     Write-Host "[PSAKE BuildManifest] New-ModuleManifest: $($Manifest | ConvertTo-Json)" -ForegroundColor 'DarkMagenta'
     New-ModuleManifest @Manifest
 }
 
 task Build -Depends BuildManifest {
+    # Create Compiled PSM1
     $modulePSM1 = [IO.Path]::Combine($script:ParentModulePath, ('{0}.psm1' -f $script:thisModuleName))
     if (Test-Path $modulePSM1) {
         Remove-Item -LiteralPath $modulePSM1 -Confirm:$false -Force
@@ -130,6 +133,7 @@ task Build -Depends BuildManifest {
 
     [IO.Path]::Combine($script:ParentDevModulePath, ('{0}.psm1' -f $script:thisModuleName))
 
+    # Sign Code
     $pfxESE = [IO.Path]::Combine($env:Temp, 'ese.pfx')
     Set-Content $pfxESE -Value ([System.Convert]::FromBase64String($env:ESE_CODE_SIGNING_CERT_PFXB64)) -Encoding 'Byte'
     $certPass = ConvertTo-SecureString -String $env:ESE_CODE_SIGNING_CERT_PASS -AsPlainText -Force
