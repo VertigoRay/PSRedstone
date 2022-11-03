@@ -1,0 +1,10 @@
+{
+    "Publisher": "Mozilla",
+    "Product": "Firefox",
+    "Version": "1.2.3",
+    "Installer": {
+        "UserName": "UTS",
+        "CompanyName": "UTSA",
+        "SerialNumber": "8e57ee4a-3b6c-4dbc-b5e5-c6775f44d1f3"
+    }
+}

@@ -26,7 +26,7 @@ Describe 'BaconWim' -Tag 'WIM' {
                 Remove-Item $imagePath -Force
             }
 
-            Write-Host ($imagePath | Select *) -ForegroundColor 'Cyan'
+            Write-Host ($imagePath | Select-Object *) -ForegroundColor 'Cyan'
 
             It ('WIM does not already exist: {0}' -f $imagePath) {
                 Test-Path $imagePath | Should -Be $false
