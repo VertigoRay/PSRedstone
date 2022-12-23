@@ -1,8 +1,8 @@
-<span style="color:red">PSRedstone</span> is a module used to streamline installation of Windows Applications.
-It includes a <span style="color:red">Redstone</span> class, which is the core building block for the included functions.
+$`\textcolor{red}{\text{PSRedstone}}`$ is a module used to streamline installation of Windows Applications.
+It includes a $`\textcolor{red}{\text{Redstone}}`$ class, which is the core building block for the included functions.
 
 - [Quick Start](#quick-start)
-- [Instantiating Redstone](#instantiating-redstone)
+- [Instantiating $`\textcolor{red}{\text{Redstone}}`$](#instantiating-textcolorredtextredstone)
   - [The Settings JSON File](#the-settings-json-file)
     - [Sample JSON](#sample-json)
 
@@ -62,7 +62,7 @@ if ([System.Environment]::Is64BitOperatingSystem) {
 }
 ```
 
-> ℹ: <span style="color:red">Redstone</span> will automatically parse the `settings.json` file if it exists.
+> ℹ: $`\textcolor{red}{\text{Redstone}}`$ will automatically parse the `settings.json` file if it exists.
 > The code  above shows where the `settings.json` data is in the class for easy creation of a `$settings` variable.
 >   - `$Redstone.Publisher`: taken directly from the root key in the `settings.json`.
 >   - `$Redstone.Product`: taken directly from the root key in the `settings.json`.
@@ -70,22 +70,22 @@ if ([System.Environment]::Is64BitOperatingSystem) {
 >   - `$Redstone.Action`: taken directly from the filename of the scripte; in this case the *Action* is `"install"` taken from `install.ps1`.
 >     - We use `Get-Culture` to capitalise the first letter and make it `"Install"`.
 
-# Instantiating <span style="color:red">Redstone</span>
+# Instantiating $`\textcolor{red}{\text{Redstone}}`$
 
-<span style="color:red">Redstone</span> can be instantiated in one of two way:
+$`\textcolor{red}{\text{Redstone}}`$ can be instantiated in one of two way:
 
 - Without parameters: `$global:Redstone = [Redstone]::new()`
 - With parameters: `$global:Redstone = [Redstone]::new($Publisher, $Product, $Version, $Action)`; where all of those parameters are `[string]`s.
 
-If <span style="color:red">Redstone</span> is instantiated with no parameters, [a `settings.json`](#the-settings-json-file) must be provided.
+If $`\textcolor{red}{\text{Redstone}}`$ is instantiated with no parameters, [a `settings.json`](#the-settings-json-file) must be provided.
 ## The Settings JSON File
 
-<span style="color:red">Redstone</span> will look for the case-insensitive JSON file named `settings.json` file in the following order:
+$`\textcolor{red}{\text{Redstone}}`$ will look for the case-insensitive JSON file named `settings.json` file in the following order:
 
 1. In the current working directory using [`$PWD`](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables#pwd).
-1. In the same directory where the executing script is; the [`$PSScriptRoot`](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables#psscriptroot) of the file that instantiated <span style="color:red">Redstone</span>.
+1. In the same directory where the executing script is; the [`$PSScriptRoot`](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables#psscriptroot) of the file that instantiated $`\textcolor{red}{\text{Redstone}}`$.
 
-If a `settings.json` is provided <span style="color:red">Redstone</span> will import the data to `$Redstone.Settings.JSON.Data`.
+If a `settings.json` is provided $`\textcolor{red}{\text{Redstone}}`$ will import the data to `$Redstone.Settings.JSON.Data`.
 To make the data more accessible, Redstone will also create a `$global:settings` for the data in the `settings.json` file.
 
 ### Sample JSON
