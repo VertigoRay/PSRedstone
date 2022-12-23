@@ -39,19 +39,19 @@ Private Parameter; used for debug overrides.
 Default: $global:Winstall.Vars.MSIProductCodeRegExPattern
 .EXAMPLE
 # Installs an MSI
-Invoke-BaconMSI -Action 'Install' -Path 'Adobe_FlashPlayer_11.2.202.233_x64_EN.msi'
+Invoke-RedstoneMSI -Action 'Install' -Path 'Adobe_FlashPlayer_11.2.202.233_x64_EN.msi'
 .EXAMPLE
 # Installs an MSI, applying a transform and overriding the default MSI toolkit parameters
-Invoke-BaconMSI -Action 'Install' -Path 'Adobe_FlashPlayer_11.2.202.233_x64_EN.msi' -Transform 'Adobe_FlashPlayer_11.2.202.233_x64_EN_01.mst' -Parameters '/QN'
+Invoke-RedstoneMSI -Action 'Install' -Path 'Adobe_FlashPlayer_11.2.202.233_x64_EN.msi' -Transform 'Adobe_FlashPlayer_11.2.202.233_x64_EN_01.mst' -Parameters '/QN'
 .EXAMPLE
 # Installs an MSI and stores the result of the execution into a variable by using the -PassThru option
-[psobject] $ExecuteMSIResult = Invoke-BaconMSI -Action 'Install' -Path 'Adobe_FlashPlayer_11.2.202.233_x64_EN.msi' -PassThru
+[psobject] $ExecuteMSIResult = Invoke-RedstoneMSI -Action 'Install' -Path 'Adobe_FlashPlayer_11.2.202.233_x64_EN.msi' -PassThru
 .EXAMPLE
 # Uninstalls an MSI using a product code
-Invoke-BaconMSI -Action 'Uninstall' -Path '{26923b43-4d38-484f-9b9e-de460746276c}'
+Invoke-RedstoneMSI -Action 'Uninstall' -Path '{26923b43-4d38-484f-9b9e-de460746276c}'
 .EXAMPLE
 # Installs an MSP
-Invoke-BaconMSI -Action 'Patch' -Path 'Adobe_Reader_11.0.3_EN.msp'
+Invoke-RedstoneMSI -Action 'Patch' -Path 'Adobe_Reader_11.0.3_EN.msp'
 .EXAMPLE
 $Invoke_MSI = @{
     'Action' = 'Install';
@@ -63,15 +63,15 @@ $Invoke_MSI = @{
 }
 
 if ($global:Winstall.Vars.OS.Is64BitOperatingSystem) {
-    Invoke-BaconMSI @Invoke_MSI -Path 'Origin2016Sr2Setup32and64Bit.msi'
+    Invoke-RedstoneMSI @Invoke_MSI -Path 'Origin2016Sr2Setup32and64Bit.msi'
 } else {
-    Invoke-BaconMSI @Invoke_MSI -Path 'Origin2016Sr2Setup32Bit.msi'
+    Invoke-RedstoneMSI @Invoke_MSI -Path 'Origin2016Sr2Setup32Bit.msi'
 }
 .NOTES
 .LINK
 http://psappdeploytoolkit.com
 #>
-function Invoke-BaconMSI {
+function Invoke-RedstoneMSI {
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory=$false)]
@@ -139,11 +139,11 @@ function Invoke-BaconMSI {
         [Parameter(Mandatory=$false, HelpMessage="Private Parameter; used for debug overrides.")]
         [ValidateNotNullorEmpty()]
         [string]
-        $LogFileF = "${env:Temp}\{Invoke-BaconMsi_{1}_{0}.log"
+        $LogFileF = "${env:Temp}\{Invoke-RedstoneMsi_{1}_{0}.log"
     )
 
-    Write-Verbose "[Invoke-BaconMsi] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
-    Write-Debug "[Invoke-BaconMsi] Function Invocation: $($MyInvocation | Out-String)"
+    Write-Verbose "[Invoke-RedstoneMsi] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
+    Write-Debug "[Invoke-RedstoneMsi] Function Invocation: $($MyInvocation | Out-String)"
 
 
     ## Initialize variable indicating whether $Path variable is a Product Code or not
@@ -231,9 +231,9 @@ function Invoke-BaconMSI {
             }
 
             [string] $MSIProductCode = Get-MsiTableProperty @Get_MsiTablePropertySplat | Select-Object -ExpandProperty 'ProductCode' -ErrorAction 'Stop'
-            Write-Information "[Invoke-BaconMsi] Got the ProductCode from the MSI file: ${MSIProductCode}"
+            Write-Information "[Invoke-RedstoneMsi] Got the ProductCode from the MSI file: ${MSIProductCode}"
         } catch {
-            Write-Information "[Invoke-BaconMsi] Failed to get the ProductCode from the MSI file. Continuing with requested action [${Action}].$([Environment]::NewLine)$([Environment]::NewLine)$_"
+            Write-Information "[Invoke-RedstoneMsi] Failed to get the ProductCode from the MSI file. Continuing with requested action [${Action}].$([Environment]::NewLine)$([Environment]::NewLine)$_"
         }
     }
 
@@ -274,9 +274,9 @@ function Invoke-BaconMSI {
     }
 
     if ($IsMsiInstalled -and ($Action -ieq 'Install')) {
-        Write-Information "[Invoke-BaconMsi] The MSI is already installed on this system. Skipping action [${Action}]..."
+        Write-Information "[Invoke-RedstoneMsi] The MSI is already installed on this system. Skipping action [${Action}]..."
     } elseif ($IsMsiInstalled -or ((-not $IsMsiInstalled) -and ($Action -eq 'Install'))) {
-        Write-Information "[Invoke-BaconMsi] Executing MSI action [${Action}]..."
+        Write-Information "[Invoke-RedstoneMsi] Executing MSI action [${Action}]..."
 
         #  Build the hashtable with the options that will be passed to Invoke-Run using splatting
         [hashtable] $invokeRun =  @{
@@ -296,27 +296,27 @@ function Invoke-BaconMSI {
         Start-Sleep -Seconds 1
         if (-not $msiExecAvailable) {
             #  Default MSI exit code for install already in progress
-            Write-Warning '[Invoke-BaconMsi] Please complete in progress MSI installation before proceeding with this install.'
-            $msg = Get-BaconMsiExitCodeMessage 1618
-            Write-Error "[Invoke-BaconMsi] 1618: ${msg}"
-            & $bacon.Quit 1618 $false
+            Write-Warning '[Invoke-RedstoneMsi] Please complete in progress MSI installation before proceeding with this install.'
+            $msg = Get-RedstoneMsiExitCodeMessage 1618
+            Write-Error "[Invoke-RedstoneMsi] 1618: ${msg}"
+            & $Redstone.Quit 1618 $false
         }
 
 
         #  Call the Invoke-Run function
         if ($PassThru) {
-            $result = Invoke-BaconRun @invokeRun
+            $result = Invoke-RedstoneRun @invokeRun
             if ($result.Process.ExitCode -ne 0) {
-                $bacon.ExitCode = $result.Process.ExitCode
-                $msg = Get-BaconMsiExitCodeMessage $bacon.ExitCode -MsiLog $msiLogFile
-                Write-Warning "[Invoke-BaconMsi] $($result.Process.ExitCode): ${msg}"
+                $Redstone.ExitCode = $result.Process.ExitCode
+                $msg = Get-RedstoneMsiExitCodeMessage $Redstone.ExitCode -MsiLog $msiLogFile
+                Write-Warning "[Invoke-RedstoneMsi] $($result.Process.ExitCode): ${msg}"
             }
-            Write-Information "[Invoke-BaconMsi] Return: $($result | Out-String)"
+            Write-Information "[Invoke-RedstoneMsi] Return: $($result | Out-String)"
             return $result
         } else {
-            Invoke-BaconRun @invokeRun
+            Invoke-RedstoneRun @invokeRun
         }
     } else {
-        Write-Warning "[Invoke-BaconMsi] The MSI is not installed on this system. Skipping action [${Action}]..."
+        Write-Warning "[Invoke-RedstoneMsi] The MSI is not installed on this system. Skipping action [${Action}]..."
     }
 }

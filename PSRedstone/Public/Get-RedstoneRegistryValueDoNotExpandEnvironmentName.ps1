@@ -4,10 +4,10 @@ Get a registry value without expanding environment variables.
 .OUTPUTS
 [bool]
 .EXAMPLE
-PS > Get-BaconRegistryValueDoNotExpandEnvironmentName HKCU:\Thing Foo
+PS > Get-RedstoneRegistryValueDoNotExpandEnvironmentName HKCU:\Thing Foo
 True
 #>
-function Get-BaconRegistryValueDoNotExpandEnvironmentName {
+function Get-RedstoneRegistryValueDoNotExpandEnvironmentName {
     [OutputType([bool])]
     [CmdletBinding()]
     Param(
@@ -20,8 +20,8 @@ function Get-BaconRegistryValueDoNotExpandEnvironmentName {
         $Value
     )
 
-    Write-Verbose ('[Get-BaconRegistryValueDoNotExpandEnvironmentName] >')
-    Write-Debug ('[Get-BaconRegistryValueDoNotExpandEnvironmentName] > {0}' -f ($MyInvocation | Out-String))
+    Write-Verbose ('[Get-RedstoneRegistryValueDoNotExpandEnvironmentName] >')
+    Write-Debug ('[Get-RedstoneRegistryValueDoNotExpandEnvironmentName] > {0}' -f ($MyInvocation | Out-String))
 
     $item = Get-Item $Key
     if ($item) {

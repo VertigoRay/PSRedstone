@@ -7,21 +7,21 @@ Wait, up to a timeout (default is 1 millisecond), for the mutex to become availa
 .PARAMETER MutexName
 The name of the system mutex.
 .PARAMETER MutexWaitTimeInMilliseconds
-The number of milliseconds the current thread should wait to acquire an exclusive lock of a named mutex. Default is: $bacon.Settings.'Test-BaconIsMutexAvailable'.MutexWaitTimeInMilliseconds
+The number of milliseconds the current thread should wait to acquire an exclusive lock of a named mutex. Default is: $Redstone.Settings.'Test-RedstoneIsMutexAvailable'.MutexWaitTimeInMilliseconds
 A wait time of -1 milliseconds means to wait indefinitely. A wait time of zero does not acquire an exclusive lock but instead tests the state of the wait handle and returns immediately.
 .EXAMPLE
-Assert-BaconIsMutexAvailable -MutexName 'Global\_MSIExecute' -MutexWaitTimeInMilliseconds 500
+Assert-RedstoneIsMutexAvailable -MutexName 'Global\_MSIExecute' -MutexWaitTimeInMilliseconds 500
 .EXAMPLE
-Assert-BaconIsMutexAvailable -MutexName 'Global\_MSIExecute' -MutexWaitTimeInMilliseconds (New-TimeSpan -Minutes 5).TotalMilliseconds
+Assert-RedstoneIsMutexAvailable -MutexName 'Global\_MSIExecute' -MutexWaitTimeInMilliseconds (New-TimeSpan -Minutes 5).TotalMilliseconds
 .EXAMPLE
-Assert-BaconIsMutexAvailable -MutexName 'Global\_MSIExecute' -MutexWaitTimeInMilliseconds (New-TimeSpan -Seconds 60).TotalMilliseconds
+Assert-RedstoneIsMutexAvailable -MutexName 'Global\_MSIExecute' -MutexWaitTimeInMilliseconds (New-TimeSpan -Seconds 60).TotalMilliseconds
 .NOTES
 This is an internal script function and should typically not be called directly.
 .LINK
 http://msdn.microsoft.com/en-us/library/aa372909(VS.85).asp
 http://psappdeploytoolkit.com
 #>
-function Assert-BaconIsMutexAvailable {
+function Assert-RedstoneIsMutexAvailable {
     [OutputType([bool])]
     [CmdletBinding()]
     Param (

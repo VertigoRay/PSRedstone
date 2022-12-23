@@ -1,8 +1,8 @@
 <#
 .EXAMPLE
-$MountPath.FullName | Invoke-BaconForceEmptyDirectory
+$MountPath.FullName | Invoke-RedstoneForceEmptyDirectory
 #>
-function Invoke-BaconForceEmptyDirectory {
+function Invoke-RedstoneForceEmptyDirectory {
     [CmdletBinding()]
     param (
         [Parameter(

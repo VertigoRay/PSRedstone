@@ -2,9 +2,9 @@
 .SYNOPSIS
 Runs the given command in ComSpec (aka: Command Prompt).
 .DESCRIPTION
-This just runs a command in ComSpec by passing it to `Invoke-BaconRun`.
+This just runs a command in ComSpec by passing it to `Invoke-RedstoneRun`.
 
-If you don't *need* ComSpec to run the command, it's normally best to just use `Invoke-BaconRun`.
+If you don't *need* ComSpec to run the command, it's normally best to just use `Invoke-RedstoneRun`.
 .PARAMETER Cmd
 Under normal usage, the string passed in here just gets appended to `cmd.exe /c `.
 .PARAMETER KeepOpen
@@ -23,18 +23,18 @@ Applies /A:  Causes the output of internal commands to a pipe or file to be ANSI
 .PARAMETER Unicode
 Applies /U:  Causes the output of internal commands to a pipe or file to be Unicode
 .OUTPUTS
-[Hashtable] As returned from `Invoke-BaconRun`.
+[Hashtable] As returned from `Invoke-RedstoneRun`.
 @{
-    'Process' = $proc; # The result from Start-Process; as returned from `Invoke-BaconRun`.
+    'Process' = $proc; # The result from Start-Process; as returned from `Invoke-RedstoneRun`.
     'StdOut'  = $stdout;
     'StdErr'  = $stderr;
 }
 .EXAMPLE
-Invoke-BaconCmd "MKLINK /D Temp C:\Temp"
+Invoke-RedstoneCmd "MKLINK /D Temp C:\Temp"
 .LINK
-https://git.cas.unt.edu/winstall/winstall/wikis/Invoke-BaconCmd
+https://git.cas.unt.edu/winstall/winstall/wikis/Invoke-RedstoneCmd
 #>
-function Invoke-BaconCmd {
+function Invoke-RedstoneCmd {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory=$true, Position=1)]
@@ -66,8 +66,8 @@ function Invoke-BaconCmd {
         $Unicode
     )
 
-    Write-Information "[Invoke-BaconCmd] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
-    Write-Debug "[Invoke-BaconCmd] Function Invocation: $($MyInvocation | Out-String)"
+    Write-Information "[Invoke-RedstoneCmd] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
+    Write-Debug "[Invoke-RedstoneCmd] Function Invocation: $($MyInvocation | Out-String)"
 
     [System.Collections.ArrayList] $ArgumentList = @()
     if ($KeepOpen) {
@@ -82,12 +82,12 @@ function Invoke-BaconCmd {
     if ($Unicode)        { $ArgumentList.Add('/U') }
     $ArgumentList.Add($Cmd)
 
-    Write-Verbose "[Invoke-BaconCmd] Executing: cmd $($ArgumentList -join ' ')"
+    Write-Verbose "[Invoke-RedstoneCmd] Executing: cmd $($ArgumentList -join ' ')"
 
-    Write-Verbose "[Invoke-BaconCmd] Invoke-BaconRun ..."
-    $proc = Invoke-BaconRun -FilePath $env:ComSpec -ArgumentList $ArgumentList
-    Write-Verbose "[Invoke-BaconCmd] ExitCode: $($proc.Process.ExitCode)"
+    Write-Verbose "[Invoke-RedstoneCmd] Invoke-RedstoneRun ..."
+    $proc = Invoke-RedstoneRun -FilePath $env:ComSpec -ArgumentList $ArgumentList
+    Write-Verbose "[Invoke-RedstoneCmd] ExitCode: $($proc.Process.ExitCode)"
 
-    Write-Information "[Invoke-BaconCmd] Return: $($proc | Out-String)"
+    Write-Information "[Invoke-RedstoneCmd] Return: $($proc | Out-String)"
     return $proc
 }

@@ -1,11 +1,11 @@
 #region DEVONLY
-. "${PSScriptRoot}\..\Public\Assert-BaconIsElevated.ps1"
-. "${PSScriptRoot}\..\Public\Get-BaconRegistryValueOrDefault.ps1"
-# . "${PSScriptRoot}\..\Public\Get-BaconRegistryValueDoNotExpandEnvironmentNames.ps1"
+. "${PSScriptRoot}\..\Public\Assert-RedstoneIsElevated.ps1"
+. "${PSScriptRoot}\..\Public\Get-RedstoneRegistryValueOrDefault.ps1"
+# . "${PSScriptRoot}\..\Public\Get-RedstoneRegistryValueDoNotExpandEnvironmentNames.ps1"
 #endregion
 
 
-class Bacon {
+class Redstone {
     hidden [string] $_Publisher = $null
     hidden [string] $_Product = $null
     hidden [string] $_Version = $null
@@ -25,9 +25,9 @@ class Bacon {
         PSCallStack = (Get-PSCallStack)
     }
 
-    static Bacon() {
+    static Redstone() {
         # Creating some custom setters that update other properties, like Log Paths, when related properties are changed.
-        Update-TypeData -TypeName 'Bacon' -MemberName 'Publisher' -MemberType 'ScriptProperty' -Value {
+        Update-TypeData -TypeName 'Redstone' -MemberName 'Publisher' -MemberType 'ScriptProperty' -Value {
             # Getter
             return $this._Publisher
         } -SecondValue {
@@ -36,7 +36,7 @@ class Bacon {
             $this._Publisher = $value
             $this.SetUpLog()
         } -Force
-        Update-TypeData -TypeName 'Bacon' -MemberName 'Product' -MemberType 'ScriptProperty' -Value {
+        Update-TypeData -TypeName 'Redstone' -MemberName 'Product' -MemberType 'ScriptProperty' -Value {
             # Getter
             return $this._Product
         } -SecondValue {
@@ -45,7 +45,7 @@ class Bacon {
             $this._Product = $value
             $this.SetUpLog()
         } -Force
-        Update-TypeData -TypeName 'Bacon' -MemberName 'Version' -MemberType 'ScriptProperty' -Value {
+        Update-TypeData -TypeName 'Redstone' -MemberName 'Version' -MemberType 'ScriptProperty' -Value {
             # Getter
             return $this._Version
         } -SecondValue {
@@ -54,7 +54,7 @@ class Bacon {
             $this._Version = $value
             $this.SetUpLog()
         } -Force
-        Update-TypeData -TypeName 'Bacon' -MemberName 'Action' -MemberType 'ScriptProperty' -Value {
+        Update-TypeData -TypeName 'Redstone' -MemberName 'Action' -MemberType 'ScriptProperty' -Value {
             # Getter
             return $this._Action
         } -SecondValue {
@@ -63,12 +63,12 @@ class Bacon {
             $this._Action = $value
             $this.SetUpLog()
         } -Force
-        Update-TypeData -TypeName 'Bacon' -MemberName 'CimInstance' -MemberType 'ScriptProperty' -Value {
+        Update-TypeData -TypeName 'Redstone' -MemberName 'CimInstance' -MemberType 'ScriptProperty' -Value {
             # Getter
             $className = $MyInvocation.Line.Split('.')[2]
             return $this.GetCimInstance($className, $true)
         } -Force
-        Update-TypeData -TypeName 'Bacon' -MemberName 'Env' -MemberType 'ScriptProperty' -Value {
+        Update-TypeData -TypeName 'Redstone' -MemberName 'Env' -MemberType 'ScriptProperty' -Value {
             # Getter
             if (-not $this._Env) {
                 # This is the Lazy Loading logic.
@@ -76,7 +76,7 @@ class Bacon {
             }
             return $this._Env
         } -Force
-        Update-TypeData -TypeName 'Bacon' -MemberName 'OS' -MemberType 'ScriptProperty' -Value {
+        Update-TypeData -TypeName 'Redstone' -MemberName 'OS' -MemberType 'ScriptProperty' -Value {
             # Getter
             if (-not $this._OS) {
                 # This is the Lazy Loading logic.
@@ -84,7 +84,7 @@ class Bacon {
             }
             return $this._OS
         } -Force
-        Update-TypeData -TypeName 'Bacon' -MemberName 'ProfileList' -MemberType 'ScriptProperty' -Value {
+        Update-TypeData -TypeName 'Redstone' -MemberName 'ProfileList' -MemberType 'ScriptProperty' -Value {
             # Getter
             if (-not $this._ProfileList) {
                 # This is the Lazy Loading logic.
@@ -94,7 +94,7 @@ class Bacon {
         } -Force
     }
 
-    Bacon() {
+    Redstone() {
         $this.SetUpSettings()
 
         $this.Settings.JSON = @{}
@@ -110,6 +110,7 @@ class Bacon {
             }
         }
         $_settings = $this.Settings.JSON.Data
+        New-Variable -Scope 'global' -Name 'settings' -Value $_settings
 
         $this.SetDefaultSettingsFromRegistry($this.Settings.Registry.Key)
         $this.SetPSDefaultParameterValues($this.Settings.Functions)
@@ -122,8 +123,10 @@ class Bacon {
         $this.SetUpLog()
     }
 
-    Bacon([string] $Publisher, [string] $Product, [string] $Version, [string] $Action) {
+    Redstone([string] $Publisher, [string] $Product, [string] $Version, [string] $Action) {
         $this.SetUpSettings()
+        New-Variable -Scope 'global' -Name 'settings' -Value $this.Settings
+
         $this.SetDefaultSettingsFromRegistry($this.Settings.Registry.Key)
         $this.SetPSDefaultParameterValues($this.Settings.Functions)
 
@@ -207,10 +210,10 @@ class Bacon {
     hidden [void] SetUpLog() {
         $this.Settings.Log = @{}
 
-        if (Assert-BaconIsElevated) {
-            $private:Directory = [IO.DirectoryInfo] "${env:SystemRoot}\Logs\Bacon"
+        if (Assert-RedstoneIsElevated) {
+            $private:Directory = [IO.DirectoryInfo] "${env:SystemRoot}\Logs\Redstone"
         } else {
-            $private:Directory = [IO.DirectoryInfo] "${env:Temp}\Logs\Bacon"
+            $private:Directory = [IO.DirectoryInfo] "${env:Temp}\Logs\Redstone"
         }
 
         if (-not $private:Directory.Exists) {
@@ -226,7 +229,7 @@ class Bacon {
     hidden [void] SetUpSettings() {
         $this.Settings = @{}
         $this.Settings.Registry = @{
-            Key = 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\PSBacon'
+            Key = Get-RedstoneRegistryValueOrDefault ([string]::Empty) 'RegistryKeyRoot' 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\PSRedstone' -RegistryKeyRoot 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\PSRedstone'
         }
     }
 
@@ -279,7 +282,7 @@ class Bacon {
         if (-not $this._ProfileList) {
             Write-Debug 'GETTER: Setting up ProfileList'
             $this._ProfileList = @{}
-            $regProfileListPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList'
+            $regProfileListPath = 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList'
             $regProfileList = Get-Item $regProfileListPath
             foreach ($property in $regProfileList.Property) {
                 $this._ProfileList.Add($property, (Get-ItemProperty -Path $regProfileListPath).$property)
@@ -321,33 +324,33 @@ class Bacon {
     }
 
     hidden [void] PSDefaultParameterValuesSetUp() {
-        $global:PSDefaultParameterValues.Set_Item('*-Bacon*:LogFile', $this.Settings.Log.File.FullName)
-        $global:PSDefaultParameterValues.Set_Item('*-Bacon*:LogFileF', $this.Settings.Log.FileF)
-        $global:PSDefaultParameterValues.Set_Item('*-Bacon*:LogFileF', $this.Settings.Log.FileF)
-        $global:PSDefaultParameterValues.Set_Item('Get-BaconRegistryValueOrDefault:OnlyUseDefaultSettings', (Get-BaconRegistryValueOrDefault 'Settings\Functions\Get-BaconRegistryValueOrDefault' 'OnlyUseDefaultSettings' $false -RegistryKeyRoot $this.Settings.Registry.Key))
-        $global:PSDefaultParameterValues.Set_Item('Get-BaconRegistryValueOrDefault:RegistryKeyRoot', $this.Settings.Registry.Key)
+        $global:PSDefaultParameterValues.Set_Item('*-Redstone*:LogFile', $this.Settings.Log.File.FullName)
+        $global:PSDefaultParameterValues.Set_Item('*-Redstone*:LogFileF', $this.Settings.Log.FileF)
+        $global:PSDefaultParameterValues.Set_Item('*-Redstone*:LogFileF', $this.Settings.Log.FileF)
+        $global:PSDefaultParameterValues.Set_Item('Get-RedstoneRegistryValueOrDefault:OnlyUseDefaultSettings', (Get-RedstoneRegistryValueOrDefault 'Settings\Functions\Get-RedstoneRegistryValueOrDefault' 'OnlyUseDefaultSettings' $false -RegistryKeyRoot $this.Settings.Registry.Key))
+        $global:PSDefaultParameterValues.Set_Item('Get-RedstoneRegistryValueOrDefault:RegistryKeyRoot', $this.Settings.Registry.Key)
         $global:PSDefaultParameterValues.Set_Item('Write-Log:FilePath', $this.Settings.Log.File.FullName)
     }
 
     hidden [psobject] GetRegOrDefault($RegistryKey, $RegistryValue, $DefaultValue) {
-        Write-Verbose "[Bacon GetRegOrDefault] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
-        Write-Debug "[Bacon GetRegOrDefault] Function Invocation: $($MyInvocation | Out-String)"
+        Write-Verbose "[Redstone GetRegOrDefault] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
+        Write-Debug "[Redstone GetRegOrDefault] Function Invocation: $($MyInvocation | Out-String)"
 
         if ($this.OnlyUseDefaultSettings) {
-            Write-Verbose "[Bacon GetRegOrDefault] OnlyUseDefaultSettings Set; Returning: ${DefaultValue}"
+            Write-Verbose "[Redstone GetRegOrDefault] OnlyUseDefaultSettings Set; Returning: ${DefaultValue}"
             return $DefaultValue
         }
 
         try {
             $ret = Get-ItemPropertyValue -Path ('{0}\{1}' -f $this.RegistryKeyRoot, $RegistryKey) -Name $RegistryValue -ErrorAction 'Stop'
-            Write-Verbose "[Bacon GetRegOrDefault] Registry Set; Returning: ${ret}"
+            Write-Verbose "[Redstone GetRegOrDefault] Registry Set; Returning: ${ret}"
             return $ret
         } catch [System.Management.Automation.PSArgumentException] {
-            Write-Verbose "[Bacon GetRegOrDefault] Registry Not Set; Returning Default: ${DefaultValue}"
+            Write-Verbose "[Redstone GetRegOrDefault] Registry Not Set; Returning Default: ${DefaultValue}"
             $Error.RemoveAt(0) # This isn't a real error, so I don't want it in the error record.
             return $DefaultValue
         } catch [System.Management.Automation.ItemNotFoundException] {
-            Write-Verbose "[Bacon GetRegOrDefault] Registry Not Set; Returning Default: ${DefaultValue}"
+            Write-Verbose "[Redstone GetRegOrDefault] Registry Not Set; Returning Default: ${DefaultValue}"
             $Error.RemoveAt(0) # This isn't a real error, so I don't want it in the error record.
             return $DefaultValue
         }
@@ -364,7 +367,7 @@ class Bacon {
 
     [void] Quit($ExitCode = 0, [boolean] $ExitCodeAdd = $true , [int] $ExitCodeErrorBase = 55550000) {
 
-        Write-Verbose "[Bacon.Exit] ExitCode Orig : ${ExitCode}"
+        Write-Verbose "[Redstone.Exit] ExitCode Orig : ${ExitCode}"
         if ($ExitCode -eq 'line_number') {
             [int] $this.ExitCode = $MyInvocation.ScriptLineNumber
         }
@@ -372,7 +375,7 @@ class Bacon {
         try {
             [int] $this.ExitCode = $ExitCode
         } catch {
-            Write-Error "[Bacon.Exit] Cannot convert ExitCode to INT.`n`tExitCode: ${ExitCode}`n`tFrom: $($MyInvocation.ScriptName):$($MyInvocation.ScriptLineNumber)"
+            Write-Error "[Redstone.Exit] Cannot convert ExitCode to INT.`n`tExitCode: ${ExitCode}`n`tFrom: $($MyInvocation.ScriptName):$($MyInvocation.ScriptLineNumber)"
         }
 
         if ($ExitCodeAdd -and ($ExitCode -lt 0) -and ($ExitCodeErrorBase -gt 0)) {
@@ -380,22 +383,22 @@ class Bacon {
         }
 
         if ($ExitCodeAdd -and (([string] $ExitCode).Length -gt 4)) {
-            Write-Warning "[Bacon.Exit] ExitCode should not be added to Base when more than 4 digits. Doing it anyway ..."
+            Write-Warning "[Redstone.Exit] ExitCode should not be added to Base when more than 4 digits. Doing it anyway ..."
         }
 
         if ($ExitCodeAdd -and ($ExitCode -eq 0)) {
-            Write-Warning "[Bacon.Exit] ExitCode 0 being added may cause failure; not sure if this is expected. Doing it anyway ..."
+            Write-Warning "[Redstone.Exit] ExitCode 0 being added may cause failure; not sure if this is expected. Doing it anyway ..."
         }
 
         $this.ExitCode = if ($ExitCodeAdd) { $ExitCode + $ExitCodeErrorBase } else { $ExitCode }
-        Write-Verbose "[Bacon.Exit] ExitCode Final: ${ExitCode}"
-        $this.Bacon.ExitCode = $ExitCode
+        Write-Verbose "[Redstone.Exit] ExitCode Final: ${ExitCode}"
+        $this.Redstone.ExitCode = $ExitCode
         $global:Host.SetShouldExit($ExitCode)
         Exit $ExitCode
     }
 
     <#
-    Dig through the Registry Key and import all the Keys and Values into the $global:Bacon objet.
+    Dig through the Registry Key and import all the Keys and Values into the $global:Redstone objet.
 
     There's a fundamental flaw that I haven't addressed yet.
     - if there's a value and sub-key with the same name at the same key level, the sub-key won't be processed.
@@ -430,11 +433,11 @@ class Bacon {
     hidden [void] SetPSDefaultParameterValues([hashtable] $FunctionParameters) {
         if ($FunctionParameters) {
             foreach ($function in $FunctionParameters.GetEnumerator()) {
-                Write-Debug ('[Bacon::SetPSDefaultParameterValues] Function Type: [{0}]' -f $function.GetType().FullName)
-                Write-Debug ('[Bacon::SetPSDefaultParameterValues] Function: {0}: {1}' -f $function.Name, ($function.Value | ConvertTo-Json))
+                Write-Debug ('[Redstone::SetPSDefaultParameterValues] Function Type: [{0}]' -f $function.GetType().FullName)
+                Write-Debug ('[Redstone::SetPSDefaultParameterValues] Function: {0}: {1}' -f $function.Name, ($function.Value | ConvertTo-Json))
                 foreach ($parameter in $function.Value.GetEnumerator()) {
-                    Write-Debug ('[Bacon::SetPSDefaultParameterValues] Parameter: {0}: {1}' -f $parameter.Name, ($parameter.Value | ConvertTo-Json))
-                    Write-Debug ('[Bacon::SetPSDefaultParameterValues] PSDefaultParameterValues: {0}:{1} :: {2}' -f $function.Name, $parameter.Name, $parameter.Value)
+                    Write-Debug ('[Redstone::SetPSDefaultParameterValues] Parameter: {0}: {1}' -f $parameter.Name, ($parameter.Value | ConvertTo-Json))
+                    Write-Debug ('[Redstone::SetPSDefaultParameterValues] PSDefaultParameterValues: {0}:{1} :: {2}' -f $function.Name, $parameter.Name, $parameter.Value)
                     $global:PSDefaultParameterValues.Set_Item(('{0}:{1}' -f $function.Name, $parameter.Name), $parameter.Value)
                 }
             }
@@ -454,10 +457,11 @@ class Bacon {
     }
 }
 
-# $bacon = [Bacon]::new('Mozilla', 'Firefox', '1.2.3', 'test')
-# $bacon
+$Redstone = [Redstone]::new('Mozilla', 'Firefox', '1.2.3', 'test')
+$Redstone
+$Redstone.Settings.Registry
 
-# Class Sausage:Bacon {
+# Class Sausage:Redstone {
 #     Sausage([string] $Publisher, [string] $Product, [string] $Version, [string] $Action):base([string] $Publisher, [string] $Product, [string] $Version, [string] $Action) {
 #     }
 # }

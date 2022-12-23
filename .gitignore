@@ -4,4 +4,4 @@ dev/*
 
 # Module Specific
 *.wim
-BaconMount/*
+RedstoneMount/*

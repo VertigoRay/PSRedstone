@@ -15,18 +15,18 @@ The product code of the application to retrieve information for.
 .PARAMETER IncludeUpdatesAndHotfixes
 Include matches against updates and hotfixes in results.
 .PARAMETER UninstallRegKeys
-Default: `$global:bacon.Settings.Functions.Get-InstalledApplication.UninstallRegKeys`
+Default: `$global:Redstone.Settings.Functions.Get-InstalledApplication.UninstallRegKeys`
 
 Private Parameter; used for debug overrides.
 .EXAMPLE
-Get-BaconInstalledApplication -Name 'Adobe Flash'
+Get-RedstoneInstalledApplication -Name 'Adobe Flash'
 .EXAMPLE
-Get-BaconInstalledApplication -ProductCode '{1AD147D0-BE0E-3D6C-AC11-64F6DC4163F1}'
+Get-RedstoneInstalledApplication -ProductCode '{1AD147D0-BE0E-3D6C-AC11-64F6DC4163F1}'
 .NOTES
 .LINK
 http://psappdeploytoolkit.com
 #>
-Function Get-BaconInstalledApplication {
+Function Get-RedstoneInstalledApplication {
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory=$false)]
@@ -60,37 +60,37 @@ Function Get-BaconInstalledApplication {
         )
     )
 
-    Write-Information "[Get-BaconInstalledApplication] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
-    Write-Debug "[Get-BaconInstalledApplication] Function Invocation: $($MyInvocation | Out-String)"
+    Write-Information "[Get-RedstoneInstalledApplication] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
+    Write-Debug "[Get-RedstoneInstalledApplication] Function Invocation: $($MyInvocation | Out-String)"
 
 
     if ($Name) {
-        Write-Information "[Get-BaconInstalledApplication] Get information for installed Application Name(s) [$($name -join ', ')]..."
+        Write-Information "[Get-RedstoneInstalledApplication] Get information for installed Application Name(s) [$($name -join ', ')]..."
     }
     if ($ProductCode) {
-        Write-Information "[Get-BaconInstalledApplication] Get information for installed Product Code [$ProductCode]..."
+        Write-Information "[Get-RedstoneInstalledApplication] Get information for installed Product Code [$ProductCode]..."
     }
 
     ## Enumerate the installed applications from the registry for applications that have the "DisplayName" property
     [psobject[]]$regKeyApplication = @()
     foreach ($regKey in $UninstallRegKeys) {
-        Write-Verbose "[Get-BaconInstalledApplication] Checking Key: ${regKey}"
+        Write-Verbose "[Get-RedstoneInstalledApplication] Checking Key: ${regKey}"
         if (Test-Path -LiteralPath $regKey -ErrorAction 'SilentlyContinue' -ErrorVariable '+ErrorUninstallKeyPath') {
             [psobject[]]$UninstallKeyApps = Get-ChildItem -LiteralPath $regKey -ErrorAction 'SilentlyContinue' -ErrorVariable '+ErrorUninstallKeyPath'
             foreach ($UninstallKeyApp in $UninstallKeyApps) {
-                Write-Verbose "[Get-BaconInstalledApplication] Checking Key: $($UninstallKeyApp.PSChildName)"
+                Write-Verbose "[Get-RedstoneInstalledApplication] Checking Key: $($UninstallKeyApp.PSChildName)"
                 try {
                     [psobject]$regKeyApplicationProps = Get-ItemProperty -LiteralPath $UninstallKeyApp.PSPath -ErrorAction 'Stop'
                     if ($regKeyApplicationProps.DisplayName) { [psobject[]]$regKeyApplication += $regKeyApplicationProps }
                 } catch {
-                    Write-Warning "[Get-BaconInstalledApplication] Unable to enumerate properties from registry key path [$($UninstallKeyApp.PSPath)]. `n$(Resolve-Error)"
+                    Write-Warning "[Get-RedstoneInstalledApplication] Unable to enumerate properties from registry key path [$($UninstallKeyApp.PSPath)]. `n$(Resolve-Error)"
                     continue
                 }
             }
         }
     }
     if ($ErrorUninstallKeyPath) {
-        Write-Warning "[Get-BaconInstalledApplication] The following error(s) took place while enumerating installed applications from the registry. `n$(Resolve-Error -ErrorRecord $ErrorUninstallKeyPath)"
+        Write-Warning "[Get-RedstoneInstalledApplication] The following error(s) took place while enumerating installed applications from the registry. `n$(Resolve-Error -ErrorRecord $ErrorUninstallKeyPath)"
     }
 
     ## Create a custom object with the desired properties for the installed applications and sanitize property details
@@ -120,7 +120,7 @@ Function Get-BaconInstalledApplication {
             if ($ProductCode) {
                 ## Verify if there is a match with the product code passed to the script
                 if ($regKeyApp.PSChildName -match [regex]::Escape($productCode)) {
-                    Write-Information "[Get-BaconInstalledApplication] Found installed application [$appDisplayName] version [$appDisplayVersion] matching product code [$productCode]."
+                    Write-Information "[Get-RedstoneInstalledApplication] Found installed application [$appDisplayName] version [$appDisplayVersion] matching product code [$productCode]."
                     $installedApplication += New-Object -TypeName 'PSObject' -Property @{
                         UninstallSubkey = $regKeyApp.PSChildName
                         ProductCode = $regKeyApp.PSChildName -as [guid]
@@ -146,20 +146,20 @@ Function Get-BaconInstalledApplication {
                         #  Check for an exact application name match
                         if ($regKeyApp.DisplayName -eq $application) {
                             $applicationMatched = $true
-                            Write-Information "[Get-BaconInstalledApplication] Found installed application [$appDisplayName] version [$appDisplayVersion] using exact name matching for search term [$application]."
+                            Write-Information "[Get-RedstoneInstalledApplication] Found installed application [$appDisplayName] version [$appDisplayVersion] using exact name matching for search term [$application]."
                         }
                     }
                     elseif ($WildCard.IsPresent) {
                         #  Check for wildcard application name match
                         if ($regKeyApp.DisplayName -like $application) {
                             $applicationMatched = $true
-                            Write-Information "[Get-BaconInstalledApplication] Found installed application [$appDisplayName] version [$appDisplayVersion] using wildcard matching for search term [$application]."
+                            Write-Information "[Get-RedstoneInstalledApplication] Found installed application [$appDisplayName] version [$appDisplayVersion] using wildcard matching for search term [$application]."
                         }
                     }
                     #  Check for a regex application name match
                     elseif ($regKeyApp.DisplayName -match [regex]::Escape($application)) {
                         $applicationMatched = $true
-                        Write-Information "[Get-BaconInstalledApplication] Found installed application [$appDisplayName] version [$appDisplayVersion] using regex matching for search term [$application]."
+                        Write-Information "[Get-RedstoneInstalledApplication] Found installed application [$appDisplayName] version [$appDisplayVersion] using regex matching for search term [$application]."
                     }
 
                     if ($applicationMatched) {
@@ -182,7 +182,7 @@ Function Get-BaconInstalledApplication {
                 }
             }
         } catch {
-            Write-Error "[Get-BaconInstalledApplication] Failed to resolve application details from registry for [$appDisplayName]. `n$(Resolve-Error)"
+            Write-Error "[Get-RedstoneInstalledApplication] Failed to resolve application details from registry for [$appDisplayName]. `n$(Resolve-Error)"
             continue
         }
     }
@@ -191,4 +191,4 @@ Function Get-BaconInstalledApplication {
 }
 
 # $VerbosePreference = 'c'
-# Get-BaconInstalledApplication -Name '*PowerShell*' -WildCard
+# Get-RedstoneInstalledApplication -Name '*PowerShell*' -WildCard

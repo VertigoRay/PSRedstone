@@ -134,19 +134,19 @@ task Build -Depends BuildManifest {
     [IO.Path]::Combine($script:ParentDevModulePath, ('{0}.psm1' -f $script:thisModuleName))
 
     # Sign Code
-    $pfxESE = [IO.Path]::Combine($env:Temp, 'ese.pfx')
-    Set-Content $pfxESE -Value ([System.Convert]::FromBase64String($env:ESE_CODE_SIGNING_CERT_PFXB64)) -Encoding 'Byte'
-    $certPass = ConvertTo-SecureString -String $env:ESE_CODE_SIGNING_CERT_PASS -AsPlainText -Force
-    $cert = (Get-PfxData -FilePath $pfxESE -Password $certPass).EndEntityCertificates[0]
-    foreach ($file in (Get-ChildItem $script:ParentModulePath -File)) {
-        $authenticodeSignature = @{
-            FilePath = $file.FullName
-            Certificate = $cert
-            TimeStampServer = 'http://timestamp.digicert.com'
-        }
-        Write-Host "[PSAKE Build] Set-AuthenticodeSignature: $($authenticodeSignature | ConvertTo-Json -Depth 1)" -ForegroundColor 'DarkMagenta'
-        Set-AuthenticodeSignature @authenticodeSignature
-    }
+    # $pfxESE = [IO.Path]::Combine($env:Temp, 'ese.pfx')
+    # Set-Content $pfxESE -Value ([System.Convert]::FromBase64String($env:ESE_CODE_SIGNING_CERT_PFXB64)) -Encoding 'Byte'
+    # $certPass = ConvertTo-SecureString -String $env:ESE_CODE_SIGNING_CERT_PASS -AsPlainText -Force
+    # $cert = (Get-PfxData -FilePath $pfxESE -Password $certPass).EndEntityCertificates[0]
+    # foreach ($file in (Get-ChildItem $script:ParentModulePath -File)) {
+    #     $authenticodeSignature = @{
+    #         FilePath = $file.FullName
+    #         Certificate = $cert
+    #         TimeStampServer = 'http://timestamp.digicert.com'
+    #     }
+    #     Write-Host "[PSAKE Build] Set-AuthenticodeSignature: $($authenticodeSignature | ConvertTo-Json -Depth 1)" -ForegroundColor 'DarkMagenta'
+    #     Set-AuthenticodeSignature @authenticodeSignature
+    # }
 }
 
 task PostAnalyze {

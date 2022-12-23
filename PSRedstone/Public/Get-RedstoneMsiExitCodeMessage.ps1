@@ -8,14 +8,14 @@ MSI error code
 .PARAMETER MsiLog
 MSI Log File. Parsed if ErrorCode is 1603.
 .EXAMPLE
-Get-BaconMsiExitCodeMessage -MsiExitCode 1618
+Get-RedstoneMsiExitCodeMessage -MsiExitCode 1618
 .NOTES
 This is an internal script function and should typically not be called directly.
 .LINK
 http://msdn.microsoft.com/en-us/library/aa368542(v=vs.85).aspx
 http://psappdeploytoolkit.com
 #>
-function Get-BaconMsiExitCodeMessage {
+function Get-RedstoneMsiExitCodeMessage {
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory=$true)]
@@ -107,5 +107,5 @@ function Get-BaconMsiExitCodeMessage {
 }
 
 
-Get-BaconMsiExitCodeMessage -MsiExitCode 1622
-# Get-BaconMsiExitCodeMessage -MsiExitCode 1635
+Get-RedstoneMsiExitCodeMessage -MsiExitCode 1622
+# Get-RedstoneMsiExitCodeMessage -MsiExitCode 1635

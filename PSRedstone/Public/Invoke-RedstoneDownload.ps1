@@ -1,4 +1,4 @@
-function Invoke-BaconDownload {
+function Invoke-RedstoneDownload {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -18,7 +18,7 @@ function Invoke-BaconDownload {
         $Checksum
     )
 
-    Write-Debug ('[Invoke-BaconDownload] MyInvocation: {0}' -f ($MyInvocation | Out-String))
+    Write-Debug ('[Invoke-RedstoneDownload] MyInvocation: {0}' -f ($MyInvocation | Out-String))
 
     if (-not $OutFile.Directory.Exists -and -not $OutFolder.Exists) {
         $directory = if ($OutFile) { $OutFile.DirectoryName } else { $OutFolder.FullName }
@@ -34,23 +34,23 @@ function Invoke-BaconDownload {
         Destination = $OutFile.FullName
         ErrorAction = 'Stop'
     }
-    Write-Verbose ('[Invoke-BaconDownload] startBitsTransfer: {0}' -f ($startBitsTransfer | ConvertTo-Json))
+    Write-Verbose ('[Invoke-RedstoneDownload] startBitsTransfer: {0}' -f ($startBitsTransfer | ConvertTo-Json))
 
     try {
         Start-BitsTransfer @startBitsTransfer
     } catch {
-        Write-Warning ('[Invoke-BaconDownload] BitsTransfer Failed: {0}' -f $_)
+        Write-Warning ('[Invoke-RedstoneDownload] BitsTransfer Failed: {0}' -f $_)
         try {
             (New-Object Net.WebClient).DownloadFile($startBitsTransfer.Source, $startBitsTransfer.Destination)
         } catch {
-            Write-Warning ('[Invoke-BaconDownload] WebClient Failed: {0}' -f $_)
+            Write-Warning ('[Invoke-RedstoneDownload] WebClient Failed: {0}' -f $_)
             Invoke-WebRequest -Uri $startBitsTransfer.Source -OutFile $startBitsTransfer.Destination
         }
     }
 
     if ($Checksum) {
         $hash = Get-FileHash -LiteralPath $startBitsTransfer.Destination -Algorithm $Checksum.Algorithm
-        Write-Verbose ('[Invoke-BaconDownload] Downloaded File Hash: {0}' -f ($hash | ConvertTo-Json))
+        Write-Verbose ('[Invoke-RedstoneDownload] Downloaded File Hash: {0}' -f ($hash | ConvertTo-Json))
 
         if ($Checksum.Hash -ne $hash.Hash) {
             Remove-Item -LiteralPath $startBitsTransfer.Destination -Force

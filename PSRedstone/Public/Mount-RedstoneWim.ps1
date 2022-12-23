@@ -2,16 +2,16 @@
 <#
 .EXAMPLE
 try {
-    Mount-BaconWim
+    Mount-RedstoneWim
 
     ... do some things ...
 } catch {
 
 } finally {
-    Dismount-BaconWim
+    Dismount-RedstoneWim
 }
 #>
-function Mount-BaconWim {
+function Mount-RedstoneWim {
     [CmdletBinding()]
     param (
         # Specifies a path to one or more locations.
@@ -39,7 +39,7 @@ function Mount-BaconWim {
         )]
         [ValidateNotNullOrEmpty()]
         [IO.DirectoryInfo]
-        $MountPath = ([IO.Path]::Combine($env:Temp, 'BaconMount')),
+        $MountPath = ([IO.Path]::Combine($env:Temp, 'RedstoneMount')),
 
         [Parameter(Mandatory = $false)]
         [int]
@@ -51,14 +51,14 @@ function Mount-BaconWim {
     )
 
     begin {
-        Write-Verbose "[Mount-BaconWim] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
-        Write-Debug "[Mount-BaconWim] Function Invocation: $($MyInvocation | Out-String)"
+        Write-Verbose "[Mount-RedstoneWim] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
+        Write-Debug "[Mount-RedstoneWim] Function Invocation: $($MyInvocation | Out-String)"
     }
 
     process {
         # $MyInvocation
         # $MountPath.FullName
-        $MountPath.FullName | Invoke-BaconForceEmptyDirectory
+        $MountPath.FullName | Invoke-RedstoneForceEmptyDirectory
         $MountPath.Refresh()
 
         $windowsImage = @{
@@ -71,11 +71,11 @@ function Mount-BaconWim {
             $windowsImage.Add('LogPath', ($LogFileF -f 'DISM'))
         }
 
-        Write-Verbose "[Mount-BaconWim] Mount-WindowImage: $($windowsImage | ConvertTo-Json)"
+        Write-Verbose "[Mount-RedstoneWim] Mount-WindowImage: $($windowsImage | ConvertTo-Json)"
         Mount-WindowsImage @windowsImage
     }
 
     end {}
 }
 
-# Mount-BaconWim -ImagePath "$pwd\PSBacon.wim"
+# Mount-RedstoneWim -ImagePath "$pwd\PSRedstone.wim"

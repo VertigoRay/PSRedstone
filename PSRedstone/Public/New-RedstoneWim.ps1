@@ -1,9 +1,9 @@
 #Requires -RunAsAdministrator
 <#
 .EXAMPLE
-New-BaconWim -ImagePath "PSBacon.wim" -CapturePath "PSBacon" -Name "PSBacon"
+New-RedstoneWim -ImagePath "PSRedstone.wim" -CapturePath "PSRedstone" -Name "PSRedstone"
 #>
-function New-BaconWim {
+function New-RedstoneWim {
     [CmdletBinding(SupportsShouldProcess)]
     param (
         [Parameter(Mandatory = $true)]
@@ -24,8 +24,8 @@ function New-BaconWim {
     )
 
     begin {
-        Write-Verbose "[New-BaconWim] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
-        Write-Debug "[New-BaconWim] Function Invocation: $($MyInvocation | Out-String)"
+        Write-Verbose "[New-RedstoneWim] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
+        Write-Debug "[New-RedstoneWim] Function Invocation: $($MyInvocation | Out-String)"
     }
 
     process {
@@ -54,4 +54,4 @@ function New-BaconWim {
     end {}
 }
 
-# New-BaconWim -ImagePath "PSBacon.wim" -CapturePath "PSBacon" -Name "PSBacon"
+# New-RedstoneWim -ImagePath "PSRedstone.wim" -CapturePath "PSRedstone" -Name "PSRedstone"

@@ -1,7 +1,7 @@
-Describe 'BaconWim' -Tag 'WIM' {
-    [IO.FileInfo] $capturePath = [IO.Path]::Combine($psProjectRoot.FullName, 'PSBacon')
-    $imagePath = [IO.Path]::Combine('TestDrive:', 'dev', 'PSBacon', 'PSBacon.wim')
-    $mountPath = [IO.Path]::Combine('TestDrive:', 'dev', 'Mount_PSBacon')
+Describe 'RedstoneWim' -Tag 'WIM' {
+    [IO.FileInfo] $capturePath = [IO.Path]::Combine($psProjectRoot.FullName, 'PSRedstone')
+    $imagePath = [IO.Path]::Combine('TestDrive:', 'dev', 'PSRedstone', 'PSRedstone.wim')
+    $mountPath = [IO.Path]::Combine('TestDrive:', 'dev', 'Mount_PSRedstone')
     [bool] $script:isElevated = (New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
 
     BeforeAll {
@@ -9,11 +9,11 @@ Describe 'BaconWim' -Tag 'WIM' {
         Write-Debug ('psProjectRoot: {0}' -f $psProjectRoot)
 
         if ($isElevated) {
-            . ('{0}\PSBacon\Public\Dismount-BaconWim.ps1' -f $psProjectRoot.FullName)
-            . ('{0}\PSBacon\Public\Mount-BaconWim.ps1' -f $psProjectRoot.FullName)
-            . ('{0}\PSBacon\Public\New-BaconWim.ps1' -f $psProjectRoot.FullName)
+            . ('{0}\PSRedstone\Public\Dismount-RedstoneWim.ps1' -f $psProjectRoot.FullName)
+            . ('{0}\PSRedstone\Public\Mount-RedstoneWim.ps1' -f $psProjectRoot.FullName)
+            . ('{0}\PSRedstone\Public\New-RedstoneWim.ps1' -f $psProjectRoot.FullName)
         }
-        . ('{0}\PSBacon\Public\Invoke-BaconForceEmptyDirectory.ps1' -f $psProjectRoot.FullName)
+        . ('{0}\PSRedstone\Public\Invoke-RedstoneForceEmptyDirectory.ps1' -f $psProjectRoot.FullName)
     }
 
     Context 'NEW' {
@@ -32,7 +32,7 @@ Describe 'BaconWim' -Tag 'WIM' {
                 Test-Path $imagePath | Should -Be $false
             }
 
-            New-BaconWim -ImagePath $imagePath -CapturePath $capturePath -Name 'PSBacon'
+            New-RedstoneWim -ImagePath $imagePath -CapturePath $capturePath -Name 'PSRedstone'
 
             It ('WIM Created: {0}' -f $imagePath) {
                 Test-Path $imagePath | Should -Be $true
@@ -54,7 +54,7 @@ Describe 'BaconWim' -Tag 'WIM' {
                 Test-Path $mountPath | Should -Be $false
             }
 
-            Mount-BaconWim -ImagePath $imagePath -MountPath $mountPath
+            Mount-RedstoneWim -ImagePath $imagePath -MountPath $mountPath
 
             It ('WIM mounted: {0}' -f $mountPath) {
                 Test-Path $mountPath | Should -Be $true
@@ -72,8 +72,8 @@ Describe 'BaconWim' -Tag 'WIM' {
                 Test-Path $mountPath | Should -Be $true
             }
 
-            Write-Host "Dismount-BaconWim -MountPath '${mountPath}'" -Fore Cyan
-            Dismount-BaconWim -MountPath $mountPath
+            Write-Host "Dismount-RedstoneWim -MountPath '${mountPath}'" -Fore Cyan
+            Dismount-RedstoneWim -MountPath $mountPath
 
             It ('WIM dismounted: {0}' -f $mountPath) {
                 Test-Path $mountPath | Should -Be $false

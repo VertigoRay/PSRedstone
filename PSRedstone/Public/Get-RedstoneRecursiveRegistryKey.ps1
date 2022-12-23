@@ -2,7 +2,7 @@
 .DESCRIPTION
 Recursively probe registry key's sub-key's and values and output a sorted array.
 #>
-function Get-BaconRecursiveRegistryKey {
+function Get-RedstoneRecursiveRegistryKey {
     param(
         [Parameter(Mandatory = $true)]
         [String]

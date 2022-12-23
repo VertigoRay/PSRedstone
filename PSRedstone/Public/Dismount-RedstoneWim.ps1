@@ -1,6 +1,6 @@
 #Requires -RunAsAdministrator
 
-function Dismount-BaconWim {
+function Dismount-RedstoneWim {
     [CmdletBinding()]
     param (
         # Specifies a path to one or more locations.
@@ -14,7 +14,7 @@ function Dismount-BaconWim {
         )]
         [ValidateNotNullOrEmpty()]
         [IO.DirectoryInfo]
-        $MountPath = (Join-Path $PWD 'BaconMount'),
+        $MountPath = (Join-Path $PWD 'RedstoneMount'),
 
         [Parameter(Mandatory = $true)]
         [IO.FileInfo]
@@ -22,8 +22,8 @@ function Dismount-BaconWim {
     )
 
     begin {
-        Write-Verbose "[Dismount-BaconWim] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
-        Write-Debug "[Dismount-BaconWim] Function Invocation: $($MyInvocation | Out-String)"
+        Write-Verbose "[Dismount-RedstoneWim] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
+        Write-Debug "[Dismount-RedstoneWim] Function Invocation: $($MyInvocation | Out-String)"
 
         $windowsImage = @{
             Path = $mountedWim.Path
@@ -57,7 +57,7 @@ function Dismount-BaconWim {
 
             if (-not $errorOccured) {
                 Clear-WindowsCorruptMountPoint
-                Unregister-ScheduledTask -TaskName 'Bacon Cleanup WIM' -Confirm:$false
+                Unregister-ScheduledTask -TaskName 'Redstone Cleanup WIM' -Confirm:$false
             }
         }
         $encodedCommand = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($mounted.ToString()))
@@ -70,17 +70,17 @@ function Dismount-BaconWim {
     process {
         ## dismount the WIM whether we succeeded or failed
         try {
-            Write-Verbose "[Dismount-BaconWim] Dismount-WindowImage: $($windowsImage | ConvertTo-Json)"
+            Write-Verbose "[Dismount-RedstoneWim] Dismount-WindowImage: $($windowsImage | ConvertTo-Json)"
             Dismount-WindowsImage @windowsImage
         } catch [System.Runtime.InteropServices.COMException] {
-            Write-Warning ('[Dismount-BaconWim] [{0}] {1}' -f $_.Exception.GetType().FullName, $_.Exception.Message)
+            Write-Warning ('[Dismount-RedstoneWim] [{0}] {1}' -f $_.Exception.GetType().FullName, $_.Exception.Message)
             if ($_.Exception.Message -eq 'The system cannot find the file specified.') {
                 Throw $_
             } else {
                 # $_.Exception.Message -eq 'The system cannot find the file specified.'
                 ## failed to cleanly dismount, so set a task to cleanup after reboot
 
-                Write-Verbose ('[Dismount-BaconWim] Scheduled Task Action: {0}' -f ($cleanupTaskAction | ConvertTo-Json))
+                Write-Verbose ('[Dismount-RedstoneWim] Scheduled Task Action: {0}' -f ($cleanupTaskAction | ConvertTo-Json))
 
                 $scheduledTaskAction = New-ScheduledTaskAction @cleanupTaskAction
                 $scheduledTaskTrigger = New-ScheduledTaskTrigger -AtStartup
@@ -88,13 +88,13 @@ function Dismount-BaconWim {
                 $scheduledTask = @{
                     Action = $scheduledTaskAction
                     Trigger = $scheduledTaskTrigger
-                    TaskName = 'Bacon Cleanup WIM'
+                    TaskName = 'Redstone Cleanup WIM'
                     Description = 'Clean up WIM Mount points that failed to dismount properly.'
                     User = 'NT AUTHORITY\SYSTEM'
                     RunLevel = 'Highest'
                     Force = $true
                 }
-                Write-Verbose ('[Dismount-BaconWim] Scheduled Task: {0}' -f ($scheduledTask | ConvertTo-Json))
+                Write-Verbose ('[Dismount-RedstoneWim] Scheduled Task: {0}' -f ($scheduledTask | ConvertTo-Json))
                 Register-ScheduledTask @scheduledTask
             }
         }
@@ -105,4 +105,4 @@ function Dismount-BaconWim {
     end {}
 }
 
-# Dismount-BaconWim
+# Dismount-RedstoneWim

@@ -34,7 +34,7 @@
             "name": "Docker: Build",
             "type": "PowerShell",
             "request": "launch",
-            "script": "docker run --rm -it --name \"PSBacon\" -v \"${workspaceFolder}:C:\\${workspaceFolderBasename}\" mcr.microsoft.com/windows/servercore:ltsc2019-amd64 C:\\${workspaceFolderBasename}\\.build\\build.ps1",
+            "script": "docker run --rm -it --name \"PSRedstone\" -v \"${workspaceFolder}:C:\\${workspaceFolderBasename}\" mcr.microsoft.com/windows/servercore:ltsc2019-amd64 C:\\${workspaceFolderBasename}\\.build\\build.ps1",
             // "script": "docker run --rm -it --name \"PSWinstall\" -v \"${workspaceFolder}:C:\\${workspaceFolderBasename}\" mcr.microsoft.com/windows/servercore:ltsc2019-amd64 powershell.exe -NoP -Command \"cd 'C:\\${workspaceFolderBasename}\\Tests'; Invoke-Pester -OutputFile 'C:\\${workspaceFolderBasename}\\dev\\pesterResults.xml' -OutputFormat 'NUnitXML'\"",
             // "script": "docker run --rm -it --name \"PSWinstall\" -v \"${workspaceFolder}:C:\\${workspaceFolderBasename}\" mcr.microsoft.com/windows/servercore:ltsc2019-amd64 \"C:\\${workspaceFolderBasename}\\.build\\InvokePester.ps1\"",
             // "script": "docker run --rm -it --name \"PSWinstall\" mcr.microsoft.com/windows/servercore:ltsc2019-amd64 powershell.exe",

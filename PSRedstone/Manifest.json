@@ -1,5 +1,5 @@
 {
-    "Description": "PSBacon is framework designed to streamline third software installation and configuration. It is designed to make endpoint managers more agile with a Configuration Management, DevOps, and Infrastructure as Code (IaC) mentality.",
+    "Description": "PSRedstone is framework designed to streamline third software installation and configuration. It is designed to make endpoint managers more agile with a Configuration Management, DevOps, and Infrastructure as Code (IaC) mentality.",
     "Author": "Raymond Piller",
     "CompanyName": "Endpoint Solutions Engineering, Tech Solutions, University of Texas at San Antonio",
     "Copyright": "(c) {0} University of Texas at San Antonio. All rights reserved.",

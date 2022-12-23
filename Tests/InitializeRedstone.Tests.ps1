@@ -1,8 +1,8 @@
 Describe 'Initialize' -Tag 'Class' {
     $script:psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
-    . ('{0}\PSBacon\Private\Initialize.ps1' -f $psProjectRoot.FullName)
+    . ('{0}\PSRedstone\Private\Initialize.ps1' -f $psProjectRoot.FullName)
 
-    function Invoke-BaconTestLogFileA898F15E {
+    function Invoke-RedstoneTestLogFileA898F15E {
         param(
             [string] $LogFile
         )
@@ -10,7 +10,7 @@ Describe 'Initialize' -Tag 'Class' {
         return $LogFile
     }
 
-    function Invoke-BaconTestLogFileF7558260D {
+    function Invoke-RedstoneTestLogFileF7558260D {
         param(
             [string] $LogFileF
         )
@@ -32,7 +32,7 @@ Describe 'Initialize' -Tag 'Class' {
             Version = '1.2.3'
             Action = 'test'
             Run = {
-                $script:bacon.Publisher = 'YourPublisher'
+                $script:Redstone.Publisher = 'YourPublisher'
             }
         }
         'Product Change' = @{
@@ -41,7 +41,7 @@ Describe 'Initialize' -Tag 'Class' {
             Version = '1.2.3'
             Action = 'test'
             Run = {
-                $script:bacon.Product = 'YourProduct'
+                $script:Redstone.Product = 'YourProduct'
             }
         }
         'Version Change' = @{
@@ -50,7 +50,7 @@ Describe 'Initialize' -Tag 'Class' {
             Version = '2.3.4'
             Action = 'test'
             Run = {
-                $script:bacon.Version = '2.3.4'
+                $script:Redstone.Version = '2.3.4'
             }
         }
         'Action Change' = @{
@@ -59,21 +59,21 @@ Describe 'Initialize' -Tag 'Class' {
             Version = '1.2.3'
             Action = 'testing'
             Run = {
-                $script:bacon.Action = 'testing'
+                $script:Redstone.Action = 'testing'
             }
         }
     }
 
-    Context ('Bacon Class: {0}' -f $context.Name) {
+    Context ('Redstone Class') {
         BeforeEach {
             $psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
-            . ('{0}\PSBacon\Private\Initialize.ps1' -f $psProjectRoot.FullName)
+            . ('{0}\PSRedstone\Private\Initialize.ps1' -f $psProjectRoot.FullName)
 
             $script:publisher = 'MyPublisher'
             $script:product = 'MyProduct'
             $script:version = '1.2.3'
             $script:action = 'test'
-            $script:bacon = [Bacon]::new($script:publisher, $script:product, $script:version, $script:action)
+            $script:Redstone = [Redstone]::new($script:publisher, $script:product, $script:version, $script:action)
         }
 
         It '<Title>: Publisher:<Publisher>' -TestCases @(
@@ -89,7 +89,7 @@ Describe 'Initialize' -Tag 'Class' {
             if ($Run -and $Run.ToString()) {
                 $Run.ToString() | Invoke-Expression
             }
-            $script:bacon.Publisher | Should -Be $Publisher
+            $script:Redstone.Publisher | Should -Be $Publisher
         }
 
         It '<Title>: Product:<Product>' -TestCases @(
@@ -105,7 +105,7 @@ Describe 'Initialize' -Tag 'Class' {
             if ($Run -and $Run.ToString()) {
                 $Run.ToString() | Invoke-Expression
             }
-            $script:bacon.Product | Should -Be $Product
+            $script:Redstone.Product | Should -Be $Product
         }
 
         It '<Title>: Version:<Version>' -TestCases @(
@@ -121,7 +121,7 @@ Describe 'Initialize' -Tag 'Class' {
             if ($Run -and $Run.ToString()) {
                 $Run.ToString() | Invoke-Expression
             }
-            $script:bacon.Version | Should -Be $Version
+            $script:Redstone.Version | Should -Be $Version
         }
 
         It '<Title>: Action:<Action>' -TestCases @(
@@ -137,14 +137,14 @@ Describe 'Initialize' -Tag 'Class' {
             if ($Run -and $Run.ToString()) {
                 $Run.ToString() | Invoke-Expression
             }
-            $script:bacon.Action | Should -Be $Action
+            $script:Redstone.Action | Should -Be $Action
         }
 
         It 'Settings Registry Key' {
             if ($context.Value -and $context.Value.ToString()) {
                 $context.Value.ToString() | Invoke-Expression
             }
-            $script:bacon.Settings.Registry.Key | Should -Be 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\PSBacon'
+            $script:Redstone.Settings.Registry.Key | Should -Be 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\PSRedstone'
         }
 
         It 'Log File' {
@@ -153,9 +153,9 @@ Describe 'Initialize' -Tag 'Class' {
                 $context.Value.ToString() | Invoke-Expression
             }
             if ($isElevated) {
-                $script:bacon.Settings.Log.File.FullName | Should -Be "${env:SystemRoot}\Logs\Bacon\${publisher} ${product} ${version} ${action}.log"
+                $script:Redstone.Settings.Log.File.FullName | Should -Be "${env:SystemRoot}\Logs\Redstone\${publisher} ${product} ${version} ${action}.log"
             } else {
-                $script:bacon.Settings.Log.File.FullName | Should -Be "${env:Temp}\Logs\Bacon\${publisher} ${product} ${version} ${action}.log"
+                $script:Redstone.Settings.Log.File.FullName | Should -Be "${env:Temp}\Logs\Redstone\${publisher} ${product} ${version} ${action}.log"
             }
         }
 
@@ -165,24 +165,10 @@ Describe 'Initialize' -Tag 'Class' {
                 $context.Value.ToString() | Invoke-Expression
             }
             if ($isElevated) {
-                $script:bacon.Settings.Log.FileF | Should -Be "${env:SystemRoot}\Logs\Bacon\${publisher} ${product} ${version} ${action}{0}.log"
+                $script:Redstone.Settings.Log.FileF | Should -Be "${env:SystemRoot}\Logs\Redstone\${publisher} ${product} ${version} ${action}{0}.log"
             } else {
-                $script:bacon.Settings.Log.FileF | Should -Be "${env:Temp}\Logs\Bacon\${publisher} ${product} ${version} ${action}{0}.log"
+                $script:Redstone.Settings.Log.FileF | Should -Be "${env:Temp}\Logs\Redstone\${publisher} ${product} ${version} ${action}{0}.log"
             }
-        }
-
-        It 'Settings Functions Get-BaconRegistryValueOrDefault RegistryKeyRoot' {
-            if ($context.Value -and $context.Value.ToString()) {
-                $context.Value.ToString() | Invoke-Expression
-            }
-            $script:bacon.Settings.Functions.'Get-BaconRegistryValueOrDefault'.RegistryKeyRoot | Should -Be 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\PSBacon'
-        }
-
-        It 'Settings Functions Get-BaconRegistryValueOrDefault OnlyUseDefaultSettings' {
-            if ($context.Value -and $context.Value.ToString()) {
-                $context.Value.ToString() | Invoke-Expression
-            }
-            $script:bacon.Settings.Functions.'Get-BaconRegistryValueOrDefault'.OnlyUseDefaultSettings | Should -Be 0
         }
 
         It 'PSDefaultParameterValues Write-Log:FilePath' {
@@ -191,33 +177,33 @@ Describe 'Initialize' -Tag 'Class' {
                 $context.Value.ToString() | Invoke-Expression
             }
             if ($isElevated) {
-                $global:PSDefaultParameterValues.'Write-Log:FilePath' | Should -Be "${env:SystemRoot}\Logs\Bacon\${publisher} ${product} ${version} ${action}.log"
+                $global:PSDefaultParameterValues.'Write-Log:FilePath' | Should -Be "${env:SystemRoot}\Logs\Redstone\${publisher} ${product} ${version} ${action}.log"
             } else {
-                $global:PSDefaultParameterValues.'Write-Log:FilePath' | Should -Be "${env:Temp}\Logs\Bacon\${publisher} ${product} ${version} ${action}.log"
+                $global:PSDefaultParameterValues.'Write-Log:FilePath' | Should -Be "${env:Temp}\Logs\Redstone\${publisher} ${product} ${version} ${action}.log"
             }
         }
 
-        It 'PSDefaultParameterValues *-Bacon*:LogFile' {
+        It 'PSDefaultParameterValues *-Redstone*:LogFile' {
             [bool] $isElevated = (New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
             if ($context.Value -and $context.Value.ToString()) {
                 $context.Value.ToString() | Invoke-Expression
             }
             if ($isElevated) {
-                $global:PSDefaultParameterValues.'*-Bacon*:LogFile' | Should -Be "${env:SystemRoot}\Logs\Bacon\${publisher} ${product} ${version} ${action}.log"
+                $global:PSDefaultParameterValues.'*-Redstone*:LogFile' | Should -Be "${env:SystemRoot}\Logs\Redstone\${publisher} ${product} ${version} ${action}.log"
             } else {
-                $global:PSDefaultParameterValues.'*-Bacon*:LogFile' | Should -Be "${env:Temp}\Logs\Bacon\${publisher} ${product} ${version} ${action}.log"
+                $global:PSDefaultParameterValues.'*-Redstone*:LogFile' | Should -Be "${env:Temp}\Logs\Redstone\${publisher} ${product} ${version} ${action}.log"
             }
         }
 
-        It 'PSDefaultParameterValues *-Bacon*:LogFileF' {
+        It 'PSDefaultParameterValues *-Redstone*:LogFileF' {
             [bool] $isElevated = (New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
             if ($context.Value -and $context.Value.ToString()) {
                 $context.Value.ToString() | Invoke-Expression
             }
             if ($isElevated) {
-                $global:PSDefaultParameterValues.'*-Bacon*:LogFileF' | Should -Be "${env:SystemRoot}\Logs\Bacon\${publisher} ${product} ${version} ${action}{0}.log"
+                $global:PSDefaultParameterValues.'*-Redstone*:LogFileF' | Should -Be "${env:SystemRoot}\Logs\Redstone\${publisher} ${product} ${version} ${action}{0}.log"
             } else {
-                $global:PSDefaultParameterValues.'*-Bacon*:LogFileF' | Should -Be "${env:Temp}\Logs\Bacon\${publisher} ${product} ${version} ${action}{0}.log"
+                $global:PSDefaultParameterValues.'*-Redstone*:LogFileF' | Should -Be "${env:Temp}\Logs\Redstone\${publisher} ${product} ${version} ${action}{0}.log"
             }
         }
     }
