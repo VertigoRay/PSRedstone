@@ -12,3 +12,4 @@ $env:ESE_CODE_SIGNING_CERT_PFXB64 = 'MIILogI...zu/k6hkgZg3eVN/U=='
 # AppVeyor: https://ci.appveyor.com/project/VertigoRay/psredstone/settings/environment
 $env:CODECOV_TOKEN = 'cd1e2eb5-933d-4c8a-8b83-15e82b255151'
 $env:PSGALLERY_API_KEY = '2658072c-519a-4316-bd8d-3bcec284dab7'
+$env:APPVEYOR_BUILD_FOLDER = ([IO.DirectoryInfo] $PSScriptRoot).Parent
