@@ -91,8 +91,19 @@ $downloads = @(
     [uri] 'https://uploader.codecov.io/latest/windows/codecov.exe.SHA256SUM.sig'
 )
 
-New-Item -ItemType 'Directory' -Name ([IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'BuildOutput')) -Force | Out-Null
-Push-Location ([IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev'))
+$item = @{
+    ItemType = 'Directory'
+    Path = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'BuildOutput')
+    Force = $true
+}
+Write-Information ('Creating: {0}' -f ($item | ConvertTo-Json))
+New-Item @item | Out-Null
+
+$location = @{
+    LiteralPath = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev')
+}
+Write-Information ('Set Location: {0}' -f ($item | ConvertTo-Json))
+Push-Location @location
 
 foreach ($download in $downloads) {
     Write-Information ('Downloading: {0}' -f $download.AbsoluteUri)
