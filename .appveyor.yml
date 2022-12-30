@@ -48,7 +48,7 @@ test_script:
         Pester = @{
           Configuration = @{
             Run = @{
-              Path = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'Tests')
+              Path = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'Tests')
             }
             CodeCoverage = @{
               Enabled = $true
