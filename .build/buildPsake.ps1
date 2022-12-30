@@ -234,14 +234,14 @@ task CodeCov {
     & [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'codecov.exe')
 }
 
-task DeployProGet -depends CodeCov {
+task DeployProGet {
     $registerPSRepo = @{
         Name = 'PowerShell-ESE'
         SourceLocation = $env:PROGET_POWERSHELL_ESE_URL
         PublishLocation = $env:PROGET_POWERSHELL_ESE_URL
     }
     if (-not (Get-PSRepository $registerPSRepo.Name -ErrorAction 'Ignore')) {
-        Write-Host "[PSAKE Deploy] Register-PSRepository: $($registerPSRepo | ConvertTo-Json)" -ForegroundColor 'DarkMagenta'
+        Write-Host "[PSAKE DeployProGet] Register-PSRepository: $($registerPSRepo | ConvertTo-Json)" -ForegroundColor 'DarkMagenta'
         Register-PSRepository @registerPSRepo
     }
 
@@ -252,7 +252,7 @@ task DeployProGet -depends CodeCov {
         Force = $true
         Verbose = $true
     }
-    Write-Host ('[PSAKE Deploy] Publish-Module: $($publishModule | ConvertTo-Json)') -ForegroundColor 'DarkMagenta'
+    Write-Host ('[PSAKE DeployProGet] Publish-Module: $($publishModule | ConvertTo-Json)') -ForegroundColor 'DarkMagenta'
     Publish-Module @publishModule
 }
 
@@ -261,23 +261,33 @@ task DeployPSGallery {
         Deployed with PSDeploy
             - https://github.com/RamblingCookieMonster/PSDeploy
     #>
-    [IO.DirectoryInfo] $buildOutputModule = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'BuildOutput', $script:thisModuleName)
+    [IO.DirectoryInfo] $buildOutputModule = [IO.Path]::Combine($script:BuildOutput, $script:thisModuleName)
 
-    Write-Host ('[PSAKE Deploy] APPVEYOR_PROJECT_NAME: {0}' -f $env:APPVEYOR_PROJECT_NAME) -Foregroundcolor 'Magenta'
-    Write-Host ('[PSAKE Deploy] buildOutputModule: {0}' -f $buildOutputModule) -Foregroundcolor 'Magenta'
-    Write-Host ('[PSAKE Deploy] Path Exists ({0}): {1}' -f $buildOutputModule.Parent.Parent.Parent.Exists, $buildOutputModule.Parent.Parent.Parent.FullName) -Foregroundcolor 'Magenta'
-    Write-Host ('[PSAKE Deploy] Path Exists ({0}): {1}' -f $buildOutputModule.Parent.Parent.Exists, $buildOutputModule.Parent.Parent.FullName) -Foregroundcolor 'Magenta'
-    Write-Host ('[PSAKE Deploy] Path Exists ({0}): {1}' -f $buildOutputModule.Parent.Exists, $buildOutputModule.Parent.FullName) -Foregroundcolor 'Magenta'
-    Write-Host ('[PSAKE Deploy] Path Exists ({0}): {1}' -f $buildOutputModule.Exists, $buildOutputModule.FullName) -Foregroundcolor 'Magenta'
+    Write-Host ('[PSAKE DeployPSGallery] APPVEYOR_PROJECT_NAME: {0}' -f $env:APPVEYOR_PROJECT_NAME) -Foregroundcolor 'Magenta'
+    Write-Host ('[PSAKE DeployPSGallery] buildOutputModule: {0}' -f $buildOutputModule) -Foregroundcolor 'Magenta'
+    Write-Host ('[PSAKE DeployPSGallery] Path Exists ({0}): {1}' -f $buildOutputModule.Parent.Parent.Parent.Exists, $buildOutputModule.Parent.Parent.Parent.FullName) -Foregroundcolor 'Magenta'
+    Write-Host ('[PSAKE DeployPSGallery] Path Exists ({0}): {1}' -f $buildOutputModule.Parent.Parent.Exists, $buildOutputModule.Parent.Parent.FullName) -Foregroundcolor 'Magenta'
+    Write-Host ('[PSAKE DeployPSGallery] Path Exists ({0}): {1}' -f $buildOutputModule.Parent.Exists, $buildOutputModule.Parent.FullName) -Foregroundcolor 'Magenta'
+    Write-Host ('[PSAKE DeployPSGallery] Path Exists ({0}): {1}' -f $buildOutputModule.Exists, $buildOutputModule.FullName) -Foregroundcolor 'Magenta'
 
-    Deploy Module {
-        By PSGalleryModule $script:thisModuleName {
-            FromSource $buildOutputModule.FullName
-            To PSGallery
-            # Tagged Testing
-            WithOptions @{
-                ApiKey = $env:PSGALLERY_API_KEY
-            }
-        }
+    # Deploy Module {
+    #     By PSGalleryModule $script:thisModuleName {
+    #         FromSource $buildOutputModule.FullName
+    #         To PSGallery
+    #         # Tagged Testing
+    #         WithOptions @{
+    #             ApiKey = $env:PSGALLERY_API_KEY
+    #         }
+    #     }
+    # }
+
+    $publishModule = @{
+        Path = $buildOutputModule.FullName
+        NuGetApiKey = $env:PSGALLERY_API_KEY
+        Repository = 'PSGallery'
+        Force = $true
+        Verbose = $true
     }
+    Write-Host ('[PSAKE DeployPSGallery] Publish-Module: $($publishModule | ConvertTo-Json)') -ForegroundColor 'DarkMagenta'
+    Publish-Module @publishModule
 }

@@ -6,8 +6,8 @@ skip_commits:
   message: /update(?:|d|s) readme\..*/
 
 init:
-  - ps: $env:MODULE_VERSION = ((Get-Date -Format 'yyyy.MM.dd'), ((New-TimeSpan -Start ([datetime]::Today)).TotalSeconds -as [int])) -join '.'
-  - ps: Update-AppveyorBuild -Version ${env:MODULE_VERSION}
+- ps: $env:MODULE_VERSION = ((Get-Date -Format 'yyyy.MM.dd'), ((New-TimeSpan -Start ([datetime]::Today)).TotalSeconds -as [int])) -join '.'
+- ps: Update-AppveyorBuild -Version ${env:MODULE_VERSION}
 
 install:
 # Bootstrap PSDepend and Install Dependencies
@@ -49,13 +49,14 @@ test_script:
           Configuration = @{
             Run = @{
               Path = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'Tests')
+              PassThru = $true
+              Exit = if ($env:CI) { $true } else { $false }
             }
             CodeCoverage = @{
               Enabled = $true
               # Path = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'BuildOutput', 'PSRedstone', 'PSRedstone.psm1')
               Path = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'PSRedstone', '*', '*.ps1')
             }
-            PassThru = $true
           }
         }
         CodeCoveragePath = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'coverage.json')
@@ -70,16 +71,21 @@ after_test:
   # Upload coverage report to codecov
   #    More Info: https://github.com/felixfbecker/PSCodeCovIo#appveyor
   - ps: |
-      $env:PATH = 'C:\msys64\usr\bin;' + $env:PATH
-      Invoke-WebRequest -Uri 'https://codecov.io/bash' -OutFile codecov.sh
-      bash codecov.sh -f coverage.json
+    $invokePsake = @{
+      BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
+      TaskList = 'CodeCov'
+    }
+    Invoke-psake @invokePsake
+    if (-not $psake.build_success) {
+      $Host.SetShouldExit(1)
+    }
 
 deploy:
   # Deploy to GitHub Releases
   - provider: GitHub
     auth_token:
       secure: pRa0vZhRPzeDLMP30BEiTTMRjyCoOoiltxJWA07rI1NBFJHyG0ZmSp41roNT5bSh
-    artifact: /.*\.zip/           # upload all NuGet packages to release assets
+    artifact: dev\PSRedstone.zip           # upload all NuGet packages to release assets
     draft: false
     prerelease: false
     on:
