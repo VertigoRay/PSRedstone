@@ -84,11 +84,11 @@ Invoke-PSDepend @invokePSDepend
 Write-Information ('# Prepping Codecov Uploader ...' -f ($invokePSDepend | ConvertTo-Json))
 # https://docs.codecov.com/docs/codecov-uploader#integrity-checking-the-uploader
 $downloads = @(
-    [uri] 'https://files.gpg4win.org/gpg4win-4.1.0.exe'
-    [uri] 'https://uploader.codecov.io/verification.gpg'
+    # [uri] 'https://files.gpg4win.org/gpg4win-4.1.0.exe'
+    # [uri] 'https://uploader.codecov.io/verification.gpg'
     [uri] 'https://uploader.codecov.io/latest/windows/codecov.exe'
-    [uri] 'https://uploader.codecov.io/latest/windows/codecov.exe.SHA256SUM'
-    [uri] 'https://uploader.codecov.io/latest/windows/codecov.exe.SHA256SUM.sig'
+    # [uri] 'https://uploader.codecov.io/latest/windows/codecov.exe.SHA256SUM'
+    # [uri] 'https://uploader.codecov.io/latest/windows/codecov.exe.SHA256SUM.sig'
 )
 
 $item = @{
@@ -102,7 +102,7 @@ New-Item @item | Out-Null
 $location = @{
     LiteralPath = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev')
 }
-Write-Information ('Set Location: {0}' -f ($item | ConvertTo-Json))
+Write-Information ('Set Location: {0}' -f ($location | ConvertTo-Json))
 Push-Location @location
 
 foreach ($download in $downloads) {
@@ -110,7 +110,7 @@ foreach ($download in $downloads) {
     Invoke-WebRequest -Uri $download.AbsoluteUri -Outfile $download.Segments[-1]
 }
 
-Write-Information ('Installing: gpg4win-4.1.0.exe')
-Start-Process -FilePath 'gpg4win-4.1.0.exe' -ArgumentList '/S' -Wait
+# Write-Information ('Installing: gpg4win-4.1.0.exe')
+# Start-Process -FilePath 'gpg4win-4.1.0.exe' -ArgumentList '/S' -Wait
 
 Pop-Location

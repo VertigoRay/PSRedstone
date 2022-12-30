@@ -217,29 +217,17 @@ task Test {
         Throw $msg
     }
 
-    # Write-Host ('[PSAKE Test] Test Results: {0}' -f ($testResults | ConvertTo-Json)) -ForegroundColor 'DarkMagenta'
-
-    # if ($CodeCoveragePath) {
-    #     $codeCovIoJson = @{
-    #         CodeCoverage = $testResults.CodeCoverage
-    #         RepoRoot = $script:psScriptRootParent.FullName
-    #         Path = $CodeCoveragePath
-    #     }
-    #     Write-Host ('[PSAKE Test] Export-CodeCovIoJson: {0}' -f ($codeCovIoJson | ConvertTo-Json)) -ForegroundColor 'DarkMagenta'
-    #     Export-CodeCovIoJson @codeCovIoJson
-    # }
-
     # EXEs all  downloaded in Prep task.
-    & 'C:\Program Files (x86)\GnuPG\bin\gpg.exe' --import verification.gpg
-    & 'C:\Program Files (x86)\GnuPG\bin\gpg.exe' --verify codecov.exe.SHA256SUM.sig codecov.exe.SHA256SUM
-    $ref = ($(certUtil -hashfile codecov.exe SHA256)[1], 'codecov.exe') -join '  '
-    $diff = Get-Content 'codecov.exe.SHA256SUM'
-    if (-not (Compare-Object -ReferenceObject $ref -DifferenceObject $diff)) {
-        Write-Host ('[PSAKE Test] CodeCov.exe SHASUM verified') -ForegroundColor 'DarkMagenta'
-    } else {
-        Write-Warning ('[PSAKE Test] CodeCov.exe SHASUM invalid')
-        Throw ('CodeCov.exe SHASUM invalid')
-    }
+    # & 'C:\Program Files (x86)\GnuPG\bin\gpg.exe' --import verification.gpg
+    # & 'C:\Program Files (x86)\GnuPG\bin\gpg.exe' --verify codecov.exe.SHA256SUM.sig codecov.exe.SHA256SUM
+    # $ref = ($(certUtil -hashfile codecov.exe SHA256)[1], 'codecov.exe') -join '  '
+    # $diff = Get-Content 'codecov.exe.SHA256SUM'
+    # if (-not (Compare-Object -ReferenceObject $ref -DifferenceObject $diff)) {
+    #     Write-Host ('[PSAKE Test] CodeCov.exe SHASUM verified') -ForegroundColor 'DarkMagenta'
+    # } else {
+    #     Write-Warning ('[PSAKE Test] CodeCov.exe SHASUM invalid')
+    #     Throw ('CodeCov.exe SHASUM invalid')
+    # }
 
     & .\codecov.exe
 
