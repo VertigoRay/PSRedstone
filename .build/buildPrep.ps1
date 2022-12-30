@@ -66,3 +66,6 @@ foreach ($module in $installModules.GetEnumerator()) {
         Get-Module -Name $module.Name -ListAvailable | Format-Table
     # }
 }
+
+# Install all build requirements
+Invoke-PSDepend -Path ([IO.Path]::Combine($PSScriptRoot, 'REQUIREMENTS.psd1'))
