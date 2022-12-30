@@ -79,7 +79,7 @@ $invokePSDepend = @{
     Force = $true
 }
 Write-Information ('Invoke-PSDepend: {0}' -f ($invokePSDepend | ConvertTo-Json))
-Invoke-PSDepend @invokePSDepend -Verbose
+Invoke-PSDepend @invokePSDepend
 
 Write-Information ('# Prepping Codecov Uploader ...' -f ($invokePSDepend | ConvertTo-Json))
 # https://docs.codecov.com/docs/codecov-uploader#integrity-checking-the-uploader
