@@ -52,7 +52,8 @@ test_script:
             }
             CodeCoverage = @{
               Enabled = $true
-              Path = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'BuildOutput', 'PSRedstone', 'PSRedstone.psm1')
+              # Path = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'BuildOutput', 'PSRedstone', 'PSRedstone.psm1')
+              Path = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'PSRedstone', '*', '*.ps1')
             }
             PassThru = $true
           }

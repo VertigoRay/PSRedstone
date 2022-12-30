@@ -7,6 +7,8 @@ param(
     $NuGetPPMinVersion = '2.8.5.201'
 )
 
+$script:psScriptRootParent = ([IO.DirectoryInfo] $PSScriptRoot).Parent
+
 $installModules = @{
     PSDepend2 = $PSDepend
 }
@@ -78,3 +80,25 @@ $invokePSDepend = @{
 }
 Write-Information ('Invoke-PSDepend: {0}' -f ($invokePSDepend | ConvertTo-Json))
 Invoke-PSDepend @invokePSDepend -Verbose
+
+Write-Information ('# Prepping Codecov Uploader ...' -f ($invokePSDepend | ConvertTo-Json))
+# https://docs.codecov.com/docs/codecov-uploader#integrity-checking-the-uploader
+$downloads = @(
+    [uri] 'https://files.gpg4win.org/gpg4win-4.1.0.exe'
+    [uri] 'https://uploader.codecov.io/verification.gpg'
+    [uri] 'https://uploader.codecov.io/latest/windows/codecov.exe'
+    [uri] 'https://uploader.codecov.io/latest/windows/codecov.exe.SHA256SUM'
+    [uri] 'https://uploader.codecov.io/latest/windows/codecov.exe.SHA256SUM.sig'
+)
+
+Push-Location ([IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev'))
+
+foreach ($download in $downloads) {
+    Write-Information ('Downloading: {0}' -f $download.AbsoluteUri)
+    Invoke-WebRequest -Uri $download.AbsoluteUri -Outfile $download.Segments[-1]
+}
+
+Write-Information ('Installing: gpg4win-4.1.0.exe')
+Start-Process -FilePath 'gpg4win-4.1.0.exe' -ArgumentList '/S' -Wait
+
+Pop-Location

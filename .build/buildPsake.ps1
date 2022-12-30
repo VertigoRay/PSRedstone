@@ -179,6 +179,7 @@ Invoke-psake -buildFile .\.build\buildPsake.ps1 -TaskList Test -Parameters @{Pes
 #>
 task Test {
     if ($Pester) {
+        $pesterFrom = 'Param'
         # Pester would be passed in as a PSake Parameter:
         #    More Info: https://psake.readthedocs.io/en/latest/pass-parameters/
         #    Example: Invoke-psake -buildFile .\.build\buildPsake.ps1 -TaskList Test -Parameters @{Pester = @{ Output = 'Detailed' }}
@@ -187,22 +188,27 @@ task Test {
             $invokePester.Set_Item($item.Name, $item.Value)
         }
     } else {
-        $invokePester = @{
-            Configuration = @{
-                Run = @{
-                    Path = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'Tests')
-                }
-                CodeCoverage = @{
-                    Enabled = $true
-                    Path = [IO.Path]::Combine($script:parentDevModulePath, '*', '*.ps1')
-                    OutputPath = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'coverage.xml')
-                }
+        $pesterFrom = 'Default'
+    }
+    $invokePester = @{
+        Configuration = @{
+            Run = @{
+                Path = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'Tests')
                 PassThru = $true
+                Exit = if ($env:CI) { $true } else { $false }
+            }
+            TestResult = @{
+                Enabled = $true
+            }
+            CodeCoverage = @{
+                Enabled = $true
+                Path = [IO.Path]::Combine($script:parentDevModulePath, '*', '*.ps1')
+                OutputPath = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'coverage.xml')
             }
         }
     }
 
-    Write-Host ('[PSAKE Test] Pester: {0}' -f ($invokePester | ConvertTo-Json)) -ForegroundColor 'DarkMagenta'
+    Write-Host ('[PSAKE Test] Invoke-Pester ({1}): {0}' -f ($invokePester | ConvertTo-Json), $pesterFrom) -ForegroundColor 'DarkMagenta'
     $testResults = Invoke-Pester @invokePester
     if ($testResults.FailedCount -gt 0) {
         $msg = '[PSAKE Test] {0} Pester test{1} failed. Build cannot continue!' -f $testResults.FailedCount, $(if ($testResults.FailedCount -gt 1) { 's' })
@@ -211,14 +217,33 @@ task Test {
         Throw $msg
     }
 
-    if ($CodeCoveragePath) {
-        $codeCovIoJson = @{
-            CodeCoverage = $testResults.CodeCoverage
-            RepoRoot = $script:psScriptRootParent
-            Path = $CodeCoveragePath
-        }
-        Export-CodeCovIoJson @codeCovIoJson
+    # Write-Host ('[PSAKE Test] Test Results: {0}' -f ($testResults | ConvertTo-Json)) -ForegroundColor 'DarkMagenta'
+
+    # if ($CodeCoveragePath) {
+    #     $codeCovIoJson = @{
+    #         CodeCoverage = $testResults.CodeCoverage
+    #         RepoRoot = $script:psScriptRootParent.FullName
+    #         Path = $CodeCoveragePath
+    #     }
+    #     Write-Host ('[PSAKE Test] Export-CodeCovIoJson: {0}' -f ($codeCovIoJson | ConvertTo-Json)) -ForegroundColor 'DarkMagenta'
+    #     Export-CodeCovIoJson @codeCovIoJson
+    # }
+
+    # EXEs all  downloaded in Prep task.
+    & 'C:\Program Files (x86)\GnuPG\bin\gpg.exe' --import verification.gpg
+    & 'C:\Program Files (x86)\GnuPG\bin\gpg.exe' --verify codecov.exe.SHA256SUM.sig codecov.exe.SHA256SUM
+    $ref = ($(certUtil -hashfile codecov.exe SHA256)[1], 'codecov.exe') -join '  '
+    $diff = Get-Content 'codecov.exe.SHA256SUM'
+    if (-not (Compare-Object -ReferenceObject $ref -DifferenceObject $diff)) {
+        Write-Host ('[PSAKE Test] CodeCov.exe SHASUM verified') -ForegroundColor 'DarkMagenta'
+    } else {
+        Write-Warning ('[PSAKE Test] CodeCov.exe SHASUM invalid')
+        Throw ('CodeCov.exe SHASUM invalid')
     }
+
+    & .\codecov.exe
+
+    Pop-Location
 }
 
 # task Deploy -depends PostAnalyze,Test {
