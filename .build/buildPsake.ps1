@@ -26,15 +26,8 @@ properties {
 }
 
 task default -Depends 'SyntaxAnal', 'Build'
-task Syntax -Depends 'Prep', 'SyntaxJson', 'SyntaxPoSh'
+task Syntax -Depends 'SyntaxJson', 'SyntaxPoSh'
 task SyntaxAnal -Depends 'Syntax', 'PreAnalyze'
-
-task Prep {
-    # Enable TLS v1.2 (for GitHub et al.)
-    Write-Verbose "[PSAKE Prep] SecurityProtocol OLD: $([System.Net.ServicePointManager]::SecurityProtocol)"
-    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor [System.Net.SecurityProtocolType]::Tls12
-    Write-Verbose "[PSAKE Prep] SecurityProtocol NEW: $([System.Net.ServicePointManager]::SecurityProtocol)"
-}
 
 task SyntaxJSON {
     $testResults = Invoke-Pester ([IO.Path]::Combine($script:psScriptRootParent.FullName, 'Tests')) -Tag 'SyntaxJSON' -PassThru
@@ -157,6 +150,13 @@ task Build -Depends BuildManifest {
     #     Write-Host "[PSAKE Build] Set-AuthenticodeSignature: $($authenticodeSignature | ConvertTo-Json -Depth 1)" -ForegroundColor 'DarkMagenta'
     #     Set-AuthenticodeSignature @authenticodeSignature
     # }
+
+    $compress = @{
+        Path = (Get-ChildItem $script:parentModulePath -File -Recurse).FullName
+        CompressionLevel = 'Optimal'
+        DestinationPath = [IO.Path]::Combine($script:parentDevModulePath, 'dev', ('{0}.zip' -f $script:thisModuleName))
+    }
+    Compress-Archive @compress
 }
 
 task PostAnalyze {
@@ -194,7 +194,7 @@ task Test {
                 }
                 CodeCoverage = @{
                     Enabled = $true
-                    Path = '{0}\*\*.ps1' -f $script:parentDevModulePath
+                    Path = [IO.Path]::Combine($script:parentDevModulePath, '*', '*.ps1')
                     OutputPath = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'coverage.xml')
                 }
                 PassThru = $true
@@ -210,14 +210,23 @@ task Test {
         $testResults | Format-List
         Throw $msg
     }
+
+    if ($CodeCoveragePath) {
+        $codeCovIoJson = @{
+            CodeCoverage = $testResults.CodeCoverage
+            RepoRoot = $script:psScriptRootParent
+            Path = $CodeCoveragePath
+        }
+        Export-CodeCovIoJson @codeCovIoJson
+    }
 }
 
 # task Deploy -depends PostAnalyze,Test {
-task Deploy {
+task DeployProGet {
     $registerPSRepo = @{
         Name = 'PowerShell-ESE'
-        SourceLocation = 'http://ese-inedo.utsarr.net:8624/nuget/powershell-ese/'
-        PublishLocation = 'http://ese-inedo.utsarr.net:8624/nuget/powershell-ese/'
+        SourceLocation = $env:PROGET_POWERSHELL_ESE_URL
+        PublishLocation = $env:PROGET_POWERSHELL_ESE_URL
     }
     if (-not (Get-PSRepository $registerPSRepo.Name -ErrorAction 'Ignore')) {
         Write-Host "[PSAKE Deploy] Register-PSRepository: $($registerPSRepo | ConvertTo-Json)" -ForegroundColor 'DarkMagenta'

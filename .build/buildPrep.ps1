@@ -1,26 +1,14 @@
 [cmdletbinding()]
 param(
-    [string[]]
-    $Task = 'default',
-
-    [hashtable]
-    $Parameters,
-
     [version]
-    $PesterVersion = '5.3.3',
+    $PSDepend = '0.4.5',
 
     [version]
     $NuGetPPMinVersion = '2.8.5.201'
 )
 
 $installModules = @{
-    Pester = @{
-        RequiredVersion = $PesterVersion
-        SkipPublisherCheck = $true
-    }
-    psake = 'latest'
-    # PSDeploy = 'latest'
-    PSMinifier = 'latest'
+    PSDepend2 = $PSDepend
 }
 
 $ErrorActionPreference = 'Stop'
@@ -45,7 +33,7 @@ if (-not (Get-PackageProvider 'NuGet' -ErrorAction 'Ignore' | Where-Object { $_.
     Install-PackageProvider -Name 'NuGet' -MinimumVersion $NuGetPPMinVersion -Force
 }
 
-# Get rid of older MS Pester
+# Get rid of older MS Pester v3
 if ((Get-Module 'Pester' -ErrorAction 'Ignore') -and ((Get-Module 'Pester' -ErrorAction 'Ignore').Version -ne $PesterVersion)) {
     foreach ($pester in (Get-Module 'Pester' -ErrorAction 'Ignore')) {
         if (([IO.DirectoryInfo] $pester.ModuleBase).Parent.Exists) {
@@ -77,19 +65,4 @@ foreach ($module in $installModules.GetEnumerator()) {
         Install-Module @install -Scope 'CurrentUser' -Force
         Get-Module -Name $module.Name -ListAvailable | Format-Table
     # }
-}
-
-# Run the *real* build script.
-$invokePsake = @{
-    BuildFile = "$PSScriptRoot\buildPsake.ps1"
-    TaskList = $Task
-    Verbose = $true
-}
-if ($Parameters) {
-    $invokePsake.Set_Item('parameters', $Parameters)
-}
-Invoke-psake @invokePsake
-
-if ($env:CI -and -not $psake.build_success) {
-    $Host.SetShouldExit(1)
 }

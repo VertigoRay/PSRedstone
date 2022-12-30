@@ -8,26 +8,86 @@ skip_commits:
 install:
 # Bootstrap PSDepend and Install Dependencies
 - ps: |
-    Install-PackageProvider -Name NuGet -MinimumVersion '2.8.5.201' -Force
-    Install-Module -Name PSDepend -Scope CurrentUser -Force
-    Import-Module -Name PSDepend
-    Invoke-PSDepend '.\.build\REQUIREMENTS.psd1' -Force
+    & ([IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPrep.ps1'))
+
+before_build:
+# Run Pester Tests
+- ps: |
+    $invokePsake = @{
+      BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
+      TaskList = 'Test'
+    }
+    Invoke-psake @invokePsake
+    if (-not $psake.build_success) {
+      $Host.SetShouldExit(1)
+    }
 
 build_script:
-- ps: & '.\.build\build.ps1' -Task Build
+- ps: |
+    $invokePsake = @{
+      BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
+      TaskList = 'Build'
+    }
+    Invoke-psake @invokePsake
+    if (-not $psake.build_success) {
+      $Host.SetShouldExit(1)
+    }
+
+test_script:
+# Run Pester Tests w/ CodeCov
+- ps: |
+    $invokePsake = @{
+      BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
+      TaskList = 'Test'
+      Parameters = @{
+        Pester = @{
+          Configuration = @{
+            Run = @{
+              Path = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'Tests')
+            }
+            CodeCoverage = @{
+              Enabled = $true
+              Path = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'BuildOutput', 'PSRedstone', 'PSRedstone.psm1')
+            }
+            PassThru = $true
+          }
+        }
+        CodeCoveragePath = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'coverage.json')
+      }
+    }
+    Invoke-psake @invokePsake
+    if (-not $psake.build_success) {
+      $Host.SetShouldExit(1)
+    }
 
 after_test:
   # Upload coverage report to codecov
+  #    More Info: https://github.com/felixfbecker/PSCodeCovIo#appveyor
   - ps: |
-    $env:PATH = 'C:\msys64\usr\bin;' + $env:PATH
-    Invoke-WebRequest -Uri 'https://codecov.io/bash' -OutFile codecov.sh
-    bash codecov.sh -f coverage.json
+      $env:PATH = 'C:\msys64\usr\bin;' + $env:PATH
+      Invoke-WebRequest -Uri 'https://codecov.io/bash' -OutFile codecov.sh
+      bash codecov.sh -f coverage.json
+
+deploy:
+  # Deploy to GitHub Releases
+  - provider: GitHub
+    artifact: /.*\.zip/           # upload all NuGet packages to release assets
+    draft: false
+    prerelease: false
+    on:
+      branch: master                # release from master branch only
 
 on_success:
 # If build was started by pushed tag; deploy it.
 - ps: |
-    Write-Host "[AppVeyor] On Success; deploying ..." -Foregroundcolor Green
-    & '.\.build\build.ps1' -Task Deploy
+    $invokePsake = @{
+      BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
+      TaskList = 'DeployPSGallery'
+    }
+    Invoke-psake @invokePsake
+    if (-not $psake.build_success) {
+      $Host.SetShouldExit(1)
+    }
   on:
     branch: master                 # release from master branch only
     APPVEYOR_REPO_TAG: true        # deploy except on tag push only
