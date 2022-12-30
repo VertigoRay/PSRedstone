@@ -77,6 +77,8 @@ after_test:
 deploy:
   # Deploy to GitHub Releases
   - provider: GitHub
+    auth_token:
+      secure: pRa0vZhRPzeDLMP30BEiTTMRjyCoOoiltxJWA07rI1NBFJHyG0ZmSp41roNT5bSh
     artifact: /.*\.zip/           # upload all NuGet packages to release assets
     draft: false
     prerelease: false
