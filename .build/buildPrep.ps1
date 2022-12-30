@@ -26,17 +26,18 @@ if (Test-Path ([IO.Path]::Combine($PSScriptRoot, 'env.ps1'))) {
     . ([IO.Path]::Combine($PSScriptRoot, 'env.ps1'))
 }
 
-Write-Information 'Enable TLS v1.2 (for GitHub et al.)'
+Write-Information '# Enable TLS v1.2 (for GitHub et al.)'
 Write-Verbose "[BUILD] SecurityProtocol OLD: $([System.Net.ServicePointManager]::SecurityProtocol)"
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor [System.Net.SecurityProtocolType]::Tls12
 Write-Verbose "[BUILD] SecurityProtocol NEW: $([System.Net.ServicePointManager]::SecurityProtocol)"
 
-Write-Information 'Setup NuGet PP'
+Write-Information '# Setup NuGet PP'
 if (-not (Get-PackageProvider 'NuGet' -ErrorAction 'Ignore' | Where-Object { $_.Version -ge $NuGetPPMinVersion })) {
     Install-PackageProvider -Name 'NuGet' -MinimumVersion $NuGetPPMinVersion -Force
 }
 
-Write-Information 'Get rid of older MS Pester v3'
+Write-Information '# Get rid of older MS Pester v3'
+$PesterVersion = (Import-PowerShellDataFile ([IO.Path]::Combine($PSScriptRoot, 'REQUIREMENTS.psd1'))).Pester
 if ((Get-Module 'Pester' -ErrorAction 'Ignore') -and ((Get-Module 'Pester' -ErrorAction 'Ignore').Version -ne $PesterVersion)) {
     foreach ($pester in (Get-Module 'Pester' -ErrorAction 'Ignore')) {
         if (([IO.DirectoryInfo] $pester.ModuleBase).Parent.Exists) {
@@ -51,7 +52,7 @@ if ((Get-Module 'Pester' -ErrorAction 'Ignore') -and ((Get-Module 'Pester' -Erro
     Remove-Module 'Pester' -Force
 }
 
-Write-Information 'Install all of the modules in the $installModules hashtable.'
+Write-Information '# Install all of the modules in the $installModules hashtable.'
 foreach ($module in $installModules.GetEnumerator()) {
     if ($module.Value -is [hashtable]) {
         $install = $module.Value
@@ -64,11 +65,16 @@ foreach ($module in $installModules.GetEnumerator()) {
             $install.Set_Item('RequiredVersion', $module.Value)
         }
     }
-    Install-Module @install -Scope 'CurrentUser' -Force
+    Install-Module @install -Scope 'CurrentUser' -AllowClobber -Force
 
     $m = Get-Module -Name $module.Name -ListAvailable
-    Write-Information ('{0}Installed: {1} {2}' -f "`t", $m.Name, $m.Version)
+    Write-Information ('Installed: {0} {1}' -f $m.Name, $m.Version)
 }
 
-Write-Information 'Install all build requirements'
-Invoke-PSDepend -Path ([IO.Path]::Combine($PSScriptRoot, 'REQUIREMENTS.psd1'))
+Write-Information '# Install all build requirements'
+$invokePSDepend = @{
+    Path = [IO.Path]::Combine($PSScriptRoot, 'REQUIREMENTS.psd1')
+    Force = $true
+}
+Write-Information ('Invoke-PSDepend: {0}' -f ($invokePSDepend | ConvertTo-Json))
+Invoke-PSDepend @invokePSDepend

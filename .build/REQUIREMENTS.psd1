@@ -3,11 +3,6 @@
     See `.appveyor.yml::install` for details on preparing the system to use PSDepend.
 #>
 @{
-    Prep             = @{
-        DependencyType = 'task'
-        Target         = '$PWD\.scripts\requirements.prep.ps1'
-        DependsOn      = @('powershell-yaml')
-    }
     Pester             = '5.3.3'
     'powershell-yaml'  = '0.3.2'
     psake              = '4.9.0'
