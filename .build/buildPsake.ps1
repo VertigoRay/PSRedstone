@@ -228,14 +228,13 @@ task Test {
     #     Write-Warning ('[PSAKE Test] CodeCov.exe SHASUM invalid')
     #     Throw ('CodeCov.exe SHASUM invalid')
     # }
-
-    & .\codecov.exe
-
-    Pop-Location
 }
 
-# task Deploy -depends PostAnalyze,Test {
-task DeployProGet {
+task CodeCov {
+    & [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'codecov.exe')
+}
+
+task DeployProGet -depends CodeCov {
     $registerPSRepo = @{
         Name = 'PowerShell-ESE'
         SourceLocation = $env:PROGET_POWERSHELL_ESE_URL
