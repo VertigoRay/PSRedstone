@@ -1,6 +1,6 @@
 # Global
 .build/env.ps1
-dev/*
+dev
 
 # Module Specific
 *.wim

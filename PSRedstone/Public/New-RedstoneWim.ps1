@@ -18,7 +18,7 @@ function New-RedstoneWim {
         [String]
         $Name,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [IO.FileInfo]
         $LogFileF
     )
@@ -30,7 +30,7 @@ function New-RedstoneWim {
 
     process {
         if (-not $ImagePath.Directory.Exists) {
-            New-Item -ItemType 'Directory' -Path $ImagePath.FullName -Force | Out-Null
+            New-Item -ItemType 'Directory' -Path $ImagePath.Directory.FullName -Force | Out-Null
             $ImagePath.Refresh()
         }
 

@@ -14,9 +14,9 @@ function Dismount-RedstoneWim {
         )]
         [ValidateNotNullOrEmpty()]
         [IO.DirectoryInfo]
-        $MountPath = (Join-Path $PWD 'RedstoneMount'),
+        $MountPath = ([IO.Path]::Combine($PWD, 'RedstoneMount')),
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [IO.FileInfo]
         $LogFileF
     )
@@ -26,13 +26,13 @@ function Dismount-RedstoneWim {
         Write-Debug "[Dismount-RedstoneWim] Function Invocation: $($MyInvocation | Out-String)"
 
         $windowsImage = @{
-            Path = $mountedWim.Path
+            Path = $MountPath.FullName
             Discard = $true
             ErrorAction = 'Stop'
         }
 
         if ($LogFileF) {
-            $windowsImage.Add('LogPath', ($LogFileF -f ('Dismount-' -f [System.Web.HTTPUtility]::UrlEncode($MountPath.FullName))))
+            $windowsImage.Add('LogPath', ($LogFileF -f 'DISM'))
         }
 
         <#
@@ -99,7 +99,12 @@ function Dismount-RedstoneWim {
             }
         }
 
-        Clear-WindowsCorruptMountPoint -LogPath ($LogFileF -f 'DISM')
+        $clearWindowsCorruptMountPoint = @{}
+        if ($LogFileF) {
+            $windowsImage.Add('LogPath', ($LogFileF -f ('DISM')))
+        }
+
+        Clear-WindowsCorruptMountPoint @clearWindowsCorruptMountPoint
     }
 
     end {}

@@ -8,51 +8,61 @@ trap {
 }
 
 properties {
-    $script:PSScriptRootParent = ([IO.DirectoryInfo] $PSScriptRoot).Parent
-    $script:thisModuleName = $script:PSScriptRootParent.BaseName
-    $script:ManifestJsonFile = [IO.Path]::Combine($script:PSScriptRootParent.FullName, $script:thisModuleName, 'Manifest.json')
-    $script:BuildOutput = [IO.Path]::Combine($script:PSScriptRootParent.FullName, 'dev', 'BuildOutput')
+    $script:psScriptRootParent = ([IO.DirectoryInfo] $PSScriptRoot).Parent
+    $script:thisModuleName = $script:psScriptRootParent.BaseName
+    $script:ManifestJsonFile = [IO.Path]::Combine($script:psScriptRootParent.FullName, $script:thisModuleName, 'Manifest.json')
+    $script:BuildOutput = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'BuildOutput')
 
-    $script:ParentDevModulePath = [IO.Path]::Combine($script:PSScriptRootParent.FullName, $script:thisModuleName)
-    $script:ParentModulePath = [IO.Path]::Combine($script:BuildOutput, $script:thisModuleName)
+    $script:parentDevModulePath = [IO.Path]::Combine($script:psScriptRootParent.FullName, $script:thisModuleName)
+    $script:parentModulePath = [IO.Path]::Combine($script:BuildOutput, $script:thisModuleName)
 
     $PSModulePath1 = $env:PSModulePath.Split(';')[1]
     $script:SystemModuleLocation = [IO.Path]::Combine($PSModulePath1, $thisModuleName)
 
     $script:Version = & ([IO.Path]::Combine($PSScriptRoot, 'version.ps1'))
+
+    # https://www.appveyor.com/docs/environment-variables/
+    $env:APPVEYOR_BUILD_VERSION = $script:Version
 }
 
 task default -Depends 'SyntaxAnal', 'Build'
-task Syntax -Depends 'SyntaxJson', 'SyntaxPoSh'
+task Syntax -Depends 'Prep', 'SyntaxJson', 'SyntaxPoSh'
 task SyntaxAnal -Depends 'Syntax', 'PreAnalyze'
 
+task Prep {
+    # Enable TLS v1.2 (for GitHub et al.)
+    Write-Verbose "[PSAKE Prep] SecurityProtocol OLD: $([System.Net.ServicePointManager]::SecurityProtocol)"
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor [System.Net.SecurityProtocolType]::Tls12
+    Write-Verbose "[PSAKE Prep] SecurityProtocol NEW: $([System.Net.ServicePointManager]::SecurityProtocol)"
+}
+
 task SyntaxJSON {
-    $testResults = Invoke-Pester ([IO.Path]::Combine($script:PSScriptRootParent.FullName, 'Tests')) -Tag 'SyntaxJSON' -PassThru
+    $testResults = Invoke-Pester ([IO.Path]::Combine($script:psScriptRootParent.FullName, 'Tests')) -Tag 'SyntaxJSON' -PassThru
     if ($testResults.FailedCount -gt 0) {
         $testResults | Format-List
-        Write-Error -Message 'One or more Pester tests failed. Build cannot continue!'
+        Write-Error -Message '[PSAKE SytaxJSON] One or more Pester tests failed. Build cannot continue!'
     }
 }
 
 task SyntaxPoSh {
-    $testResults = Invoke-Pester ([IO.Path]::Combine($script:PSScriptRootParent.FullName, 'Tests')) -Tag 'SyntaxPoSh' -PassThru
+    $testResults = Invoke-Pester ([IO.Path]::Combine($script:psScriptRootParent.FullName, 'Tests')) -Tag 'SyntaxPoSh' -PassThru
     if ($testResults.FailedCount -gt 0) {
         $testResults | Format-List
-        Write-Error -Message 'One or more Pester tests failed. Build cannot continue!'
+        Write-Error -Message '[PSAKE SyntaxPoSh] One or more Pester tests failed. Build cannot continue!'
     }
 }
 
 task PreAnalyze {
-    $testResults = Invoke-Pester ([IO.Path]::Combine($script:PSScriptRootParent.FullName, 'Tests')) -Tag 'PSScriptAnalyzer' -PassThru
+    $testResults = Invoke-Pester ([IO.Path]::Combine($script:psScriptRootParent.FullName, 'Tests')) -Tag 'PSScriptAnalyzer' -PassThru
     if ($testResults.FailedCount -gt 0) {
         $testResults | Format-List
-        Write-Error -Message 'One or more Script Analyzer errors/warnings where found. Build cannot continue!'
+        Write-Error -Message '[PSAKE PreAnalyze] One or more Script Analyzer errors/warnings where found. Build cannot continue!'
     }
 }
 
 task BuildManifest {
-    if (-not (Test-Path $script:ParentModulePath)) {
-        New-Item -ItemType Directory -Path $script:ParentModulePath -Force
+    if (-not (Test-Path $script:parentModulePath)) {
+        New-Item -ItemType Directory -Path $script:parentModulePath -Force
     }
 
     $Manifest = @{}
@@ -63,11 +73,11 @@ task BuildManifest {
     }
 
     $Manifest.Copyright = $Manifest.Copyright -f [DateTime]::Now.Year
-    Write-Verbose ('$script:ParentDevModulePath: {0}' -f $script:ParentDevModulePath)
+    Write-Verbose ('[PSAKE BuildManifest] $script:parentDevModulePath: {0}' -f $script:parentDevModulePath)
     [System.Collections.ArrayList] $cmdletsToExport = @()
     [System.Collections.ArrayList] $functionsToExport = @()
 
-    foreach ($public in (Get-ChildItem -Path ([IO.Path]::Combine($script:ParentDevModulePath, 'Public', '*.ps1')) -ErrorAction SilentlyContinue)) {
+    foreach ($public in (Get-ChildItem -Path ([IO.Path]::Combine($script:parentDevModulePath, 'Public', '*.ps1')) -ErrorAction SilentlyContinue)) {
         $fullName = $public.FullName
         $baseName = $public.BaseName
         $cmdletBinding = Invoke-Command -ScriptBlock {
@@ -90,7 +100,7 @@ task BuildManifest {
         $Manifest.VariablesToExport = @()
     }
 
-    $Manifest.Path = "${script:ParentModulePath}\${script:thisModuleName}.psd1"
+    $Manifest.Path = "${script:parentModulePath}\${script:thisModuleName}.psd1"
     $Manifest.RootModule = "${script:thisModuleName}.psm1"
     $Manifest.ModuleVersion = [version] $Version
 
@@ -102,13 +112,13 @@ task BuildManifest {
 
 task Build -Depends BuildManifest {
     # Create Compiled PSM1
-    $modulePSM1 = [IO.Path]::Combine($script:ParentModulePath, ('{0}.psm1' -f $script:thisModuleName))
+    $modulePSM1 = [IO.Path]::Combine($script:parentModulePath, ('{0}.psm1' -f $script:thisModuleName))
     if (Test-Path $modulePSM1) {
         Remove-Item -LiteralPath $modulePSM1 -Confirm:$false -Force
     }
     Write-Host "[PSAKE Build] Adding to:`t$($modulePSM1 | ConvertTo-Json)" -ForegroundColor 'DarkMagenta'
-    $ps1s = @(Get-ChildItem ([IO.Path]::Combine($script:PSScriptRootParent.FullName, $script:thisModuleName)) -Recurse -Filter '*.ps1' -File)
-    $psm1s = @(Get-ChildItem ([IO.Path]::Combine($script:PSScriptRootParent.FullName, $script:thisModuleName)) -Filter '*.psm1' -File)
+    $ps1s = @(Get-ChildItem ([IO.Path]::Combine($script:psScriptRootParent.FullName, $script:thisModuleName)) -Recurse -Filter '*.ps1' -File)
+    $psm1s = @(Get-ChildItem ([IO.Path]::Combine($script:psScriptRootParent.FullName, $script:thisModuleName)) -Filter '*.psm1' -File)
     foreach ($file in ($ps1s + $psm1s)) {
         Write-Host "[PSAKE Build] `tAdding:`t`t$($file.FullName | ConvertTo-Json)" -ForegroundColor 'DarkMagenta'
         $regionDevOnly = $false
@@ -131,14 +141,14 @@ task Build -Depends BuildManifest {
         $allLines | Out-File -LiteralPath $modulePSM1 -Encoding 'utf8' -Append -Force
     }
 
-    [IO.Path]::Combine($script:ParentDevModulePath, ('{0}.psm1' -f $script:thisModuleName))
+    [IO.Path]::Combine($script:parentDevModulePath, ('{0}.psm1' -f $script:thisModuleName))
 
     # Sign Code
     # $pfxESE = [IO.Path]::Combine($env:Temp, 'ese.pfx')
     # Set-Content $pfxESE -Value ([System.Convert]::FromBase64String($env:ESE_CODE_SIGNING_CERT_PFXB64)) -Encoding 'Byte'
     # $certPass = ConvertTo-SecureString -String $env:ESE_CODE_SIGNING_CERT_PASS -AsPlainText -Force
     # $cert = (Get-PfxData -FilePath $pfxESE -Password $certPass).EndEntityCertificates[0]
-    # foreach ($file in (Get-ChildItem $script:ParentModulePath -File)) {
+    # foreach ($file in (Get-ChildItem $script:parentModulePath -File)) {
     #     $authenticodeSignature = @{
     #         FilePath = $file.FullName
     #         Certificate = $cert
@@ -153,15 +163,52 @@ task PostAnalyze {
     $saResults = Invoke-ScriptAnalyzer -Path ([IO.Path]::Combine($script:BuildOutput, $script:thisModuleName)) -Severity @('Error', 'Warning') -Recurse -Verbose:$false
     if ($saResults) {
         $saResults | Format-Table
-        Write-Error -Message 'One or more Script Analyzer errors/warnings where found. Build cannot continue!'
+        Write-Error -Message '[PSAKE PostAnalyze] One or more Script Analyzer errors/warnings where found. Build cannot continue!'
     }
 }
 
+<#
+Invoke-psake -buildFile .\.build\buildPsake.ps1 -TaskList Test -Parameters @{Pester = @{
+    Configuration = @{
+        CodeCoverage = @{
+            Enabled = $true
+            Path = 'C:\Users\qhm067\Git\PSRedstone\PSRedstone\Public\*-RedstoneWim.ps1'
+        }
+    }
+}}
+#>
 task Test {
-    $testResults = Invoke-Pester -Path ([IO.Path]::Combine($script:PSScriptRootParent, 'Tests')) -PassThru
+    if ($Pester) {
+        # Pester would be passed in as a PSake Parameter:
+        #    More Info: https://psake.readthedocs.io/en/latest/pass-parameters/
+        #    Example: Invoke-psake -buildFile .\.build\buildPsake.ps1 -TaskList Test -Parameters @{Pester = @{ Output = 'Detailed' }}
+        $invokePester = @{}
+        foreach ($item in $Pester.GetEnumerator()) {
+            $invokePester.Set_Item($item.Name, $item.Value)
+        }
+    } else {
+        $invokePester = @{
+            Configuration = @{
+                Run = @{
+                    Path = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'Tests')
+                }
+                CodeCoverage = @{
+                    Enabled = $true
+                    Path = '{0}\*\*.ps1' -f $script:parentDevModulePath
+                    OutputPath = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'coverage.xml')
+                }
+                PassThru = $true
+            }
+        }
+    }
+
+    Write-Host ('[PSAKE Test] Pester: {0}' -f ($invokePester | ConvertTo-Json)) -ForegroundColor 'DarkMagenta'
+    $testResults = Invoke-Pester @invokePester
     if ($testResults.FailedCount -gt 0) {
+        $msg = '[PSAKE Test] {0} Pester test{1} failed. Build cannot continue!' -f $testResults.FailedCount, $(if ($testResults.FailedCount -gt 1) { 's' })
+        Write-Warning $msg
         $testResults | Format-List
-        Write-Error -Message 'One or more Pester tests failed. Build cannot continue!'
+        Throw $msg
     }
 }
 
@@ -184,6 +231,32 @@ task Deploy {
         Force = $true
         Verbose = $true
     }
-    Write-Host "[PSAKE Deploy] Publish-Module: $($publishModule | ConvertTo-Json)" -ForegroundColor 'DarkMagenta'
+    Write-Host ('[PSAKE Deploy] Publish-Module: $($publishModule | ConvertTo-Json)') -ForegroundColor 'DarkMagenta'
     Publish-Module @publishModule
+}
+
+task DeployPSGallery {
+    <#
+        Deployed with PSDeploy
+            - https://github.com/RamblingCookieMonster/PSDeploy
+    #>
+    [IO.DirectoryInfo] $buildOutputModule = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'BuildOutput', $script:thisModuleName)
+
+    Write-Host ('[PSAKE Deploy] APPVEYOR_PROJECT_NAME: {0}' -f $env:APPVEYOR_PROJECT_NAME) -Foregroundcolor 'Magenta'
+    Write-Host ('[PSAKE Deploy] buildOutputModule: {0}' -f $buildOutputModule) -Foregroundcolor 'Magenta'
+    Write-Host ('[PSAKE Deploy] Path Exists ({0}): {1}' -f $buildOutputModule.Parent.Parent.Parent.Exists, $buildOutputModule.Parent.Parent.Parent.FullName) -Foregroundcolor 'Magenta'
+    Write-Host ('[PSAKE Deploy] Path Exists ({0}): {1}' -f $buildOutputModule.Parent.Parent.Exists, $buildOutputModule.Parent.Parent.FullName) -Foregroundcolor 'Magenta'
+    Write-Host ('[PSAKE Deploy] Path Exists ({0}): {1}' -f $buildOutputModule.Parent.Exists, $buildOutputModule.Parent.FullName) -Foregroundcolor 'Magenta'
+    Write-Host ('[PSAKE Deploy] Path Exists ({0}): {1}' -f $buildOutputModule.Exists, $buildOutputModule.FullName) -Foregroundcolor 'Magenta'
+
+    Deploy Module {
+        By PSGalleryModule $script:thisModuleName {
+            FromSource $buildOutputModule.FullName
+            To PSGallery
+            # Tagged Testing
+            WithOptions @{
+                ApiKey = $env:PSGALLERY_API_KEY
+            }
+        }
+    }
 }

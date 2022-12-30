@@ -1,0 +1,36 @@
+image: WMF 5
+
+# Skip on updates to the readme.
+# We can force this by adding [skip ci] or [ci skip] anywhere in commit message
+skip_commits:
+  message: /update(?:|d|s) readme\..*/
+
+install:
+# Bootstrap PSDepend and Install Dependencies
+- ps: |
+    Install-PackageProvider -Name NuGet -MinimumVersion '2.8.5.201' -Force
+    Install-Module -Name PSDepend -Scope CurrentUser -Force
+    Import-Module -Name PSDepend
+    Invoke-PSDepend '.\.build\REQUIREMENTS.psd1' -Force
+
+build_script:
+- ps: & '.\.build\build.ps1' -Task Build
+
+after_test:
+  # Upload coverage report to codecov
+  - ps: |
+    $env:PATH = 'C:\msys64\usr\bin;' + $env:PATH
+    Invoke-WebRequest -Uri 'https://codecov.io/bash' -OutFile codecov.sh
+    bash codecov.sh -f coverage.json
+
+on_success:
+# If build was started by pushed tag; deploy it.
+- ps: |
+    Write-Host "[AppVeyor] On Success; deploying ..." -Foregroundcolor Green
+    & '.\.build\build.ps1' -Task Deploy
+  on:
+    branch: master                 # release from master branch only
+    APPVEYOR_REPO_TAG: true        # deploy except on tag push only
+  branches:
+    only:
+    - master

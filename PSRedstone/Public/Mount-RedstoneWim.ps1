@@ -45,7 +45,7 @@ function Mount-RedstoneWim {
         [int]
         $ImageIndex = 1,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [IO.FileInfo]
         $LogFileF
     )

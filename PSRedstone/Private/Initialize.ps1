@@ -110,7 +110,7 @@ class Redstone {
             }
         }
         $_settings = $this.Settings.JSON.Data
-        New-Variable -Scope 'global' -Name 'settings' -Value $_settings
+        New-Variable -Scope 'global' -Name 'settings' -Value $_settings -Force
 
         $this.SetDefaultSettingsFromRegistry($this.Settings.Registry.Key)
         $this.SetPSDefaultParameterValues($this.Settings.Functions)
@@ -125,7 +125,7 @@ class Redstone {
 
     Redstone([string] $Publisher, [string] $Product, [string] $Version, [string] $Action) {
         $this.SetUpSettings()
-        New-Variable -Scope 'global' -Name 'settings' -Value $this.Settings
+        New-Variable -Scope 'global' -Name 'settings' -Value $this.Settings -Force
 
         $this.SetDefaultSettingsFromRegistry($this.Settings.Registry.Key)
         $this.SetPSDefaultParameterValues($this.Settings.Functions)

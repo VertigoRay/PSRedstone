@@ -35,6 +35,11 @@ if (Test-Path ([IO.Path]::Combine($PSScriptRoot, 'env.ps1'))) {
     . ([IO.Path]::Combine($PSScriptRoot, 'env.ps1'))
 }
 
+# Enable TLS v1.2 (for GitHub et al.)
+Write-Verbose "[BUILD] SecurityProtocol OLD: $([System.Net.ServicePointManager]::SecurityProtocol)"
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor [System.Net.SecurityProtocolType]::Tls12
+Write-Verbose "[BUILD] SecurityProtocol NEW: $([System.Net.ServicePointManager]::SecurityProtocol)"
+
 # Setup NuGet PP
 if (-not (Get-PackageProvider 'NuGet' -ErrorAction 'Ignore' | Where-Object { $_.Version -ge $NuGetPPMinVersion })) {
     Install-PackageProvider -Name 'NuGet' -MinimumVersion $NuGetPPMinVersion -Force

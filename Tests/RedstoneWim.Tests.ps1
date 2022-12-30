@@ -1,87 +1,168 @@
-Describe 'RedstoneWim' -Tag 'WIM' {
-    [IO.FileInfo] $capturePath = [IO.Path]::Combine($psProjectRoot.FullName, 'PSRedstone')
-    $imagePath = [IO.Path]::Combine('TestDrive:', 'dev', 'PSRedstone', 'PSRedstone.wim')
-    $mountPath = [IO.Path]::Combine('TestDrive:', 'dev', 'Mount_PSRedstone')
+BeforeAll {
+    [IO.DirectoryInfo] $psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
+    Write-Information ('[BeforeAll] psProjectRoot: {0}' -f $psProjectRoot)
+
     [bool] $script:isElevated = (New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
+    Write-Information ('[BeforeAll] PowerShell is Elevated: {0}' -f $script:isElevated)
 
-    BeforeAll {
-        $psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
-        Write-Debug ('psProjectRoot: {0}' -f $psProjectRoot)
+    if ($script:isElevated) {
+        $imports = @(
+            '{0}\PSRedstone\Public\Dismount-RedstoneWim.ps1'
+            '{0}\PSRedstone\Public\Invoke-RedstoneForceEmptyDirectory.ps1'
+            '{0}\PSRedstone\Public\Mount-RedstoneWim.ps1'
+            '{0}\PSRedstone\Public\New-RedstoneWim.ps1'
+        )
 
-        if ($isElevated) {
-            . ('{0}\PSRedstone\Public\Dismount-RedstoneWim.ps1' -f $psProjectRoot.FullName)
-            . ('{0}\PSRedstone\Public\Mount-RedstoneWim.ps1' -f $psProjectRoot.FullName)
-            . ('{0}\PSRedstone\Public\New-RedstoneWim.ps1' -f $psProjectRoot.FullName)
+        foreach ($import in $imports) {
+            Write-Information ('[BeforeAll] Importing: {0}' -f ($import -f $psProjectRoot.FullName))
+            . ($import -f $psProjectRoot.FullName)
         }
-        . ('{0}\PSRedstone\Public\Invoke-RedstoneForceEmptyDirectory.ps1' -f $psProjectRoot.FullName)
     }
 
-    Context 'NEW' {
-        It 'Should be elevated to create WIMs' {
-            (New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator) | Should -Be $true
-        }
+    Write-Information ('[BeforeAll] Redstone Commands: {0}' -f (Get-Command '*-Redstone*' | Out-String))
 
-        if ((New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)) {
-            if (Test-Path $imagePath) {
-                Remove-Item $imagePath -Force
+    [IO.DirectoryInfo] $capturePath = [IO.Path]::Combine($psProjectRoot.FullName, 'PSRedstone')
+    Write-Information ('[BeforeAll] RedstoneWim CapturePath: [{1}] {0}' -f $capturePath.FullName, $capturePath.GetType().FullName)
+
+    # Comment `[string] $TestDrive` out to use default Pester Test location.
+    #    More Info: https://pester.dev/docs/usage/testdrive#compare-with-literal-path
+    [string] $TestDrive = [IO.Path]::Combine($psProjectRoot.FullName, 'dev')
+    Write-Information ('[BeforeAll] Pester TestDrive: {0}' -f $TestDrive)
+
+    [IO.FileInfo] $imagePath = [IO.Path]::Combine($TestDrive, 'PSRedstone', 'PSRedstone.wim')
+    Write-Information ('[BeforeAll] RedstoneWim Image Path: [{1}] {0}' -f $imagePath.FullName, $imagePath.GetType().FullName)
+
+    [IO.DirectoryInfo] $mountPath = [IO.Path]::Combine($TestDrive, 'Mount_PSRedstone')
+    Write-Information ('[BeforeAll] RedstoneWim Mount Path: [{1}] {0}' -f $mountPath.FullName, $mountPath.GetType().FullName)
+}
+
+AfterAll {
+    Write-Information ('[AfterAll] RedstoneWim Image Path: [{1}] {0}' -f $imagePath.FullName, $imagePath.GetType().FullName)
+    if ($imagePath.Exists) {
+        Write-Information ('[AfterAll] Deleting Image Path...')
+        Remove-Item $imagePath.FullName -Force
+    }
+
+    Write-Information ('[AfterAll] RedstoneWim Mount Path: [{1}] {0}' -f $mountPath.FullName, $mountPath.GetType().FullName)
+    if ($mountPath.Exists) {
+        Write-Information ('[AfterAll] Deleting Mount Path...')
+        Remove-Item $mountPath.FullName -Recurse -Force
+    }
+}
+
+Describe 'RedstoneWim' -Tag 'WIM' {
+    if ($script:isElevated) {
+        Context 'NEW' {
+            BeforeAll {
+                Write-Information ('[Context NEW BeforeAll] RedstoneWim Image Path: [{1}] {0}' -f $imagePath.FullName, $imagePath.GetType().FullName)
+                if ($imagePath.Exists) {
+                    Remove-Item $imagePath.FullName -Force
+                }
+
+                $newWim = @{
+                    ImagePath = $imagePath.FullName
+                    CapturePath = $capturePath.FullName
+                    Name = 'PSRedstone'
+                }
+                Write-Information ('[Context NEW BeforeAll] New-RedstoneWim: {0}' -f ($newWim | ConvertTo-Json))
             }
 
-            Write-Host ($imagePath | Select-Object *) -ForegroundColor 'Cyan'
-
-            It ('WIM does not already exist: {0}' -f $imagePath) {
-                Test-Path $imagePath | Should -Be $false
+            It 'Should be elevated to create WIMs' {
+                $script:isElevated | Should -Be $true
             }
 
-            New-RedstoneWim -ImagePath $imagePath -CapturePath $capturePath -Name 'PSRedstone'
+            It ('WIM does not already exist: {0}' -f $imagePath.FullName) {
+                $imagePath.Exists | Should -Be $false
+            }
+
+            It ('New-RedstoneWim Should Run') {
+                { New-RedstoneWim @newWim } | Should -Not -Throw
+            }
 
             It ('WIM Created: {0}' -f $imagePath) {
-                Test-Path $imagePath | Should -Be $true
+                $imagePath.Refresh()
+                $imagePath.Exists | Should -Be $true
             }
         }
-    }
 
-    Context 'MOUNT' {
-        It 'Should be elevated to mount WIMs' {
-            $isElevated | Should -Be $true
-        }
+        Context 'MOUNT' {
+            BeforeAll {
+                Write-Information ('[Context MOUNT BeforeAll] RedstoneWim Image Path: [{1}] {0}' -f $imagePath.FullName, $imagePath.GetType().FullName)
+                if ($mountPath.Exists) {
+                    Remove-Item $mountPath.FullName -Force
+                }
 
-        if ($isElevated) {
-            if (Test-Path $mountPath) {
-                Remove-Item $mountPath -Recurse -Force
+                $mountWim = @{
+                    ImagePath = $imagePath.FullName
+                    MountPath = $mountPath.FullName
+                }
+                Write-Information ('[Context MOUNT BeforeAll] Mount-RedstoneWim: {0}' -f ($mountWim | ConvertTo-Json))
             }
 
-            It ('Mount path does not already exist: {0}' -f $mountPath) {
-                Test-Path $mountPath | Should -Be $false
+            It 'Should be elevated to mount WIMs' {
+                $script:isElevated | Should -Be $true
             }
 
-            Mount-RedstoneWim -ImagePath $imagePath -MountPath $mountPath
-
-            It ('WIM mounted: {0}' -f $mountPath) {
-                Test-Path $mountPath | Should -Be $true
-            }
-        }
-    }
-
-    Context 'DISMOUNT' {
-        It 'Should be elevated to dismount WIMs' {
-            $isElevated | Should -Be $true
-        }
-
-        if ($isElevated) {
-            It ('Mount path already exist: {0}' -f $mountPath) {
-                Test-Path $mountPath | Should -Be $true
+            It ('Mount path does not exist: {0}' -f $mountPath.FullName) {
+                $mountPath.Exists | Should -Be $false
             }
 
-            Write-Host "Dismount-RedstoneWim -MountPath '${mountPath}'" -Fore Cyan
-            Dismount-RedstoneWim -MountPath $mountPath
-
-            It ('WIM dismounted: {0}' -f $mountPath) {
-                Test-Path $mountPath | Should -Be $false
+            It ('Mount-RedstoneWim Should Run') {
+                { Mount-RedstoneWim @mountWim } | Should -Not -Throw
             }
 
-            It ('WIM dismounted 2: {0}' -f $mountPath) {
-                Get-ChildItem $mountPath | Should -Be $false
+            It ('Mount path exists: {0}' -f $mountPath.FullName) {
+                $mountPath.Refresh()
+                $mountPath.Exists | Should -Be $true
+            }
+
+            It ('Mount path not empty: {0}' -f $mountPath.FullName) {
+                Get-ChildItem $mountPath.FullName | Should -Not -BeNullOrEmpty
+            }
+
+            It ('WIM mounted: {0}' -f $mountPath.FullName) {
+                $mounted = Get-WindowsImage -Mounted | Where-Object { $_.Path -eq $mountPath.FullName }
+                $mounted.MountStatus | Should -Be 'Ok'
             }
         }
+
+        Context 'DISMOUNT' {
+            BeforeAll {
+                $dismountWim = @{
+                    MountPath = $mountPath.FullName
+                }
+                Write-Information ('[Context DISMOUNT BeforeAll] Dismount-RedstoneWim: {0}' -f ($dismountWim | ConvertTo-Json))
+            }
+
+            It 'Should be elevated to dismount WIMs' {
+                $script:isElevated | Should -Be $true
+            }
+
+            It ('Mount path exists: {0}' -f $mountPath.FullName) {
+                $mountPath.Refresh()
+                $mountPath.Exists | Should -Be $true
+            }
+
+            It ('Dismount-RedstoneWim Should Run') {
+                { Dismount-RedstoneWim @dismountWim } | Should -Not -Throw
+            }
+
+            It ('Mount path still exists: {0}' -f $mountPath.FullName) {
+                $mountPath.Refresh()
+                $mountPath.Exists | Should -Be $true
+            }
+
+            It ('Mount path is empty: {0}' -f $mountPath.FullName) {
+                Get-ChildItem $mountPath.FullName | Should -BeNullOrEmpty
+            }
+
+            It ('WIM dismounted: {0}' -f $mountPath.FullName) {
+                $mounted = Get-WindowsImage -Mounted | Where-Object { $_.Path -eq $mountPath.FullName }
+                $mounted.MountStatus | Should -BeNullOrEmpty
+            }
+        }
+    } else {
+        # NOT Elevated
+        Write-Warning ('[Describe] PowerShell is NOT Elevated')
     }
 }
