@@ -154,7 +154,7 @@ task Build -Depends BuildManifest {
     $compress = @{
         Path = (Get-ChildItem $script:parentModulePath -File -Recurse).FullName
         CompressionLevel = 'Optimal'
-        DestinationPath = [IO.Path]::Combine($script:parentDevModulePath, 'dev', ('{0}.zip' -f $script:thisModuleName))
+        DestinationPath = [IO.Path]::Combine($script:psScriptRootParent, 'dev', ('{0}.zip' -f $script:thisModuleName))
     }
     Compress-Archive @compress
 }

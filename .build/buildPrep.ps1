@@ -77,4 +77,4 @@ $invokePSDepend = @{
     Force = $true
 }
 Write-Information ('Invoke-PSDepend: {0}' -f ($invokePSDepend | ConvertTo-Json))
-Invoke-PSDepend @invokePSDepend
+Invoke-PSDepend @invokePSDepend -Verbose
