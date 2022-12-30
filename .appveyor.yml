@@ -12,6 +12,7 @@ init:
 install:
 # Bootstrap PSDepend and Install Dependencies
 - ps: |
+    $InformationPreference = 'Continue'
     & ([IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPrep.ps1'))
 
 before_build:
