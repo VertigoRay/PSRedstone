@@ -5,6 +5,11 @@ image: WMF 5
 skip_commits:
   message: /update(?:|d|s) readme\..*/
 
+init:
+  - ps: |
+    $env:MODULE_VERSION = ((Get-Date -Format 'yyyy.MM.dd'), ((New-TimeSpan -Start ([datetime]::Today)).TotalSeconds -as [int])) -join '.'
+    Update-AppveyorBuild -Version $env:MODULE_VERSION
+
 install:
 # Bootstrap PSDepend and Install Dependencies
 - ps: |
