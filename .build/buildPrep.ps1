@@ -67,7 +67,7 @@ foreach ($module in $installModules.GetEnumerator()) {
     Install-Module @install -Scope 'CurrentUser' -Force
 
     $m = Get-Module -Name $module.Name -ListAvailable
-    Write-Information '{0}Installed: {1} {2}' -f "`t", $m.Name, $m.Version
+    Write-Information ('{0}Installed: {1} {2}' -f "`t", $m.Name, $m.Version)
 }
 
 Write-Information 'Install all build requirements'
