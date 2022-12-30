@@ -68,12 +68,16 @@ if ([System.Environment]::Is64BitOperatingSystem) {
 ```
 
 > ℹ: *Redstone* will automatically parse the `settings.json` file if it exists.
-> The code  above shows where the `settings.json` data is in the class for easy creation of a `$settings` variable.
+> The `settings.json` data is in the class, but we create you a `$settings` variable as well.
 >   - `$Redstone.Publisher`: taken directly from the root key in the `settings.json`.
 >   - `$Redstone.Product`: taken directly from the root key in the `settings.json`.
 >   - `$Redstone.Version`: taken directly from the root key in the `settings.json`; this would normally be injected into the file during the set up of the MECM Package Source files.
->   - `$Redstone.Action`: taken directly from the filename of the scripte; in this case the *Action* is `"install"` taken from `install.ps1`.
->     - We use `Get-Culture` to capitalise the first letter and make it `"Install"`.
+>   - `$Redstone.Action`: taken directly from the filename of the script; in this case the *Action* is `"install"` taken from `install.ps1`.
+>     - We use `Get-Culture` to capitalize the first letter and make it `"Install"`.
+>
+> Given the above details, the output of `Write-Information` will be:
+>
+>     Installing Mozilla Firefox RR 1.2.3 ...
 
 # Instantiating *Redstone*
 
