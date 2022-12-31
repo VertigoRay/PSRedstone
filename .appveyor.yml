@@ -68,9 +68,9 @@ test_script:
     }
 
 after_test:
-  # Upload coverage report to codecov
-  - ps:   - ps: |
-      & [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'appveyor', 'after_test.ps1')
+# Upload coverage report to codecov
+- ps: |
+    & [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'appveyor', 'after_test.ps1')
 
 deploy:
   # Deploy to GitHub Releases
