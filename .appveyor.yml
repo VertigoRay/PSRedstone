@@ -6,71 +6,71 @@ skip_commits:
   message: /update(?:|d|s) readme\..*/
 
 init:
-- ps: $env:MODULE_VERSION = ((Get-Date -Format 'yyyy.MM.dd'), ((New-TimeSpan -Start ([datetime]::Today)).TotalSeconds -as [int])) -join '.'
-- ps: Update-AppveyorBuild -Version ${env:MODULE_VERSION}
+  - ps: $env:MODULE_VERSION = ((Get-Date -Format 'yyyy.MM.dd'), ((New-TimeSpan -Start ([datetime]::Today)).TotalSeconds -as [int])) -join '.'
+  - ps: Update-AppveyorBuild -Version ${env:MODULE_VERSION}
 
 install:
-# Bootstrap PSDepend and Install Dependencies
-- ps: |
-    $InformationPreference = 'Continue'
-    & ([IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPrep.ps1'))
+  # Bootstrap PSDepend and Install Dependencies
+  - ps: |
+      $InformationPreference = 'Continue'
+      & ([IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPrep.ps1'))
 
 before_build:
-# Run Pester Tests
-- ps: |
-    $invokePsake = @{
-      BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
-      TaskList = 'Test'
-    }
-    Invoke-psake @invokePsake
-    if (-not $psake.build_success) {
-      $Host.SetShouldExit(1)
-    }
+  # Run Pester Tests
+  - ps: |
+      $invokePsake = @{
+        BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
+        TaskList = 'Test'
+      }
+      Invoke-psake @invokePsake
+      if (-not $psake.build_success) {
+        $Host.SetShouldExit(1)
+      }
 
 build_script:
-- ps: |
-    $invokePsake = @{
-      BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
-      TaskList = 'Build'
-    }
-    Invoke-psake @invokePsake
-    if (-not $psake.build_success) {
-      $Host.SetShouldExit(1)
-    }
+  - ps: |
+      $invokePsake = @{
+        BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
+        TaskList = 'Build'
+      }
+      Invoke-psake @invokePsake
+      if (-not $psake.build_success) {
+        $Host.SetShouldExit(1)
+      }
 
 test_script:
-# Run Pester Tests w/ CodeCov
-- ps: |
-    $invokePsake = @{
-      BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
-      TaskList = 'Test'
-      Parameters = @{
-        Pester = @{
-          Configuration = @{
-            Run = @{
-              Path = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'Tests')
-              PassThru = $true
-              Exit = if ($env:CI) { $true } else { $false }
-            }
-            CodeCoverage = @{
-              Enabled = $true
-              # Path = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'BuildOutput', 'PSRedstone', 'PSRedstone.psm1')
-              Path = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'PSRedstone', '*', '*.ps1')
+  # Run Pester Tests w/ CodeCov
+  - ps: |
+      $invokePsake = @{
+        BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
+        TaskList = 'Test'
+        Parameters = @{
+          Pester = @{
+            Configuration = @{
+              Run = @{
+                Path = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'Tests')
+                PassThru = $true
+                Exit = if ($env:CI) { $true } else { $false }
+              }
+              CodeCoverage = @{
+                Enabled = $true
+                # Path = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'BuildOutput', 'PSRedstone', 'PSRedstone.psm1')
+                Path = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'PSRedstone', '*', '*.ps1')
+              }
             }
           }
+          CodeCoveragePath = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'coverage.json')
         }
-        CodeCoveragePath = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'coverage.json')
       }
-    }
-    Invoke-psake @invokePsake
-    if (-not $psake.build_success) {
-      $Host.SetShouldExit(1)
-    }
+      Invoke-psake @invokePsake
+      if (-not $psake.build_success) {
+        $Host.SetShouldExit(1)
+      }
 
 after_test:
-# Upload coverage report to codecov
-- ps: |
-    & [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'appveyor', 'after_test.ps1')
+  # Upload coverage report to codecov
+  - ps: |
+      & [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'appveyor', 'after_test.ps1')
 
 deploy:
   # Deploy to GitHub Releases
@@ -84,19 +84,19 @@ deploy:
       branch: master                # release from master branch only
 
 on_success:
-# If build was started by pushed tag; deploy it.
-- ps: |
-    $invokePsake = @{
-      BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
-      TaskList = 'DeployPSGallery'
-    }
-    Invoke-psake @invokePsake
-    if (-not $psake.build_success) {
-      $Host.SetShouldExit(1)
-    }
-  on:
-    branch: master                 # release from master branch only
-    APPVEYOR_REPO_TAG: true        # deploy except on tag push only
-  branches:
-    only:
-    - master
+  # If build was started by pushed tag; deploy it.
+  - ps: |
+      $invokePsake = @{
+        BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
+        TaskList = 'DeployPSGallery'
+      }
+      Invoke-psake @invokePsake
+      if (-not $psake.build_success) {
+        $Host.SetShouldExit(1)
+      }
+    on:
+      branch: master                 # release from master branch only
+      APPVEYOR_REPO_TAG: true        # deploy except on tag push only
+    branches:
+      only:
+      - master
