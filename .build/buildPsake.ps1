@@ -231,7 +231,7 @@ task Test {
 }
 
 task CodeCov {
-    & [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'codecov.exe')
+    & ([IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'codecov.exe'))
 }
 
 task DeployProGet {
