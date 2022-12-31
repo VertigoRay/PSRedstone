@@ -70,7 +70,14 @@ test_script:
 after_test:
   # Upload coverage report to codecov
   - ps: |
-      & ([IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'appveyor', 'after_test.ps1'))
+      $invokePsake = @{
+        BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
+        TaskList = 'CodeCov'
+      }
+      Invoke-psake @invokePsake
+      if (-not $psake.build_success) {
+        $Host.SetShouldExit(1)
+      }
 
 deploy:
   # Deploy to GitHub Releases
