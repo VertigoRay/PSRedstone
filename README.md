@@ -2,8 +2,11 @@
 [![codecov](https://codecov.io/gh/VertigoRay/PSRedstone/branch/master/graph/badge.svg)](https://codecov.io/gh/VertigoRay/PSRedstone)
 [![version](https://img.shields.io/powershellgallery/v/PSRedstone.svg)](https://www.powershellgallery.com/packages/PSRedstone)
 [![downloads](https://img.shields.io/powershellgallery/dt/PSRedstone.svg?label=downloads)](https://www.powershellgallery.com/stats/packages/PSRedstone?groupby=Version)
+[![PSScriptAnalyzer](https://github.com/VertigoRay/PSRedstone/actions/workflows/powershell.yml/badge.svg)](https://github.com/VertigoRay/PSRedstone/actions/workflows/powershell.yml)
+[![Codacy Security Scan](https://github.com/VertigoRay/PSRedstone/actions/workflows/codacy.yml/badge.svg)](https://github.com/VertigoRay/PSRedstone/actions/workflows/codacy.yml)
+[![DevSkim](https://github.com/VertigoRay/PSRedstone/actions/workflows/devskim.yml/badge.svg)](https://github.com/VertigoRay/PSRedstone/actions/workflows/devskim.yml)
 
-![PSRedstone](https://placehold.co/80x15/red/white?text=PSRedstone) is a module used to streamline installation of Windows Applications.
+![PSRedstone](https://t.ly/_jxT) is a module used to streamline installation of Windows Applications.
 It includes a *Redstone* class, which is the core building block for the included functions.
 
 - [Quick Start](#quick-start)
