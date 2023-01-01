@@ -105,7 +105,7 @@ function Get-RedstoneMsiExitCodeMessage {
         Write-Information "Return: ${return}"
         return $return
 }
-
-
-Get-RedstoneMsiExitCodeMessage -MsiExitCode 1622
+#region DEVONLY
+# Get-RedstoneMsiExitCodeMessage -MsiExitCode 1622
 # Get-RedstoneMsiExitCodeMessage -MsiExitCode 1635
+#endregion

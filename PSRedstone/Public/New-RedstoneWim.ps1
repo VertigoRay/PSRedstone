@@ -53,5 +53,6 @@ function New-RedstoneWim {
 
     end {}
 }
-
+#region DEVONLY
 # New-RedstoneWim -ImagePath "PSRedstone.wim" -CapturePath "PSRedstone" -Name "PSRedstone"
+#endregion

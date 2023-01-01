@@ -189,6 +189,7 @@ Function Get-RedstoneInstalledApplication {
 
     return $installedApplication
 }
-
+#region DEVONLY
 # $VerbosePreference = 'c'
 # Get-RedstoneInstalledApplication -Name '*PowerShell*' -WildCard
+#endregion

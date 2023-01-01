@@ -456,10 +456,10 @@ class Redstone {
         return ([Environment]::GetFolderPath($Name) -as [IO.DirectoryInfo])
     }
 }
-
-$Redstone = [Redstone]::new('Mozilla', 'Firefox', '1.2.3', 'test')
-$Redstone
-$Redstone.Settings.Registry
+#region DEVONLY
+# $Redstone = [Redstone]::new('Mozilla', 'Firefox', '1.2.3', 'test')
+# $Redstone
+# $Redstone.Settings.Registry
 
 # Class Sausage:Redstone {
 #     Sausage([string] $Publisher, [string] $Product, [string] $Version, [string] $Action):base([string] $Publisher, [string] $Product, [string] $Version, [string] $Action) {
@@ -468,3 +468,4 @@ $Redstone.Settings.Registry
 
 # $sausage = [Sausage]::new('Mozilla', 'Firefox', '1.2.3', 'test')
 # $sausage
+#endregion

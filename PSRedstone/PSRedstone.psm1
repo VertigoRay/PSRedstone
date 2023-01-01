@@ -12,9 +12,8 @@ foreach ($import in $ps1s) {
         Write-Error -Message "Failed to import function: $($import.FullName): $_"
     }
 }
-#endregion
-
 # The PSD1 is generated from the build pipeline.
+#endregion
 $psd1 = Import-PowerShellDataFile ([IO.Path]::Combine($PSScriptRoot, ('{0}.psd1' -f ([IO.FileInfo] $PSCommandPath).BaseName)))
 $moduleMember = @{
     Cmdlet = $psd1.CmdletsToExport
