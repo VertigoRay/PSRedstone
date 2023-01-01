@@ -9,7 +9,19 @@ trap {
 
 properties {
     $script:psScriptRootParent = ([IO.DirectoryInfo] $PSScriptRoot).Parent
-    $script:thisModuleName = $script:psScriptRootParent.BaseName
+    $script:thisModuleName = if ($mn = (Get-ChildItem $script:psScriptRootParent.FullName -Directory -Filter $script:psScriptRootParent.BaseName).BaseName) {
+        # AppVeyor's project folder is changed to all lowercase (same as URL slug).
+        # This attempts to grab the sub-folder with the same name to preserve the preferred case.
+        # This *should be* consistent across *all* platforms.
+        $mn
+    } elseif ($env:APPVEYOR_PROJECT_NAME) {
+        # Alternatively, use what's set in AppVeyor
+        #   More Info: https://www.appveyor.com/docs/environment-variables/
+        $env:APPVEYOR_PROJECT_NAME
+    } else {
+        $script:psScriptRootParent.BaseName
+    }
+
     $script:ManifestJsonFile = [IO.Path]::Combine($script:psScriptRootParent.FullName, $script:thisModuleName, 'Manifest.json')
     $script:BuildOutput = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'BuildOutput')
 
@@ -252,7 +264,7 @@ task DeployProGet {
         Force = $true
         Verbose = $true
     }
-    Write-Host ('[PSAKE DeployProGet] Publish-Module: $($publishModule | ConvertTo-Json)') -ForegroundColor 'DarkMagenta'
+    Write-Host ('[PSAKE DeployPSGallery] Publish-Module: {0}' -f$($publishModule | ConvertTo-Json)) -ForegroundColor 'DarkMagenta'
     Publish-Module @publishModule
 }
 
@@ -288,6 +300,6 @@ task DeployPSGallery {
         Force = $true
         Verbose = $true
     }
-    Write-Host ('[PSAKE DeployPSGallery] Publish-Module: $($publishModule | ConvertTo-Json)') -ForegroundColor 'DarkMagenta'
+    Write-Host ('[PSAKE DeployPSGallery] Publish-Module: {0}' -f$($publishModule | ConvertTo-Json)) -ForegroundColor 'DarkMagenta'
     Publish-Module @publishModule
 }
