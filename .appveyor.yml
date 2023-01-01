@@ -12,7 +12,7 @@ init:
       Exit-AppveyorBuild
     on:
       branch: master                 # release from master branch only
-      APPVEYOR_REPO_TAG: true        # do on tag push only
+      APPVEYOR_REPO_TAG: 'true'      # do on tag push only
   - ps: $env:MODULE_VERSION = ((Get-Date -Format 'yyyy.MM.dd'), ((New-TimeSpan -Start ([datetime]::Today)).TotalSeconds -as [int])) -join '.'
   - ps: Update-AppveyorBuild -Version ${env:MODULE_VERSION}
 
@@ -121,3 +121,4 @@ on_success:
       Push-AppveyorArtifact ([IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'PSRedstone.zip') -FileName ('PSRedstone.{0}.zip' -f $env:APPVEYOR_BUILD_VERSION)
     on:
       branch: master                 # release from master branch only
+      APPVEYOR_REPO_TAG: 'false'     # do on tag push only
