@@ -8,6 +8,10 @@ trap {
 }
 
 properties {
+    foreach ($item in (Get-ChildItem 'env:' | Where-Object { $_.Name.StartsWith('APPVEYOR') })) {
+        Write-Host ('{0}: {1}' -f $item.Name, $item.Value) -ForegroundColor 'Black'
+    }
+
     $script:psScriptRootParent = ([IO.DirectoryInfo] $PSScriptRoot).Parent
     $script:thisModuleName = if ($mn = (Get-ChildItem $script:psScriptRootParent.FullName -Directory -Filter $script:psScriptRootParent.BaseName).BaseName) {
         # AppVeyor's project folder is changed to all lowercase (same as URL slug).
