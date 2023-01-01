@@ -7,9 +7,11 @@ skip_commits:
 
 init:
   - ps: |
-      Add-AppveyorMessage -Message 'Git Tag Push Detected. Exit the pipeline.' -Category 'Information' -Details ('APPVEYOR_REPO_TAG: {0}' -f $env:APPVEYOR_REPO_TAG)
-      Write-Host 'Git Tag Push Detected. Exit the pipeline.' -ForegroundColor 'Black' -BackgroundColor 'DarkYellow'
-      Exit-AppveyorBuild
+      if ($env:APPVEYOR_REPO_TAG -eq 'true') {
+        Add-AppveyorMessage -Message 'Git Tag Push Detected. Exit the pipeline.' -Category 'Information' -Details ('APPVEYOR_REPO_TAG: {0}' -f $env:APPVEYOR_REPO_TAG)
+        Write-Host 'Git Tag Push Detected. Exit the pipeline.' -ForegroundColor 'Black' -BackgroundColor 'DarkYellow'
+        Exit-AppveyorBuild
+      }
     on:
       APPVEYOR_REPO_TAG: 'true'      # do on tag push only
   - ps: $env:MODULE_VERSION = ((Get-Date -Format 'yyyy.MM.dd'), ((New-TimeSpan -Start ([datetime]::Today)).TotalSeconds -as [int])) -join '.'
@@ -109,14 +111,14 @@ deploy:
 on_success:
   # If build was started by pushed tag; deploy it.
   - ps: |
-      $invokePsake = @{
-        BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
-        TaskList = 'DeployPSGallery'
+      if ($env:APPVEYOR_REPO_TAG -eq 'false') {
+        $invokePsake = @{
+          BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
+          TaskList = 'DeployPSGallery'
+        }
+        Invoke-psake @invokePsake
+        if (-not $psake.build_success) {
+          $Host.SetShouldExit(1)
+        }
+        Push-AppveyorArtifact ([IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'PSRedstone.zip') -FileName ('PSRedstone.{0}.zip' -f $env:APPVEYOR_BUILD_VERSION)
       }
-      Invoke-psake @invokePsake
-      if (-not $psake.build_success) {
-        $Host.SetShouldExit(1)
-      }
-      Push-AppveyorArtifact ([IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'PSRedstone.zip') -FileName ('PSRedstone.{0}.zip' -f $env:APPVEYOR_BUILD_VERSION)
-    on:
-      APPVEYOR_REPO_TAG: 'false'     # do on tag push only
