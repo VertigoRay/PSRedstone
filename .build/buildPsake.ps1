@@ -268,7 +268,7 @@ task DeployProGet {
         Force = $true
         Verbose = $true
     }
-    Write-Host ('[PSAKE DeployPSGallery] Publish-Module: {0}' -f$($publishModule | ConvertTo-Json)) -ForegroundColor 'DarkMagenta'
+    Write-Host ('[PSAKE DeployPSGallery] Publish-Module: {0}' -f ($publishModule | ConvertTo-Json).Replace($env:PROGET_POWERSHELL_ESE, '********')) -ForegroundColor 'DarkMagenta'
     Publish-Module @publishModule
 }
 
@@ -304,6 +304,6 @@ task DeployPSGallery {
         Force = $true
         Verbose = $true
     }
-    Write-Host ('[PSAKE DeployPSGallery] Publish-Module: {0}' -f$($publishModule | ConvertTo-Json)) -ForegroundColor 'DarkMagenta'
+    Write-Host ('[PSAKE DeployPSGallery] Publish-Module: {0}' -f ($publishModule | ConvertTo-Json).Replace($env:PSGALLERY_API_KEY, '********')) -ForegroundColor 'DarkMagenta'
     Publish-Module @publishModule
 }
