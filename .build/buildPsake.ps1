@@ -41,7 +41,7 @@ properties {
     $env:APPVEYOR_BUILD_VERSION = $script:Version
 }
 
-task default -Depends 'SyntaxAnal', 'Build'
+task default -Depends 'SyntaxAnal', 'Test', 'Build'
 task Syntax -Depends 'SyntaxJson', 'SyntaxPoSh'
 task SyntaxAnal -Depends 'Syntax', 'PreAnalyze'
 

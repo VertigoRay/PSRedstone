@@ -6,12 +6,6 @@ skip_commits:
   message: /update(?:|d|s) readme\..*/
 
 init:
-  - ps: |
-      if ($env:APPVEYOR_REPO_TAG -eq 'true') {
-        Add-AppveyorMessage -Message 'Git Tag Push Detected. Exit the pipeline.' -Category 'Information' -Details ('APPVEYOR_REPO_TAG: {0}' -f $env:APPVEYOR_REPO_TAG)
-        Write-Host 'Git Tag Push Detected. Exit the pipeline.' -ForegroundColor 'Black' -BackgroundColor 'DarkYellow'
-        Exit-AppveyorBuild
-      }
   - ps: $env:MODULE_VERSION = ((Get-Date -Format 'yyyy.MM.dd'), ((New-TimeSpan -Start ([datetime]::Today)).TotalSeconds -as [int])) -join '.'
   - ps: Update-AppveyorBuild -Version ${env:MODULE_VERSION}
 
@@ -41,7 +35,7 @@ build_script:
   - ps: |
       $invokePsake = @{
         BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
-        TaskList = 'Build'
+        # TaskList = 'default'
       }
       Invoke-psake @invokePsake
       if (-not $psake.build_success) {
@@ -83,6 +77,7 @@ test_script:
 
 after_test:
   # Upload coverage report to codecov
+  # Also, if we're tagged, delete the tag to prep for publishing release.
   - ps: |
       $invokePsake = @{
         BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
@@ -91,6 +86,9 @@ after_test:
       Invoke-psake @invokePsake
       if (-not $psake.build_success) {
         $Host.SetShouldExit(1)
+      }
+      if ($env:APPVEYOR_REPO_TAG -eq 'true') {
+        & git push origin :refs/tags/$env:APPVEYOR_REPO_TAG_NAME
       }
     on:
       branch: master                 # release from master branch only
@@ -104,12 +102,12 @@ deploy:
     draft: false
     prerelease: false
     on:
-      branch: master                 # release from master branch only
+      APPVEYOR_REPO_TAG: true
 
 on_success:
   # If build was started by pushed tag; deploy it.
   - ps: |
-      if ($env:APPVEYOR_REPO_TAG -eq 'false') {
+      if ($env:APPVEYOR_REPO_TAG -eq 'true') {
         $invokePsake = @{
           BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
           TaskList = 'DeployPSGallery'
