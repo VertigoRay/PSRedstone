@@ -6,8 +6,19 @@ skip_commits:
   message: /update(?:|d|s) readme\..*/
 
 init:
-  - ps: $env:MODULE_VERSION = ((Get-Date -Format 'yyyy.MM.dd'), ((New-TimeSpan -Start ([datetime]::Today)).TotalSeconds -as [int])) -join '.'
-  - ps: Update-AppveyorBuild -Version ${env:MODULE_VERSION}
+  - ps: |
+      if ($env:APPVEYOR_REPO_TAG -eq 'true') {
+        $env:MODULE_VERSION = ((Get-Date -Format 'yyyy.MM.dd'), ((New-TimeSpan -Start ([datetime]::Today)).TotalSeconds -as [int])) -join '.'
+        Update-AppveyorBuild -Version ${env:MODULE_VERSION}
+        $details = @{
+          APPVEYOR_REPO_TAG = $env:APPVEYOR_REPO_TAG
+          APPVEYOR_REPO_TAG_NAME = $env:APPVEYOR_REPO_TAG_NAME
+          MODULE_VERSION = $env:MODULE_VERSION
+        }
+        Add-AppveyorMessage -Message ('Git tag to publish Version: {0}' -f $env:MODULE_VERSION) -Category 'Information' -Details ($details | ConvertTo-Json)
+      } else {
+        Add-AppveyorMessage -Message 'Git Push, just running checks.' -Category 'Information'
+      }
 
 install:
   # Bootstrap PSDepend and Install Dependencies
