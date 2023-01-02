@@ -205,21 +205,21 @@ task Test {
         }
     } else {
         $pesterFrom = 'Default'
-    }
-    $invokePester = @{
-        Configuration = @{
-            Run = @{
-                Path = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'Tests')
-                PassThru = $true
-                Exit = if ($env:CI) { $true } else { $false }
-            }
-            TestResult = @{
-                Enabled = $true
-            }
-            CodeCoverage = @{
-                Enabled = $true
-                Path = [IO.Path]::Combine($script:parentDevModulePath, '*', '*.ps1')
-                OutputPath = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'coverage.xml')
+        $invokePester = @{
+            Configuration = @{
+                Run = @{
+                    Path = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'Tests')
+                    PassThru = $true
+                    Exit = if ($env:CI) { $true } else { $false }
+                }
+                TestResult = @{
+                    Enabled = $true
+                }
+                CodeCoverage = @{
+                    Enabled = $true
+                    Path = [IO.Path]::Combine($script:parentDevModulePath, '*', '*.ps1')
+                    OutputPath = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'coverage.xml')
+                }
             }
         }
     }
