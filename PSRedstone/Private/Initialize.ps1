@@ -14,16 +14,13 @@ class Redstone {
     hidden [hashtable] $_Env = $null
     hidden [hashtable] $_OS = $null
     hidden [hashtable] $_ProfileList = $null
-    [string] $ExitCode = 0
+    [int] $ExitCode = 0
     [System.Collections.ArrayList] $Exiting = @()
     [hashtable] $Settings = @{}
-    [bool] $IsElevated = (New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
+    [bool] $IsElevated = $null
     # Use the default settings, don't read any of the settings in from the registry. In production this is never set.
     [bool] $OnlyUseDefaultSettings = $false
-    [hashtable] $Debug = @{
-        MyInvocation = $MyInvocation
-        PSCallStack = (Get-PSCallStack)
-    }
+    [hashtable] $Debug = @{}
 
     static Redstone() {
         # Creating some custom setters that update other properties, like Log Paths, when related properties are changed.
@@ -102,22 +99,44 @@ class Redstone {
         if ($this.Settings.JSON.File.Exists) {
             $this.Settings.JSON.Data = Get-Content $this.Settings.JSON.File.FullName | ConvertFrom-Json
         } else {
-            $this.Settings.JSON.File = [IO.FileInfo] ([IO.Path]::Combine(([IO.FileInfo] $this.Debug.PSCallStack[1].ScriptName).Directory.FullName, 'settings.json'))
+            $this.Settings.JSON.File = [IO.FileInfo] ([IO.Path]::Combine(([IO.FileInfo] $this.Debug.PSCallStack[2].ScriptName).Directory.FullName, 'settings.json'))
             if ($this.Settings.JSON.File.Exists) {
                 $this.Settings.JSON.Data = Get-Content $this.Settings.JSON.File.FullName | ConvertFrom-Json
             } else {
                 Throw [System.IO.FileNotFoundException] $this.Settings.JSON.File.FullName
             }
         }
-        $_settings = $this.Settings.JSON.Data
-        New-Variable -Scope 'global' -Name 'settings' -Value $_settings -Force
+        New-Variable -Scope 'global' -Name 'settings' -Value $this.Settings.JSON.Data -Force
 
         $this.SetDefaultSettingsFromRegistry($this.Settings.Registry.Key)
         $this.SetPSDefaultParameterValues($this.Settings.Functions)
 
-        $this.set__Publisher($_settings.Publisher)
-        $this.set__Product($_settings.Product)
-        $this.set__Version($_settings.Version)
+        $this.set__Publisher($this.Settings.JSON.Data.Publisher)
+        $this.set__Product($this.Settings.JSON.Data.Product)
+        $this.set__Version($this.Settings.JSON.Data.Version)
+        $this.set__Action(([IO.FileInfo] $this.Debug.PSCallStack[2].ScriptName).BaseName)
+
+        $this.SetUpLog()
+    }
+
+    Redstone([IO.FileInfo] $Settings) {
+        $this.SetUpSettings()
+
+        $this.Settings.JSON = @{}
+        $this.Settings.JSON.File = [IO.FileInfo] $Settings
+        if ($this.Settings.JSON.File.Exists) {
+            $this.Settings.JSON.Data = Get-Content $this.Settings.JSON.File.FullName | ConvertFrom-Json
+        } else {
+            Throw [System.IO.FileNotFoundException] $this.Settings.JSON.File.FullName
+        }
+        New-Variable -Scope 'global' -Name 'settings' -Value $this.Settings.JSON.Data -Force
+
+        $this.SetDefaultSettingsFromRegistry($this.Settings.Registry.Key)
+        $this.SetPSDefaultParameterValues($this.Settings.Functions)
+
+        $this.set__Publisher($this.Settings.JSON.Data.Publisher)
+        $this.set__Product($this.Settings.JSON.Data.Product)
+        $this.set__Version($this.Settings.JSON.Data.Version)
         $this.set__Action(([IO.FileInfo] $this.Debug.PSCallStack[1].ScriptName).BaseName)
 
         $this.SetUpLog()
@@ -165,16 +184,45 @@ class Redstone {
         return $this.GetCimInstance($ClassName, $false, $true)
     }
 
+    hidden [bool] Is64BitOperatingSystem() {
+        if ('Is64BitOperatingSystem' -in $this.Debug.Keys) {
+            return $this.Debug.Is64BitOperatingSystem
+        } else {
+            return ([System.Environment]::Is64BitOperatingSystem)
+        }
+    }
+
+    hidden [System.Collections.DictionaryEntry] Is64BitOperatingSystem([bool] $Override) {
+        # Used for Pester Testing
+        $this.Debug.Is64BitOperatingSystem = $Override
+        return ($this.Debug.GetEnumerator() | Where-Object{ $_.Name -eq 'Is64BitOperatingSystem' })
+    }
+
+    hidden [bool] Is64BitProcess() {
+        if ('Is64BitProcess' -in $this.Debug.Keys) {
+            return $this.Debug.Is64BitProcess
+        } else {
+            return ([System.Environment]::Is64BitProcess)
+        }
+    }
+
+    hidden [System.Collections.DictionaryEntry] Is64BitProcess([bool] $Override) {
+        # Used for Pester Testing
+        $this.Debug.Is64BitProcess = $Override
+        return ($this.Debug.GetEnumerator() | Where-Object{ $_.Name -eq 'Is64BitProcess' })
+    }
+
     hidden [void] SetUpEnv() {
         # This section
 
         $this._Env = @{}
-        if ([System.Environment]::Is64BitOperatingSystem) {
+        if ($this.Is64BitOperatingSystem()) {
             # x64 OS
-            if ([System.Environment]::Is64BitProcess) {
+            if ($this.Is64BitProcess()) {
                 # x64 Process
                 $this._Env.CommonProgramFiles = $env:CommonProgramFiles
                 $this._Env.'CommonProgramFiles(x86)' = ${env:CommonProgramFiles(x86)}
+                $this._Env.PROCESSOR_ARCHITECTURE = $env:PROCESSOR_ARCHITECTURE
                 $this._Env.ProgramFiles = $env:ProgramFiles
                 $this._Env.'ProgramFiles(x86)' = ${env:ProgramFiles(x86)}
                 $this._Env.System32 = "${env:SystemRoot}\System32"
@@ -183,6 +231,7 @@ class Redstone {
                 # Running as x86 on x64 OS
                 $this._Env.CommonProgramFiles = $env:CommonProgramW6432
                 $this._Env.'CommonProgramFiles(x86)' = ${env:CommonProgramFiles(x86)}
+                $this._Env.PROCESSOR_ARCHITECTURE = $env:PROCESSOR_ARCHITEW6432
                 $this._Env.ProgramFiles = $env:ProgramW6432
                 $this._Env.'ProgramFiles(x86)' = ${env:ProgramFiles(x86)}
                 $this._Env.System32 = "${env:SystemRoot}\SysNative"
@@ -192,25 +241,18 @@ class Redstone {
             # x86 OS
             $this._Env.CommonProgramFiles = $env:CommonProgramFiles
             $this._Env.'CommonProgramFiles(x86)' = $env:CommonProgramFiles
+            $this._Env.PROCESSOR_ARCHITECTURE = $env:PROCESSOR_ARCHITECTURE
             $this._Env.ProgramFiles = $env:ProgramFiles
             $this._Env.'ProgramFiles(x86)' = $env:ProgramFiles
             $this._Env.System32 = "${env:SystemRoot}\System32"
             $this._Env.SysWOW64 = "${env:SystemRoot}\System32"
-        }
-
-        if ($env:PROCESSOR_ARCHITEW6432) {
-            # Running as x86 on x64 OS
-            $this._Env.PROCESSOR_ARCHITECTURE = $env:PROCESSOR_ARCHITEW6432
-        } else {
-            # x86 or x64
-            $this._Env.PROCESSOR_ARCHITECTURE = $env:PROCESSOR_ARCHITECTURE
         }
     }
 
     hidden [void] SetUpLog() {
         $this.Settings.Log = @{}
 
-        if (Assert-RedstoneIsElevated) {
+        if ($this.IsElevated) {
             $private:Directory = [IO.DirectoryInfo] "${env:SystemRoot}\Logs\Redstone"
         } else {
             $private:Directory = [IO.DirectoryInfo] "${env:Temp}\Logs\Redstone"
@@ -227,6 +269,11 @@ class Redstone {
     }
 
     hidden [void] SetUpSettings() {
+        $this.Debug = @{
+            MyInvocation = $MyInvocation
+            PSCallStack = (Get-PSCallStack)
+        }
+        $this.IsElevated = (New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
         $this.Settings = @{}
         $this.Settings.Registry = @{
             Key = Get-RedstoneRegistryValueOrDefault ([string]::Empty) 'RegistryKeyRoot' 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\PSRedstone' -RegistryKeyRoot 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\PSRedstone'
@@ -285,14 +332,19 @@ class Redstone {
             $regProfileListPath = 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList'
             $regProfileList = Get-Item $regProfileListPath
             foreach ($property in $regProfileList.Property) {
-                $this._ProfileList.Add($property, (Get-ItemProperty -Path $regProfileListPath).$property)
+                $value = if ($dirInfo = (Get-ItemProperty -Path $regProfileListPath).$property -as [IO.DirectoryInfo]) {
+                    $dirInfo
+                } else {
+                    (Get-ItemProperty -Path $regProfileListPath).$property
+                }
+                $this._ProfileList.Add($property, $value)
             }
 
             [System.Collections.ArrayList] $this._ProfileList.Profiles = @()
             foreach ($userProfile in (Get-ChildItem $regProfileListPath)) {
                 [hashtable] $user = @{}
                 $user.Add('SID', $userProfile.PSChildName)
-                $user.Add('Path', (Get-ItemProperty "${regProfileListPath}\$($userProfile.PSChildName)").ProfileImagePath)
+                $user.Add('Path', ((Get-ItemProperty "${regProfileListPath}\$($userProfile.PSChildName)").ProfileImagePath -as [IO.DirectoryInfo]))
                 $objSID = New-Object System.Security.Principal.SecurityIdentifier($user.SID)
                 try {
                     $objUser = $objSID.Translate([System.Security.Principal.NTAccount])
@@ -316,11 +368,6 @@ class Redstone {
                 ($this._ProfileList.Profiles).Add($user) | Out-Null
             }
         }
-    }
-
-    hidden [void] SetUpVars() {
-        $this.SetUpOS()
-        $this.SetUpEnv()
     }
 
     hidden [void] PSDefaultParameterValuesSetUp() {
@@ -365,36 +412,80 @@ class Redstone {
         }
     }
 
-    [void] Quit($ExitCode = 0, [boolean] $ExitCodeAdd = $true , [int] $ExitCodeErrorBase = 55550000) {
+    [psobject] GetSpecialFolders() {
+        $specialFolders = [ordered] @{}
+        foreach ($folder in ([Environment+SpecialFolder]::GetNames([Environment+SpecialFolder]) | Sort-Object)) {
+            $specialFolders.Add($folder, $this.GetSpecialFolder($folder))
+        }
+        return ([psobject] $specialFolders)
+    }
 
-        Write-Verbose "[Redstone.Exit] ExitCode Orig : ${ExitCode}"
-        if ($ExitCode -eq 'line_number') {
-            [int] $this.ExitCode = $MyInvocation.ScriptLineNumber
+    [IO.DirectoryInfo] GetSpecialFolder([string] $Name) {
+        return ([Environment]::GetFolderPath($Name) -as [IO.DirectoryInfo])
+    }
+
+    [void] Quit() {
+        Write-Debug ('[Redstone.Quit 0] > {0}' -f ($MyInvocation | Out-String))
+        [void] $this.Quit(0, $true , 0)
+    }
+
+    [void] Quit($ExitCode = 0) {
+        Write-Verbose ('[Redstone.Quit 1] > {0}' -f ($MyInvocation | Out-String))
+        $this.ExitCode = if ($ExitCode -eq 'line_number') {
+            (Get-PSCallStack)[1].Location.Split(':')[1].Replace('line', '') -as [int]
+        } else {
+            $ExitCode
+        }
+        [void] $this.Quit($this.ExitCode, $false , 55550000)
+    }
+
+    [void] Quit($ExitCode = 0, [boolean] $ExitCodeAdd = $false) {
+        Write-Verbose ('[Redstone.Quit 1] > {0}' -f ($MyInvocation | Out-String))
+        $this.ExitCode = if ($ExitCode -eq 'line_number') {
+            (Get-PSCallStack)[1].Location.Split(':')[1].Replace('line', '') -as [int]
+        } else {
+            $ExitCode
+        }
+        [void] $this.Quit($this.ExitCode, $ExitCodeAdd , 55550000)
+    }
+
+    [void] Quit($ExitCode = 0, [boolean] $ExitCodeAdd = $false, [int] $ExitCodeErrorBase = 55550000) {
+        Write-Debug ('[Redstone.Quit 3] > {0}' -f ($MyInvocation | Out-String))
+
+        Write-Verbose ('[Redstone.Quit] ExitCode: {0}' -f $ExitCode)
+        $this.ExitCode = if ($ExitCode -eq 'line_number') {
+            (Get-PSCallStack)[1].Location.Split(':')[1].Replace('line', '') -as [int]
+        } else {
+            $ExitCode -as [int]
         }
 
-        try {
-            [int] $this.ExitCode = $ExitCode
-        } catch {
-            Write-Error "[Redstone.Exit] Cannot convert ExitCode to INT.`n`tExitCode: ${ExitCode}`n`tFrom: $($MyInvocation.ScriptName):$($MyInvocation.ScriptLineNumber)"
+        if ($ExitCodeAdd) {
+            Write-Information ('[Redstone.Quit] ExitCodeErrorBase: {0}' -f $ExitCodeErrorBase)
+            if (($this.ExitCode -lt 0) -and ($ExitCodeErrorBase -gt 0)) {
+                # Always Exit positive
+                Write-Verbose ('[Redstone.Quit] ExitCodeErrorBase: {0}' -f $ExitCodeErrorBase)
+                $ExitCodeErrorBase = $ExitCodeErrorBase * -1
+                Write-Verbose ('[Redstone.Quit] ExitCodeErrorBase: {0}' -f $ExitCodeErrorBase)
+            }
+
+            if (([string] $this.ExitCode).Length -gt 4) {
+                Write-Warning "[Redstone.Quit] ExitCode should not be added to Base when more than 4 digits. Doing it anyway ..."
+            }
+
+            if ($this.ExitCode -eq 0) {
+                Write-Warning "[Redstone.Quit] ExitCode 0 being added may cause failure; not sure if this is expected. Doing it anyway ..."
+            }
+
+            $this.ExitCode = $this.ExitCode + $ExitCodeErrorBase
         }
 
-        if ($ExitCodeAdd -and ($ExitCode -lt 0) -and ($ExitCodeErrorBase -gt 0)) {
-            $ExitCodeErrorBase = $ExitCodeErrorBase * -1
-        }
+        Write-Information ('[Redstone.Quit] ExitCode: {0}' -f $this.ExitCode)
 
-        if ($ExitCodeAdd -and (([string] $ExitCode).Length -gt 4)) {
-            Write-Warning "[Redstone.Exit] ExitCode should not be added to Base when more than 4 digits. Doing it anyway ..."
+        # Debug.Quit.DoNotExit is used in Pester testing.
+        if (-not $this.Debug.Quit.DoNotExit) {
+            $global:Host.SetShouldExit($ExitCode)
+            Exit $ExitCode
         }
-
-        if ($ExitCodeAdd -and ($ExitCode -eq 0)) {
-            Write-Warning "[Redstone.Exit] ExitCode 0 being added may cause failure; not sure if this is expected. Doing it anyway ..."
-        }
-
-        $this.ExitCode = if ($ExitCodeAdd) { $ExitCode + $ExitCodeErrorBase } else { $ExitCode }
-        Write-Verbose "[Redstone.Exit] ExitCode Final: ${ExitCode}"
-        $this.Redstone.ExitCode = $ExitCode
-        $global:Host.SetShouldExit($ExitCode)
-        Exit $ExitCode
     }
 
     <#
@@ -442,18 +533,6 @@ class Redstone {
                 }
             }
         }
-    }
-
-    [psobject] GetSpecialFolders() {
-        $specialFolders = [ordered] @{}
-        foreach ($folder in ([Environment+SpecialFolder]::GetNames([Environment+SpecialFolder]) | Sort-Object)) {
-            $specialFolders.Add($folder, $this.GetSpecialFolder($folder))
-        }
-        return ([psobject] $specialFolders)
-    }
-
-    [IO.DirectoryInfo] GetSpecialFolder([string] $Name) {
-        return ([Environment]::GetFolderPath($Name) -as [IO.DirectoryInfo])
     }
 }
 #region DEVONLY

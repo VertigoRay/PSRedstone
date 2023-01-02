@@ -51,7 +51,7 @@ AfterAll {
 }
 
 Describe 'RedstoneWim' -Tag 'WIM' {
-    if ($script:isElevated) {
+    if ((New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)) {
         Context 'NEW' {
             BeforeAll {
                 Write-Information ('[Context NEW BeforeAll] RedstoneWim Image Path: [{1}] {0}' -f $imagePath.FullName, $imagePath.GetType().FullName)
