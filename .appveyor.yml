@@ -102,7 +102,6 @@ after_test:
       if (-not $psake.build_success) {
         $Host.SetShouldExit(1)
       }
-  - ps: |
       if ($env:APPVEYOR_REPO_TAG -eq 'true') {
         Write-Host 'Git Config ...' -ForegroundColor 'Black' -BackgroundColor 'DarkCyan'
         & git config --global credential.helper store
