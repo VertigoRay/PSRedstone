@@ -264,7 +264,7 @@ task GitHubTagDelete {
             'Set-Content -Path ([IO.Path]::Combine($HOME, ''.ssh'', ''config'')) -Value "Host github.com`n`tCheckHostIP no"'
             'Get-Content -LiteralPath ([IO.Path]::Combine($HOME, ''.ssh'', ''config''))'
             '& git remote rm origin'
-            '& git remote add origin ''git@github.com:{1}.git'''
+            '& git remote add origin ''https://github.com/{1}.git'''
             '& git config --global credential.helper store'
             'Set-Content -Path ([IO.Path]::Combine($HOME, ''.git-credentials'')) -Value ''https://{0}:x-oauth-basic@github.com'''
             '& git config --global user.name ''VertigoBot'''
