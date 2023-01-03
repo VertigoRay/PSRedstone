@@ -251,6 +251,42 @@ task CodeCov {
 }
 
 task GitHubTagDelete {
+    function Invoke-Config {
+        [CmdletBinding()]
+        param (
+            [Parameter()]
+            [string]
+            $Config
+        )
+
+        if ($Config.StartsWith('&')) {
+            $cmd = $Config.Split(' ', 3)
+            $process = @{
+                FilePath = $cmd[1]
+                ArgumentList = $cmd[2] -f $gitFormatters
+                RedirectStandardOutput = [IO.Path]::Combine($env:Temp, 'stdout.txt')
+                RedirectStandardError = [IO.Path]::Combine($env:Temp, 'stderr.txt')
+                Wait = $true
+                PassThru = $true
+            }
+            $result = Start-Process @process
+            if ($stdout = (Get-Content ([IO.Path]::Combine($env:Temp, 'stdout.txt')) | Out-String).Trim()) {
+                Write-Host $stdout
+            }
+            if ($stderr = (Get-Content ([IO.Path]::Combine($env:Temp, 'stderr.txt')) | Out-String).Trim()) {
+                if ($result.ExitCode) {
+                    Write-Host ('# ExitCode: {0}' -f $result.ExitCode) -BackgroundColor 'DarkRed'
+                    Write-Error $stderr
+                } else {
+                    Write-Host $stderr -BackgroundColor 'DarkYellow'
+                    Write-Host ('# ExitCode: {0}' -f $result.ExitCode)
+                }
+            }
+        } else {
+            $config -f $gitFormatters | Invoke-Expression
+        }
+    }
+
     if ($env:APPVEYOR_REPO_TAG -eq 'true') {
         $gitFormatters = @(
             $env:GITHUB_PERSONAL_ACCESS_TOKEN
@@ -267,52 +303,17 @@ task GitHubTagDelete {
         )
         foreach ($config in $configs) {
             Write-Host ('PS > {0}' -f ($config -f $gitFormatters)).Replace($env:GITHUB_PERSONAL_ACCESS_TOKEN, '********')
-            if ($config.StartsWith('&')) {
-                $cmd = $config.Split(' ', 3)
-                $process = @{
-                    FilePath = $cmd[1]
-                    ArgumentList = $cmd[2] -f $gitFormatters
-                    RedirectStandardOutput = [IO.Path]::Combine($env:Temp, 'stdout.txt')
-                    RedirectStandardError = [IO.Path]::Combine($env:Temp, 'stderr.txt')
-                    Wait = $true
-                    PassThru = $true
-                }
-                $result = Start-Process @process
-                Write-Host ('StdOut: {0}' -f (Get-Content ([IO.Path]::Combine($env:Temp, 'stdout.txt')) | Out-String))
-                Write-Host ('StdErr: {0}' -f (Get-Content ([IO.Path]::Combine($env:Temp, 'stderr.txt')) | Out-String)) -BackgroundColor 'Red'
-                Write-Host ('# ExitCode: {0}' -f $result.ExitCode)
-            } else {
-                $config -f $gitFormatters | Invoke-Expression
-            }
+            Invoke-Config -Config $config
         }
 
         Write-Host ('Git Delete Tag: {0}' -f $env:APPVEYOR_REPO_TAG_NAME) -ForegroundColor 'Black' -BackgroundColor 'DarkCyan'
         $configs = @(
-            '& git stash --all'
-            '& git stash list'
             '& git pull origin master'
-            '& git stash pop'
             '& git push --set-upstream origin :refs/tags/{2}'
         )
         foreach ($config in $configs) {
             Write-Host ('PS > {0}' -f ($config -f $gitFormatters)).Replace($env:GITHUB_PERSONAL_ACCESS_TOKEN, '********')
-            if ($config.StartsWith('&')) {
-                $cmd = $config.Split(' ', 3)
-                $process = @{
-                    FilePath = $cmd[1]
-                    ArgumentList = $cmd[2] -f $gitFormatters
-                    RedirectStandardOutput = [IO.Path]::Combine($env:Temp, 'stdout.txt')
-                    RedirectStandardError = [IO.Path]::Combine($env:Temp, 'stderr.txt')
-                    Wait = $true
-                    PassThru = $true
-                }
-                $result = Start-Process @process
-                Write-Host ('StdOut: {0}' -f (Get-Content ([IO.Path]::Combine($env:Temp, 'stdout.txt')) | Out-String))
-                Write-Host ('StdErr: {0}' -f (Get-Content ([IO.Path]::Combine($env:Temp, 'stderr.txt')) | Out-String)) -BackgroundColor 'Red'
-                Write-Host ('# ExitCode: {0}' -f $result.ExitCode)
-            } else {
-                $config -f $gitFormatters | Invoke-Expression
-            }
+            Invoke-Config -Config $config
         }
     }
 }
