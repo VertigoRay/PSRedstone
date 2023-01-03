@@ -261,6 +261,7 @@ task GitHubTagDelete {
         Write-Host 'Git Config ...' -ForegroundColor 'Black' -BackgroundColor 'DarkCyan'
         $configs = @(
             '& git config -l'
+            'Get-Content -LiteralPath ([IO.Path]::Combine($HOME, ''.ssh'', ''config''))'
             '& git remote rm origin'
             '& git remote add origin ''git@github.com:{1}.git'''
             '& git config --global credential.helper store'
@@ -271,7 +272,7 @@ task GitHubTagDelete {
         )
         foreach ($config in $configs) {
             Write-Host ('PS > {0}' -f ($config -f $gitFormatters)).Replace($env:GITHUB_PERSONAL_ACCESS_TOKEN, '********')
-            ($config -f $gitFormatters) | Invoke-Expression
+            $config -f $gitFormatters | Invoke-Expression
 
             if ($config.StartsWith('&')) {
                 Write-Host ('# ExitCode: {0}' -f $LASTEXITCODE)
@@ -284,7 +285,7 @@ task GitHubTagDelete {
         )
         foreach ($config in $configs) {
             Write-Host ('PS > {0}' -f ($config -f $gitFormatters)).Replace($env:GITHUB_PERSONAL_ACCESS_TOKEN, '********')
-            ($config -f $gitFormatters) | Invoke-Expression
+            $config -f $gitFormatters | Invoke-Expression
 
             if ($config.StartsWith('&')) {
                 Write-Host ('# ExitCode: {0}' -f $LASTEXITCODE)
