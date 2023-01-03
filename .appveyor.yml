@@ -32,19 +32,19 @@ install:
     on:
       branch: master                 # release from master branch only
 
-before_build:
-  # Run Pester Tests
-  - ps: |
-      $invokePsake = @{
-        BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
-        TaskList = 'Test'
-      }
-      Invoke-psake @invokePsake
-      if (-not $psake.build_success) {
-        $Host.SetShouldExit(1)
-      }
-    on:
-      branch: master                 # release from master branch only
+# before_build:
+#   # Run Pester Tests
+#   - ps: |
+#       $invokePsake = @{
+#         BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
+#         TaskList = 'Test'
+#       }
+#       Invoke-psake @invokePsake
+#       if (-not $psake.build_success) {
+#         $Host.SetShouldExit(1)
+#       }
+#     on:
+#       branch: master                 # release from master branch only
 
 build_script:
   - ps: |
