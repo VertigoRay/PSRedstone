@@ -14,7 +14,7 @@ foreach ($import in $ps1s) {
 }
 # The PSD1 is generated from the build pipeline.
 #endregion
-$psd1 = Import-PowerShellDataFile ([IO.Path]::Combine($PSScriptRoot, ('{0}.psd1' -f ([IO.FileInfo] $PSCommandPath).BaseName)))
+$psd1 = Import-PowerShellDataFile ([IO.Path]::Combine($PSScriptRoot, 'PSRedstone.psd1'))
 $moduleMember = @{
     Cmdlet = $psd1.CmdletsToExport
     Function = $psd1.FunctionsToExport
