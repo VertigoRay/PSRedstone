@@ -107,10 +107,11 @@ after_test:
 
 deploy:
   # Deploy to GitHub Releases
-  - provider: GitHub
+  - release: $(APPVEYOR_BUILD_VERSION)
+    provider: GitHub
     auth_token:
       secure: pRa0vZhRPzeDLMP30BEiTTMRjyCoOoiltxJWA07rI1NBFJHyG0ZmSp41roNT5bSh
-    artifact: dev\PSRedstone.zip     # upload all NuGet packages to release assets
+    artifact: dev\PSRedstone.zip
     draft: false
     prerelease: false
     on:
