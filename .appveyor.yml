@@ -96,33 +96,11 @@ after_test:
   - ps: |
       $invokePsake = @{
         BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
-        TaskList = 'CodeCov'
+        TaskList = @('CodeCov', 'GitHubTagDelete')
       }
       Invoke-psake @invokePsake
       if (-not $psake.build_success) {
         $Host.SetShouldExit(1)
-      }
-      if ($env:APPVEYOR_REPO_TAG -eq 'true') {
-        Write-Host 'Git Config ...' -ForegroundColor 'Black' -BackgroundColor 'DarkCyan'
-        & git config --global credential.helper store
-        Set-Content -Path "$HOME\.git-credentials" -Value "https://$($env:GITHUB_PERSONAL_ACCESS_TOKEN):x-oauth-basic@github.com`n" -NoNewline
-        & git config --global user.name "VertigoBot"
-        & git config --global user.email "VertigoBot@80.vertigion.com"
-        Write-Host ('Git Delete Tag: {0}' -f $env:APPVEYOR_REPO_TAG_NAME) -ForegroundColor 'Black' -BackgroundColor 'DarkCyan'
-        $process = @{
-          FilePath = 'git'
-          ArgumentList = ('push origin :refs/tags/{0}' -f $env:APPVEYOR_REPO_TAG_NAME)
-          RedirectStandardOutput = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'stdout.txt')
-          RedirectStandardError = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'stderr.txt')
-          Wait = $true
-          PassThru = $true
-        }
-        Write-Host ('Start-Process: {0}' -f ($process | ConvertTo-Json))
-        $gitPush = Start-Process @process
-        Write-Host (Get-Content ([IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'stdout.txt')) | Out-String) -ForegroundColor 'Black' -BackgroundColor 'Gray'
-        Write-Host (Get-Content ([IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'stderr.txt')) | Out-String) -ForegroundColor 'Black' -BackgroundColor 'Red'
-        Write-Host ($gitPush | Out-String)
-        Write-Host ('Exit Code: {0}' -f $gitPush.ExitCode)
       }
     on:
       branch: master                 # release from master branch only
@@ -144,11 +122,10 @@ on_success:
       if ($env:APPVEYOR_REPO_TAG -eq 'true') {
         $invokePsake = @{
           BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
-          TaskList = 'DeployPSGallery'
+          TaskList = @('DeployPSGallery', 'AppveyorArtifact')
         }
         Invoke-psake @invokePsake
         if (-not $psake.build_success) {
           $Host.SetShouldExit(1)
         }
-        Push-AppveyorArtifact ([IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'PSRedstone.zip')) -FileName ('PSRedstone.{0}.zip' -f $env:APPVEYOR_BUILD_VERSION)
       }

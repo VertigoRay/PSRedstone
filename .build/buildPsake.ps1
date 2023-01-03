@@ -250,6 +250,31 @@ task CodeCov {
     & ([IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'codecov.exe'))
 }
 
+task GitHubTagDelete {
+    if ($env:APPVEYOR_REPO_TAG -eq 'true') {
+        Write-Host 'Git Config ...' -ForegroundColor 'Black' -BackgroundColor 'DarkCyan'
+        & git config --global credential.helper store
+        Set-Content -Path ([IO.Path]::Combine($HOME, '.git-credentials')) -Value ('https://{0}:x-oauth-basic@github.com' -f $env:GITHUB_PERSONAL_ACCESS_TOKEN)
+        & git config --global user.name 'VertigoBot'
+        & git config --global user.email 'VertigoBot@80.vertigion.com'
+        Write-Host ('Git Delete Tag: {0}' -f $env:APPVEYOR_REPO_TAG_NAME) -ForegroundColor 'Black' -BackgroundColor 'DarkCyan'
+        $process = @{
+            FilePath = 'git'
+            ArgumentList = ('push origin :refs/tags/{0}' -f $env:APPVEYOR_REPO_TAG_NAME)
+            RedirectStandardOutput = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'stdout.txt')
+            RedirectStandardError = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'stderr.txt')
+            Wait = $true
+            PassThru = $true
+        }
+        Write-Host ('Start-Process: {0}' -f ($process | ConvertTo-Json))
+        $gitPush = Start-Process @process
+        Write-Host (Get-Content ([IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'stdout.txt')) | Out-String) -ForegroundColor 'Black' -BackgroundColor 'Gray'
+        Write-Host (Get-Content ([IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'stderr.txt')) | Out-String) -ForegroundColor 'Black' -BackgroundColor 'Red'
+        Write-Host ($gitPush | Out-String)
+        Write-Host ('Exit Code: {0}' -f $gitPush.ExitCode)
+    }
+}
+
 task DeployProGet {
     $registerPSRepo = @{
         Name = 'PowerShell-ESE'
@@ -306,4 +331,12 @@ task DeployPSGallery {
     }
     Write-Host ('[PSAKE DeployPSGallery] Publish-Module: {0}' -f ($publishModule | ConvertTo-Json).Replace($env:PSGALLERY_API_KEY, '********')) -ForegroundColor 'DarkMagenta'
     Publish-Module @publishModule
+}
+
+task AppveyorArtifact {
+    $fileName = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'PSRedstone.zip')
+    Write-Host ('[PSAKE AppveyorArtifact] Push-AppveyorArtifact FileName: {0}' -f $fileName) -ForegroundColor 'DarkMagenta'
+    $newFileName = 'PSRedstone.{0}.zip' -f $env:APPVEYOR_BUILD_VERSION
+    Write-Host ('[PSAKE AppveyorArtifact] Push-AppveyorArtifact NewFileName: {0}' -f $newFileName) -ForegroundColor 'DarkMagenta'
+    Push-AppveyorArtifact $fileName -FileName $newFileName
 }
