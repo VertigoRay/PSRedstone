@@ -261,6 +261,7 @@ task GitHubTagDelete {
         Write-Host 'Git Config ...' -ForegroundColor 'Black' -BackgroundColor 'DarkCyan'
         $configs = @(
             '& git config -l'
+            'Set-Content -Path ([IO.Path]::Combine($HOME, ''.ssh'', ''config'')) -Value "Host github.com`n`tCheckHostIP no"'
             'Get-Content -LiteralPath ([IO.Path]::Combine($HOME, ''.ssh'', ''config''))'
             '& git remote rm origin'
             '& git remote add origin ''git@github.com:{1}.git'''
