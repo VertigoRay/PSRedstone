@@ -264,7 +264,7 @@ task GitHubTagDelete {
             '& git remote rm origin'
             '& git remote add origin ''git@github.com:{1}.git'''
             '& git config --global credential.helper store'
-            'Set-Content -Path ([IO.Path]::Combine($HOME, ''.git-credentials'')) -Value (''https://{0}:x-oauth-basic@github.com'''
+            'Set-Content -Path ([IO.Path]::Combine($HOME, ''.git-credentials'')) -Value ''https://{0}:x-oauth-basic@github.com'''
             '& git config --global user.name ''VertigoBot'''
             '& git config --global user.email ''VertigoBot@80.vertigion.com'''
             '& git config -l'
