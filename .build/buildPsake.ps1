@@ -271,7 +271,7 @@ task GitHubTagDelete {
                 $cmd = $config.Split(' ', 3)
                 $process = @{
                     FilePath = $cmd[1]
-                    ArgumentList = $cmd[2]
+                    ArgumentList = $cmd[2] -f $gitFormatters
                     RedirectStandardOutput = [IO.Path]::Combine($env:Temp, 'stdout.txt')
                     RedirectStandardError = [IO.Path]::Combine($env:Temp, 'stderr.txt')
                     Wait = $true
@@ -300,7 +300,7 @@ task GitHubTagDelete {
                 $cmd = $config.Split(' ', 3)
                 $process = @{
                     FilePath = $cmd[1]
-                    ArgumentList = $cmd[2]
+                    ArgumentList = $cmd[2] -f $gitFormatters
                     RedirectStandardOutput = [IO.Path]::Combine($env:Temp, 'stdout.txt')
                     RedirectStandardError = [IO.Path]::Combine($env:Temp, 'stderr.txt')
                     Wait = $true
