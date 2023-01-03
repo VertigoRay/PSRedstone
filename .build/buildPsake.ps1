@@ -267,10 +267,22 @@ task GitHubTagDelete {
         )
         foreach ($config in $configs) {
             Write-Host ('PS > {0}' -f ($config -f $gitFormatters)).Replace($env:GITHUB_PERSONAL_ACCESS_TOKEN, '********')
-            $config -f $gitFormatters | Invoke-Expression
-
             if ($config.StartsWith('&')) {
-                Write-Host ('# ExitCode: {0}' -f $LASTEXITCODE)
+                $cmd = $config.Split(' ', 3)
+                $process = @{
+                    FilePath = $cmd[1]
+                    ArgumentList = $cmd[2]
+                    RedirectStandardOutput = [IO.Path]::Combine($env:Temp, 'stdout.txt')
+                    RedirectStandardError = [IO.Path]::Combine($env:Temp, 'stderr.txt')
+                    Wait = $true
+                    PassThru = $true
+                }
+                $result = Start-Process @process
+                Write-Host ('StdOut: {0}' -f (Get-Content ([IO.Path]::Combine($env:Temp, 'stdout.txt')) | Out-String))
+                Write-Host ('StdErr: {0}' -f (Get-Content ([IO.Path]::Combine($env:Temp, 'stderr.txt')) | Out-String)) -BackgroundColor 'Red'
+                Write-Host ('# ExitCode: {0}' -f $result.ExitCode)
+            } else {
+                $config -f $gitFormatters | Invoke-Expression
             }
         }
 
@@ -284,10 +296,22 @@ task GitHubTagDelete {
         )
         foreach ($config in $configs) {
             Write-Host ('PS > {0}' -f ($config -f $gitFormatters)).Replace($env:GITHUB_PERSONAL_ACCESS_TOKEN, '********')
-            $config -f $gitFormatters | Invoke-Expression
-
             if ($config.StartsWith('&')) {
-                Write-Host ('# ExitCode: {0}' -f $LASTEXITCODE)
+                $cmd = $config.Split(' ', 3)
+                $process = @{
+                    FilePath = $cmd[1]
+                    ArgumentList = $cmd[2]
+                    RedirectStandardOutput = [IO.Path]::Combine($env:Temp, 'stdout.txt')
+                    RedirectStandardError = [IO.Path]::Combine($env:Temp, 'stderr.txt')
+                    Wait = $true
+                    PassThru = $true
+                }
+                $result = Start-Process @process
+                Write-Host ('StdOut: {0}' -f (Get-Content ([IO.Path]::Combine($env:Temp, 'stdout.txt')) | Out-String))
+                Write-Host ('StdErr: {0}' -f (Get-Content ([IO.Path]::Combine($env:Temp, 'stderr.txt')) | Out-String)) -BackgroundColor 'Red'
+                Write-Host ('# ExitCode: {0}' -f $result.ExitCode)
+            } else {
+                $config -f $gitFormatters | Invoke-Expression
             }
         }
     }
