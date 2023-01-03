@@ -5,12 +5,16 @@ image: WMF 5
 skip_commits:
   message: /update(?:|d|s) readme\..*/
 
+environment:
+  GITHUB_PERSONAL_ACCESS_TOKEN:
+    secure: 9dAiRDP1/4/NmX8+4Rq1Xf22yjI5ZTuGtPpuP9keq0mfk9yRd+urPf0FsYx1rre2
+
 init:
   - ps: |
       if ($env:APPVEYOR_REPO_TAG -eq 'true') {
         $env:MODULE_VERSION = ((Get-Date -Format 'yyyy.MM.dd'), ((New-TimeSpan -Start ([datetime]::Today)).TotalSeconds -as [int])) -join '.'
         Update-AppveyorBuild -Version ${env:MODULE_VERSION}
-        $details = @{
+        $details = [ordered] @{
           APPVEYOR_REPO_TAG = $env:APPVEYOR_REPO_TAG
           APPVEYOR_REPO_TAG_NAME = $env:APPVEYOR_REPO_TAG_NAME
           MODULE_VERSION = $env:MODULE_VERSION
@@ -99,6 +103,10 @@ after_test:
         $Host.SetShouldExit(1)
       }
       if ($env:APPVEYOR_REPO_TAG -eq 'true') {
+        & git config --global credential.helper store
+        Set-Content -Path "$HOME\.git-credentials" -Value "https://$($env:GITHUB_PERSONAL_ACCESS_TOKEN):x-oauth-basic@github.com`n" -NoNewline
+        & git config --global user.email "VertigoBot"
+        & git config --global user.name "VertigoBot@80.vertigion.com"
         & git push origin :refs/tags/$env:APPVEYOR_REPO_TAG_NAME
       }
     on:
