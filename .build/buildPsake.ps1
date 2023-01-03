@@ -252,26 +252,44 @@ task CodeCov {
 
 task GitHubTagDelete {
     if ($env:APPVEYOR_REPO_TAG -eq 'true') {
+        $gitFormatters = @(
+            $env:GITHUB_PERSONAL_ACCESS_TOKEN
+            $env:APPVEYOR_REPO_NAME
+            $env:APPVEYOR_REPO_TAG_NAME
+        )
+
         Write-Host 'Git Config ...' -ForegroundColor 'Black' -BackgroundColor 'DarkCyan'
-        & git config --global credential.helper store
-        Set-Content -Path ([IO.Path]::Combine($HOME, '.git-credentials')) -Value ('https://{0}:x-oauth-basic@github.com' -f $env:GITHUB_PERSONAL_ACCESS_TOKEN)
-        & git config --global user.name 'VertigoBot'
-        & git config --global user.email 'VertigoBot@80.vertigion.com'
-        Write-Host ('Git Delete Tag: {0}' -f $env:APPVEYOR_REPO_TAG_NAME) -ForegroundColor 'Black' -BackgroundColor 'DarkCyan'
-        $process = @{
-            FilePath = 'git'
-            ArgumentList = ('push origin :refs/tags/{0}' -f $env:APPVEYOR_REPO_TAG_NAME)
-            RedirectStandardOutput = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'stdout.txt')
-            RedirectStandardError = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'stderr.txt')
-            Wait = $true
-            PassThru = $true
+        $configs = @(
+            '& git config -l'
+            '& git remote rm origin'
+            '& git remote add origin ''git@github.com:{1}.git'''
+            '& git config --global credential.helper store'
+            'Set-Content -Path ([IO.Path]::Combine($HOME, ''.git-credentials'')) -Value (''https://{0}:x-oauth-basic@github.com'''
+            '& git config --global user.name ''VertigoBot'''
+            '& git config --global user.email ''VertigoBot@80.vertigion.com'''
+            '& git config -l'
+        )
+        foreach ($config in $configs) {
+            Write-Host ('PS > {0}' -f ($config -f $gitFormatters)).Replace($env:GITHUB_PERSONAL_ACCESS_TOKEN, '********')
+            ($config -f $gitFormatters) | Invoke-Expression
+
+            if ($config.StartsWith('&')) {
+                Write-Host ('# ExitCode: {0}' -f $LASTEXITCODE)
+            }
         }
-        Write-Host ('Start-Process: {0}' -f ($process | ConvertTo-Json))
-        $gitPush = Start-Process @process
-        Write-Host (Get-Content ([IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'stdout.txt')) | Out-String) -ForegroundColor 'Black' -BackgroundColor 'Gray'
-        Write-Host (Get-Content ([IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'stderr.txt')) | Out-String) -ForegroundColor 'Black' -BackgroundColor 'Red'
-        Write-Host ($gitPush | Out-String)
-        Write-Host ('Exit Code: {0}' -f $gitPush.ExitCode)
+
+        Write-Host ('Git Delete Tag: {0}' -f $env:APPVEYOR_REPO_TAG_NAME) -ForegroundColor 'Black' -BackgroundColor 'DarkCyan'
+        $configs = @(
+            '& git push origin :refs/tags/{2}'
+        )
+        foreach ($config in $configs) {
+            Write-Host ('PS > {0}' -f ($config -f $gitFormatters)).Replace($env:GITHUB_PERSONAL_ACCESS_TOKEN, '********')
+            ($config -f $gitFormatters) | Invoke-Expression
+
+            if ($config.StartsWith('&')) {
+                Write-Host ('# ExitCode: {0}' -f $LASTEXITCODE)
+            }
+        }
     }
 }
 
