@@ -260,16 +260,10 @@ task GitHubTagDelete {
 
         Write-Host 'Git Config ...' -ForegroundColor 'Black' -BackgroundColor 'DarkCyan'
         $configs = @(
-            '& git config -l'
-            'Set-Content -Path ([IO.Path]::Combine($HOME, ''.ssh'', ''config'')) -Value "Host github.com`n`tCheckHostIP no"'
-            'Get-Content -LiteralPath ([IO.Path]::Combine($HOME, ''.ssh'', ''config''))'
             '& git remote rm origin'
-            '& git remote add origin ''https://github.com/{1}.git'''
-            '& git config --global credential.helper store'
-            'Set-Content -Path ([IO.Path]::Combine($HOME, ''.git-credentials'')) -Value ''https://{0}:x-oauth-basic@github.com'''
-            '& git config --global user.name ''VertigoBot'''
-            '& git config --global user.email ''VertigoBot@80.vertigion.com'''
-            '& git config -l'
+            '& git remote add origin "https://{0}:x-oauth-basic@github.com/{1}.git"'
+            '& git config --global user.name "VertigoBot"'
+            '& git config --global user.email "VertigoBot@80.vertigion.com"'
         )
         foreach ($config in $configs) {
             Write-Host ('PS > {0}' -f ($config -f $gitFormatters)).Replace($env:GITHUB_PERSONAL_ACCESS_TOKEN, '********')
@@ -282,7 +276,7 @@ task GitHubTagDelete {
 
         Write-Host ('Git Delete Tag: {0}' -f $env:APPVEYOR_REPO_TAG_NAME) -ForegroundColor 'Black' -BackgroundColor 'DarkCyan'
         $configs = @(
-            '& git push origin :refs/tags/{2}'
+            '& git push --set-upstream origin :refs/tags/{2}'
         )
         foreach ($config in $configs) {
             Write-Host ('PS > {0}' -f ($config -f $gitFormatters)).Replace($env:GITHUB_PERSONAL_ACCESS_TOKEN, '********')
