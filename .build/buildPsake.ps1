@@ -258,7 +258,7 @@ task GitHubTagDelete {
             $env:APPVEYOR_REPO_TAG_NAME
         )
 
-        Write-Host 'Git Config ...' -ForegroundColor 'Black' -BackgroundColor 'DarkCyan'
+        Write-Host 'Git Config' -ForegroundColor 'Black' -BackgroundColor 'DarkCyan'
         $configs = @(
             '& git remote rm origin'
             '& git remote add origin "https://{0}:x-oauth-basic@github.com/{1}.git"'
@@ -276,6 +276,7 @@ task GitHubTagDelete {
 
         Write-Host ('Git Delete Tag: {0}' -f $env:APPVEYOR_REPO_TAG_NAME) -ForegroundColor 'Black' -BackgroundColor 'DarkCyan'
         $configs = @(
+            '& git pull origin master'
             '& git push --set-upstream origin :refs/tags/{2}'
         )
         foreach ($config in $configs) {
