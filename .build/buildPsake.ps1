@@ -276,7 +276,10 @@ task GitHubTagDelete {
 
         Write-Host ('Git Delete Tag: {0}' -f $env:APPVEYOR_REPO_TAG_NAME) -ForegroundColor 'Black' -BackgroundColor 'DarkCyan'
         $configs = @(
+            '& git stash --all'
+            '& git stash list'
             '& git pull origin master'
+            '& git stash pop'
             '& git push --set-upstream origin :refs/tags/{2}'
         )
         foreach ($config in $configs) {
