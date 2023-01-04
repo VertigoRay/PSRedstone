@@ -90,13 +90,13 @@ build_script:
 #     on:
 #       branch: master                 # release from master branch only
 
-after_test:
+after_build:
   # Upload coverage report to codecov
   # Also, if we're tagged, delete the tag to prep for publishing release.
   - ps: |
       $invokePsake = @{
         BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
-        TaskList = @('CodeCov', 'GitHubTagDelete')
+        TaskList = @('CodeCov', 'GitHubTagDelete', 'AppveyorArtifact')
       }
       Invoke-psake @invokePsake
       if (-not $psake.build_success) {
@@ -107,11 +107,12 @@ after_test:
 
 deploy:
   # Deploy to GitHub Releases
-  - release: $(APPVEYOR_BUILD_VERSION)
+  - tag: v$(APPVEYOR_BUILD_VERSION)
+    release: v$(APPVEYOR_BUILD_VERSION)
     provider: GitHub
     auth_token:
-      secure: pRa0vZhRPzeDLMP30BEiTTMRjyCoOoiltxJWA07rI1NBFJHyG0ZmSp41roNT5bSh
-    artifact: dev\PSRedstone.zip
+      secure: NegQQNxnvn93My5EI3I24WexZixb/9kXU+PpSaVYLoUHkqISEMZLkpwLjOHtqWsa
+    artifact: PSRedstone.zip
     draft: false
     prerelease: false
     on:
@@ -123,10 +124,14 @@ on_success:
       if ($env:APPVEYOR_REPO_TAG -eq 'true') {
         $invokePsake = @{
           BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
-          TaskList = @('DeployPSGallery', 'AppveyorArtifact')
+          TaskList = @('DeployPSGallery')
         }
         Invoke-psake @invokePsake
         if (-not $psake.build_success) {
           $Host.SetShouldExit(1)
         }
       }
+
+artifacts:
+  - path: dev\PSRedstone.zip
+    name: PSRedstone.zip

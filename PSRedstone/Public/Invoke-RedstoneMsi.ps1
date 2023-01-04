@@ -30,13 +30,10 @@ Overrides the working directory. The working directory is set to the location of
 .PARAMETER SkipMSIAlreadyInstalledCheck
 Skips the check to determine if the MSI is already installed on the system. Default is: $false.
 .PARAMETER PassThru
-Returns ExitCode, STDOut, and STDErr output from the process.
-.PARAMETER LogsPathF
+Returns ExitCode, StdOut, and StdErr output from the process.
+.PARAMETER LogFileF
 Private Parameter; used for debug overrides.
 Default: $global:Winstall.Settings.Logs.PathF
-.PARAMETER MSIProductCodeRegExPattern
-Private Parameter; used for debug overrides.
-Default: $global:Winstall.Vars.MSIProductCodeRegExPattern
 .EXAMPLE
 # Installs an MSI
 Invoke-RedstoneMSI -Action 'Install' -Path 'Adobe_FlashPlayer_11.2.202.233_x64_EN.msi'
@@ -53,19 +50,19 @@ Invoke-RedstoneMSI -Action 'Uninstall' -Path '{26923b43-4d38-484f-9b9e-de4607462
 # Installs an MSP
 Invoke-RedstoneMSI -Action 'Patch' -Path 'Adobe_Reader_11.0.3_EN.msp'
 .EXAMPLE
-$Invoke_MSI = @{
-    'Action' = 'Install';
-    'Parameters' = @(
-        "USERNAME=`"$($settings.Installer.UserName)`"",
-        "COMPANYNAME=`"$($settings.Installer.CompanyName)`"",
-        "SERIALNUMBER=`"$($settings.Installer.SerialNumber)`""
-    );
+$msi = @{
+    Action = 'Install'
+    Parameters = @(
+        'USERNAME="{0}"' -f $settings.Installer.UserName
+        'COMPANYNAME="{0}"' -f $settings.Installer.CompanyName
+        'SERIALNUMBER="{0}"' -f $settings.Installer.SerialNumber
+    )
 }
 
-if ($global:Winstall.Vars.OS.Is64BitOperatingSystem) {
-    Invoke-RedstoneMSI @Invoke_MSI -Path 'Origin2016Sr2Setup32and64Bit.msi'
+if ([Environment]::Is64BitOperatingSystem) {
+    Invoke-RedstoneMSI @msi -Path 'Origin2016Sr2Setup32and64Bit.msi'
 } else {
-    Invoke-RedstoneMSI @Invoke_MSI -Path 'Origin2016Sr2Setup32Bit.msi'
+    Invoke-RedstoneMSI @msi -Path 'Origin2016Sr2Setup32Bit.msi'
 }
 .NOTES
 .LINK
@@ -136,7 +133,7 @@ function Invoke-RedstoneMSI {
         [switch]
         $PassThru,
 
-        [Parameter(Mandatory=$false, HelpMessage="Private Parameter; used for debug overrides.")]
+        [Parameter(Mandatory=$false, HelpMessage='Private Parameter; used for debug overrides.')]
         [ValidateNotNullorEmpty()]
         [string]
         $LogFileF = "${env:Temp}\{Invoke-RedstoneMsi_{1}_{0}.log"
