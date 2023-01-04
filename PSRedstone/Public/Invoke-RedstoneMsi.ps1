@@ -32,7 +32,7 @@ Skips the check to determine if the MSI is already installed on the system. Defa
 .PARAMETER PassThru
 Returns ExitCode, StdOut, and StdErr output from the process.
 .PARAMETER LogFileF
-Private Parameter; used for debug overrides.
+When using [Redstone], this will be overridden via $PSDefaultParameters.
 Default: $global:Winstall.Settings.Logs.PathF
 .EXAMPLE
 # Installs an MSI
@@ -133,7 +133,7 @@ function Invoke-RedstoneMSI {
         [switch]
         $PassThru,
 
-        [Parameter(Mandatory=$false, HelpMessage='Private Parameter; used for debug overrides.')]
+        [Parameter(Mandatory=$false, HelpMessage='When using [Redstone], this will be overridden via $PSDefaultParameters.')]
         [ValidateNotNullorEmpty()]
         [string]
         $LogFileF = "${env:Temp}\{Invoke-RedstoneMsi_{1}_{0}.log"

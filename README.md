@@ -38,6 +38,7 @@ You just need a *Redstone Block* ( ͡° ͜ʖ ͡°) at the top of your script to 
 ```powershell
 #region Redstone Block
 #Requires -Modules PSRedstone
+Using Module PSRedstone
 $global:Redstone = [Redstone]::new()
 #endregion Redstone Block
 ```
@@ -96,6 +97,8 @@ If *Redstone* is instantiated with no parameters, [a `settings.json`](#the-setti
 
 1. In the current working directory using [`$PWD`](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables#pwd).
 1. In the same directory where the executing script is; the [`$PSScriptRoot`](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables#psscriptroot) of the file that instantiated *Redstone*.
+1. In the parent of the current working directory using [`$PWD`](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables#pwd).
+1. In the parent of the directory where the executing script is; the [`$PSScriptRoot`](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables#psscriptroot) of the file that instantiated *Redstone*.
 
 If a `settings.json` is provided *Redstone* will import the data to `$Redstone.Settings.JSON.Data`.
 To make the data more accessible, Redstone will also create a `$global:settings` for the data in the `settings.json` file.

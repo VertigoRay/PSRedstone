@@ -93,18 +93,25 @@ class Redstone {
 
     Redstone() {
         $this.SetUpSettings()
-
         $this.Settings.JSON = @{}
-        $this.Settings.JSON.File = [IO.FileInfo] ([IO.Path]::Combine($PWD, 'settings.json'))
-        if ($this.Settings.JSON.File.Exists) {
-            $this.Settings.JSON.Data = Get-Content $this.Settings.JSON.File.FullName | ConvertFrom-Json
-        } else {
-            $this.Settings.JSON.File = [IO.FileInfo] ([IO.Path]::Combine(([IO.FileInfo] $this.Debug.PSCallStack[2].ScriptName).Directory.FullName, 'settings.json'))
-            if ($this.Settings.JSON.File.Exists) {
+
+        $settingsFiles = @(
+            [IO.FileInfo] ([IO.Path]::Combine($PWD.ProviderPath, 'settings.json'))
+            [IO.FileInfo] ([IO.Path]::Combine(([IO.FileInfo] $this.Debug.PSCallStack[2].ScriptName).Directory.FullName, 'settings.json'))
+            [IO.FileInfo] ([IO.Path]::Combine(([IO.DirectoryInfo] $PWD.ProviderPath).Parent, 'settings.json'))
+            [IO.FileInfo] ([IO.Path]::Combine(([IO.FileInfo] $this.Debug.PSCallStack[2].ScriptName).Directory.Parent.FullName, 'settings.json'))
+        )
+
+        foreach ($location in $settingsFiles) {
+            if ($location.Exists) {
+                $this.Settings.JSON.File = $location
                 $this.Settings.JSON.Data = Get-Content $this.Settings.JSON.File.FullName | ConvertFrom-Json
-            } else {
-                Throw [System.IO.FileNotFoundException] $this.Settings.JSON.File.FullName
+                break
             }
+        }
+
+        if (-not $this.Settings.JSON.File.Exists) {
+            Throw [System.IO.FileNotFoundException] $this.Settings.JSON.File.FullName
         }
         New-Variable -Scope 'global' -Name 'settings' -Value $this.Settings.JSON.Data -Force
 
