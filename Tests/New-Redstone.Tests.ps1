@@ -25,7 +25,7 @@ Describe ('New-Redstone') {
                 Version = $script:version
                 Action = $script:action
             }
-            # $jsonData | ConvertTo-Json | Out-File -Encoding 'ascii' -LiteralPath $json.FullName
+            $jsonData | ConvertTo-Json | Out-File -Encoding 'ascii' -LiteralPath $json.FullName
             $json.Refresh()
         }
 
