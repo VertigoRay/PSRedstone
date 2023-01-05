@@ -67,13 +67,13 @@ Describe ('New-Redstone') {
         }
 
         It ('Redstone ParameterName Provided Type') {
-            $redstonePester, $settingsPester = New-Redstone -SettingsJson ([IO.Path]::Combine($PWD.Path, 'dev', 'settings.json'))
-            $RedstonePester.GetType().FullName | Should -Be 'Redstone'
+            $redstonePester, $settingsPester = New-Redstone -SettingsJson ([IO.Path]::Combine($script:psProjectRoot.FullName, 'dev', 'settings.json'))
+            $redstonePester.GetType().FullName | Should -Be 'Redstone'
         }
 
         It ('Redstone Positional Type') {
-            $redstonePester, $settingsPester = New-Redstone ([IO.FileInfo] [IO.Path]::Combine($PWD.Path, 'dev', 'settings.json'))
-            $RedstonePester.GetType().FullName | Should -Be 'Redstone'
+            $redstonePester, $settingsPester = New-Redstone ([IO.FileInfo] [IO.Path]::Combine($script:psProjectRoot.FullName, 'dev', 'settings.json'))
+            $redstonePester.GetType().FullName | Should -Be 'Redstone'
         }
     }
 
