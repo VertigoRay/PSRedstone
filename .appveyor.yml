@@ -5,10 +5,6 @@ image: WMF 5
 skip_commits:
   message: /update(?:|d|s) readme\..*/
 
-environment:
-  GITHUB_PERSONAL_ACCESS_TOKEN:
-    secure: NegQQNxnvn93My5EI3I24WexZixb/9kXU+PpSaVYLoUHkqISEMZLkpwLjOHtqWsa
-
 init:
   - ps: |
       if ($env:APPVEYOR_REPO_TAG -eq 'true' -and $env:APPVEYOR_REPO_TAG_NAME.StartsWith('v')) {
