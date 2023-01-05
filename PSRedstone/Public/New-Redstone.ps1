@@ -23,7 +23,7 @@ Version of the product, like "108.0.1".
 This was deliberatly not cast as a [version] to allow handling of non-semantic versioning.
 
 .PARAMETER Action
-Type: [RedstoneAction]
+Type: [string]
 Action that is being taken.
 This is purely cosmetic and directly affects the log name. For Example:
     - Using the examples from the Publisher, Product, and Version parameters.
@@ -32,7 +32,11 @@ This is purely cosmetic and directly affects the log name. For Example:
 The log file name will be: Mozilla Firefox ESR 108.0.1 Install.log
 
 If you don't specify an action, the action will be taken from the name of the script your calling this function from.
-For this to work, your script would have to be named one of the Enum values, such as: install.ps1
+
+.OUTPUTS
+System.Array with two Values:
+    1. Redstone. The Redstone class
+    2. PSObject. The results of parsing the provided settings.json file. Null if parameters supplied.
 
 .NOTES
 
@@ -40,7 +44,7 @@ For this to work, your script would have to be named one of the Enum values, suc
     - Ref: https://stephanevg.github.io/powershell/class/module/DATA-How-To-Write-powershell-Modules-with-classes/
 #>
 function New-Redstone {
-    [OutputType([Redstone])]
+    [OutputType([array])]
     [CmdletBinding(DefaultParameterSetName='NoParams')]
     param (
         [Parameter(
@@ -85,20 +89,32 @@ function New-Redstone {
             ParameterSetName = 'ManuallyDefined',
             HelpMessage = 'Action that is being taken.'
         )]
-        [RedstoneAction]
+        [string]
         $Action
     )
 
     switch ($PSCmdlet.ParameterSetName) {
         'SettingsJson' {
-            return [Redstone]::new($SettingsJson)
+            $redstone = [Redstone]::new($SettingsJson)
+            return @(
+                $redstone
+                $redstone.Settings.JSON.Data
+            )
         }
         'ManuallyDefined' {
-            return [Redstone]::new($Publisher, $Product, $Version, $Action)
+            $redstone = [Redstone]::new($Publisher, $Product, $Version, $Action)
+            return @(
+                $redstone
+                $redstone.Settings.JSON.Data
+            )
         }
         default {
             # NoParams
-            return [Redstone]::new()
+            $redstone = [Redstone]::new()
+            return @(
+                $redstone
+                $redstone.Settings.JSON.Data
+            )
         }
     }
 }

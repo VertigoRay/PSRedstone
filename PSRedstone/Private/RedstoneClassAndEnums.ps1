@@ -4,20 +4,11 @@
 # . "${PSScriptRoot}\..\Public\Get-RedstoneRegistryValueDoNotExpandEnvironmentNames.ps1"
 #endregion
 
-Enum RedstoneAction {
-    None
-    Detect
-    Detection
-    Install
-    Remediation
-    Uninstall
-}
-
 class Redstone {
     hidden [string] $_Publisher = $null
     hidden [string] $_Product = $null
     hidden [string] $_Version = 'None'
-    hidden [RedstoneAction] $_Action = 'install'
+    hidden [string] $_Action = $null
     hidden [hashtable] $_CimInstance = $null
     hidden [hashtable] $_Env = $null
     hidden [hashtable] $_OS = $null
@@ -121,7 +112,6 @@ class Redstone {
         if (-not $this.Settings.JSON.File.Exists) {
             Throw [System.IO.FileNotFoundException] $this.Settings.JSON.File.FullName
         }
-        New-Variable -Scope 'global' -Name 'settings' -Value $this.Settings.JSON.Data -Force
 
         $this.SetDefaultSettingsFromRegistry($this.Settings.Registry.Key)
         $this.SetPSDefaultParameterValues($this.Settings.Functions)
@@ -150,7 +140,6 @@ class Redstone {
         } else {
             Throw [System.IO.FileNotFoundException] $this.Settings.JSON.File.FullName
         }
-        New-Variable -Scope 'global' -Name 'settings' -Value $this.Settings.JSON.Data -Force
 
         $this.SetDefaultSettingsFromRegistry($this.Settings.Registry.Key)
         $this.SetPSDefaultParameterValues($this.Settings.Functions)
@@ -171,7 +160,6 @@ class Redstone {
 
     Redstone([string] $Publisher, [string] $Product, [string] $Version, [string] $Action) {
         $this.SetUpSettings()
-        New-Variable -Scope 'global' -Name 'settings' -Value $this.Settings -Force
 
         $this.SetDefaultSettingsFromRegistry($this.Settings.Registry.Key)
         $this.SetPSDefaultParameterValues($this.Settings.Functions)
