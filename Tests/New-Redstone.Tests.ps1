@@ -10,6 +10,7 @@ Describe ('New-Redstone') {
 
     Context ('NoParams') {
         BeforeEach {
+            $script:psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
             if (Test-Path -LiteralPath 'variable:RedstonePester') {
                 Clear-Variable -Name 'RedstonePester'
             }
@@ -17,7 +18,7 @@ Describe ('New-Redstone') {
             $script:product = 'MyProduct'
             $script:version = '1.2.3'
             $script:action = 'install'
-            [IO.FileInfo] $json = [IO.Path]::Combine($PWD.Path, 'settings.json')
+            [IO.FileInfo] $json = [IO.Path]::Combine($script:psProjectRoot.FullName, 'dev', 'settings.json')
             $jsonData = @{
                 Publisher = $script:publisher
                 Product = $script:product
@@ -29,7 +30,8 @@ Describe ('New-Redstone') {
         }
 
         AfterEach {
-            Remove-Item -LiteralPath ([IO.Path]::Combine($PWD.Path, 'settings.json')) -Force
+            $script:psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
+            Remove-Item -LiteralPath ([IO.Path]::Combine($script:psProjectRoot.FullName, 'dev', 'settings.json')) -Force
         }
 
         It ('Redstone Type') {
@@ -41,6 +43,7 @@ Describe ('New-Redstone') {
 
     Context ('SettingsJson') {
         BeforeEach {
+            $script:psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
             if (Test-Path -LiteralPath 'variable:RedstonePester') {
                 Clear-Variable -Name 'RedstonePester'
             }
@@ -48,7 +51,7 @@ Describe ('New-Redstone') {
             $script:product = 'MyProduct'
             $script:version = '1.2.3'
             $script:action = 'install'
-            [IO.FileInfo] $json = [IO.Path]::Combine($PWD.Path, 'dev', 'settings.json')
+            [IO.FileInfo] $json = [IO.Path]::Combine($script:psProjectRoot.FullName, 'dev', 'settings.json')
             $jsonData = @{
                 Publisher = $script:publisher
                 Product = $script:product
@@ -60,7 +63,8 @@ Describe ('New-Redstone') {
         }
 
         AfterEach {
-            Remove-Item -LiteralPath ([IO.Path]::Combine($PWD.Path, 'dev', 'settings.json')) -Force
+            $script:psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
+            Remove-Item -LiteralPath ([IO.Path]::Combine($script:psProjectRoot.FullName, 'dev', 'settings.json')) -Force
         }
 
         It ('Redstone ParameterName Provided Type') {
