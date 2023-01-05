@@ -33,7 +33,7 @@ Describe ('New-Redstone') {
         }
 
         It ('Redstone Type') {
-            $RedstonePester = New-Redstone
+            $redstonePester, $settingsPester = New-Redstone
             $RedstonePester.GetType().FullName | Should -Be 'Redstone'
         }
     }
@@ -64,12 +64,12 @@ Describe ('New-Redstone') {
         }
 
         It ('Redstone ParameterName Provided Type') {
-            $RedstonePester = New-Redstone -SettingsJson ([IO.Path]::Combine($PWD.Path, 'dev', 'settings.json'))
+            $redstonePester, $settingsPester = New-Redstone -SettingsJson ([IO.Path]::Combine($PWD.Path, 'dev', 'settings.json'))
             $RedstonePester.GetType().FullName | Should -Be 'Redstone'
         }
 
         It ('Redstone Positional Type') {
-            $RedstonePester = New-Redstone ([IO.FileInfo] [IO.Path]::Combine($PWD.Path, 'dev', 'settings.json'))
+            $redstonePester, $settingsPester = New-Redstone ([IO.FileInfo] [IO.Path]::Combine($PWD.Path, 'dev', 'settings.json'))
             $RedstonePester.GetType().FullName | Should -Be 'Redstone'
         }
     }
@@ -82,12 +82,12 @@ Describe ('New-Redstone') {
         }
 
         It ('Redstone ParameterNameProvided Type') {
-            $RedstonePester = New-Redstone -Publisher 'MyPublisher' -Product 'MyProduct' -Version '1.2.3' -Action 'install'
+            $redstonePester, $settingsPester = New-Redstone -Publisher 'MyPublisher' -Product 'MyProduct' -Version '1.2.3' -Action 'install'
             $RedstonePester.GetType().FullName | Should -Be 'Redstone'
         }
 
         It ('Redstone Positional Type') {
-            $RedstonePester = New-Redstone 'MyPublisher' 'MyProduct' '1.2.3' 'install'
+            $redstonePester, $settingsPester = New-Redstone 'MyPublisher' 'MyProduct' '1.2.3' 'install'
             $RedstonePester.GetType().FullName | Should -Be 'Redstone'
         }
     }
