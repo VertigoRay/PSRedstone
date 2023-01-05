@@ -124,7 +124,7 @@ deploy:
 on_success:
   # If build was started by pushed tag; deploy it.
   - ps: |
-      if ($env:APPVEYOR_REPO_TAG -eq 'true') {
+      if ($env:APPVEYOR_REPO_TAG -eq 'true' -and -not $env:APPVEYOR_REPO_TAG_NAME.StartsWith('v')) {
         $invokePsake = @{
           BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
           TaskList = @('DeployPSGallery')
