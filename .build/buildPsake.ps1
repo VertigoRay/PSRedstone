@@ -109,7 +109,7 @@ task BuildManifest {
         $Manifest.VariablesToExport = @()
     }
 
-    $Manifest.Path = "${script:parentModulePath}\${script:thisModuleName}.psd1"
+    $Manifest.Path = [IO.Path]::Combine($script:parentDevModulePath, ('{0}.psd1' -f $script:thisModuleName))
     $Manifest.RootModule = "${script:thisModuleName}.psm1"
     $Manifest.ModuleVersion = [version] $Version
 
@@ -150,7 +150,11 @@ task Build -Depends BuildManifest {
         $allLines | Out-File -LiteralPath $modulePSM1 -Encoding 'utf8' -Append -Force
     }
 
-    [IO.Path]::Combine($script:parentDevModulePath, ('{0}.psm1' -f $script:thisModuleName))
+    $license = @{
+        Source = [IO.Path]::Combine($script:psScriptRootParent, 'LICENSE.md')
+        Destination = [IO.Path]::Combine($script:parentDevModulePath, 'LICENSE.md')
+    }
+    Copy-Item -LiteralPath $license.Source -Destination $license.Destination -Force
 
     # Sign Code
     # $pfxESE = [IO.Path]::Combine($env:Temp, 'ese.pfx')
