@@ -31,20 +31,6 @@ install:
     on:
       branch: master                 # release from master branch only
 
-# before_build:
-#   # Run Pester Tests
-#   - ps: |
-#       $invokePsake = @{
-#         BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
-#         TaskList = 'Test'
-#       }
-#       Invoke-psake @invokePsake
-#       if (-not $psake.build_success) {
-#         $Host.SetShouldExit(1)
-#       }
-#     on:
-#       branch: master                 # release from master branch only
-
 build_script:
   - ps: |
       $invokePsake = @{
@@ -57,37 +43,6 @@ build_script:
       }
     on:
       branch: master                 # release from master branch only
-
-# test_script:
-#   # Run Pester Tests w/ CodeCov
-#   - ps: |
-#       $invokePsake = @{
-#         BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
-#         TaskList = 'Test'
-#         Parameters = @{
-#           Pester = @{
-#             Configuration = @{
-#               Run = @{
-#                 Path = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'Tests')
-#                 PassThru = $true
-#                 Exit = if ($env:CI) { $true } else { $false }
-#               }
-#               CodeCoverage = @{
-#                 Enabled = $true
-#                 # Path = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'BuildOutput', 'PSRedstone', 'PSRedstone.psm1')
-#                 Path = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'PSRedstone', '*', '*.ps1')
-#               }
-#             }
-#           }
-#           CodeCoveragePath = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'coverage.json')
-#         }
-#       }
-#       Invoke-psake @invokePsake
-#       if (-not $psake.build_success) {
-#         $Host.SetShouldExit(1)
-#       }
-#     on:
-#       branch: master                 # release from master branch only
 
 after_build:
   # Upload coverage report to codecov
@@ -109,7 +64,7 @@ deploy:
   - tag: v$(APPVEYOR_BUILD_VERSION)
     release: v$(APPVEYOR_BUILD_VERSION)
     provider: GitHub
-    auth_token:
+    auth_token: $(GITHUB_PERSONAL_ACCESS_TOKEN)
       secure: NegQQNxnvn93My5EI3I24WexZixb/9kXU+PpSaVYLoUHkqISEMZLkpwLjOHtqWsa
     artifact: PSRedstone.zip
     draft: false
