@@ -38,8 +38,7 @@ You just need a *Redstone Block* ( ͡° ͜ʖ ͡°) at the top of your script to 
 ```powershell
 #region Redstone Block
 #Requires -Modules PSRedstone
-Using Module PSRedstone
-$global:Redstone = [Redstone]::new()
+$global:Redstone = New-Redstone
 #endregion Redstone Block
 ```
 
@@ -51,7 +50,7 @@ MECM Install Command:
     powershell.exe -Exe Bypass -Win Hidden -NoP -NonI -File install.ps1
 #>
 #Requires -Modules PSRedstone
-$global:Redstone = [Redstone]::new()
+$global:Redstone = New-Redstone
 
 Write-Information ('{3}ing {0} {1} {2} ...' -f $Redstone.Publisher, $Redstone.Product, $Redstone.Version, (Get-Culture).TextInfo.ToTitleCase($Redstone.Action))
 
@@ -87,8 +86,8 @@ if ([System.Environment]::Is64BitOperatingSystem) {
 
 *Redstone* can be instantiated in one of two way:
 
-- Without parameters: `$global:Redstone = [Redstone]::new()`
-- With parameters: `$global:Redstone = [Redstone]::new($Publisher, $Product, $Version, $Action)`; where all of those parameters are `[string]`s.
+- Without parameters: `$global:Redstone = New-Redstone`
+- With parameters: `$global:Redstone = New-Redstone $Publisher $Product $Version $Action`; where all of those parameters are `[string]`s.
 
 If *Redstone* is instantiated with no parameters, [a `settings.json`](#the-settings-json-file) must be provided.
 ## The Settings JSON File

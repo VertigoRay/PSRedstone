@@ -1,0 +1,94 @@
+$script:psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
+. ('{0}\PSRedstone\Private\RedstoneClassAndEnums.ps1' -f $psProjectRoot.FullName)
+
+Describe ('New-Redstone') {
+    BeforeAll {
+        $script:psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
+        . ('{0}\PSRedstone\Private\RedstoneClassAndEnums.ps1' -f $psProjectRoot.FullName)
+        . ('{0}\PSRedstone\Public\New-Redstone.ps1' -f $psProjectRoot.FullName)
+    }
+
+    Context ('NoParams') {
+        BeforeEach {
+            if (Test-Path -LiteralPath 'variable:RedstonePester') {
+                Clear-Variable -Name 'RedstonePester'
+            }
+            $script:publisher = 'MyPublisher'
+            $script:product = 'MyProduct'
+            $script:version = '1.2.3'
+            $script:action = 'install'
+            [IO.FileInfo] $json = [IO.Path]::Combine($PWD.Path, 'settings.json')
+            $jsonData = @{
+                Publisher = $script:publisher
+                Product = $script:product
+                Version = $script:version
+                Action = $script:action
+            }
+            $jsonData | ConvertTo-Json | Out-File -Encoding 'ascii' -LiteralPath $json.FullName
+            $json.Refresh()
+        }
+
+        AfterEach {
+            Remove-Item -LiteralPath ([IO.Path]::Combine($PWD.Path, 'settings.json')) -Force
+        }
+
+        It ('Redstone Type') {
+            $RedstonePester = New-Redstone
+            $RedstonePester.GetType().FullName | Should -Be 'Redstone'
+        }
+    }
+
+
+    Context ('SettingsJson') {
+        BeforeEach {
+            if (Test-Path -LiteralPath 'variable:RedstonePester') {
+                Clear-Variable -Name 'RedstonePester'
+            }
+            $script:publisher = 'MyPublisher'
+            $script:product = 'MyProduct'
+            $script:version = '1.2.3'
+            $script:action = 'install'
+            [IO.FileInfo] $json = [IO.Path]::Combine($PWD.Path, 'dev', 'settings.json')
+            $jsonData = @{
+                Publisher = $script:publisher
+                Product = $script:product
+                Version = $script:version
+                Action = $script:action
+            }
+            $jsonData | ConvertTo-Json | Out-File -Encoding 'ascii' -LiteralPath $json.FullName
+            $json.Refresh()
+        }
+
+        AfterEach {
+            Remove-Item -LiteralPath ([IO.Path]::Combine($PWD.Path, 'dev', 'settings.json')) -Force
+        }
+
+        It ('Redstone ParameterName Provided Type') {
+            $RedstonePester = New-Redstone -SettingsJson ([IO.Path]::Combine($PWD.Path, 'dev', 'settings.json'))
+            $RedstonePester.GetType().FullName | Should -Be 'Redstone'
+        }
+
+        It ('Redstone Positional Type') {
+            $RedstonePester = New-Redstone ([IO.FileInfo] [IO.Path]::Combine($PWD.Path, 'dev', 'settings.json'))
+            $RedstonePester.GetType().FullName | Should -Be 'Redstone'
+        }
+    }
+
+    Context ('ManuallyDefined') {
+        BeforeEach {
+            if (Test-Path -LiteralPath 'variable:RedstonePester') {
+                Clear-Variable -Name 'RedstonePester'
+            }
+        }
+
+        It ('Redstone ParameterNameProvided Type') {
+            $RedstonePester = New-Redstone -Publisher 'MyPublisher' -Product 'MyProduct' -Version '1.2.3' -Action 'install'
+            $RedstonePester.GetType().FullName | Should -Be 'Redstone'
+        }
+
+        It ('Redstone Positional Type') {
+            $RedstonePester = New-Redstone 'MyPublisher' 'MyProduct' '1.2.3' 'install'
+            $RedstonePester.GetType().FullName | Should -Be 'Redstone'
+        }
+    }
+}

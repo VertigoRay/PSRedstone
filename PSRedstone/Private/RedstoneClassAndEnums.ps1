@@ -4,12 +4,20 @@
 # . "${PSScriptRoot}\..\Public\Get-RedstoneRegistryValueDoNotExpandEnvironmentNames.ps1"
 #endregion
 
+Enum RedstoneAction {
+    None
+    Detect
+    Detection
+    Install
+    Remediation
+    Uninstall
+}
 
 class Redstone {
     hidden [string] $_Publisher = $null
     hidden [string] $_Product = $null
-    hidden [string] $_Version = $null
-    hidden [string] $_Action = $null
+    hidden [string] $_Version = 'None'
+    hidden [RedstoneAction] $_Action = 'install'
     hidden [hashtable] $_CimInstance = $null
     hidden [hashtable] $_Env = $null
     hidden [hashtable] $_OS = $null
@@ -121,7 +129,13 @@ class Redstone {
         $this.set__Publisher($this.Settings.JSON.Data.Publisher)
         $this.set__Product($this.Settings.JSON.Data.Product)
         $this.set__Version($this.Settings.JSON.Data.Version)
-        $this.set__Action(([IO.FileInfo] $this.Debug.PSCallStack[2].ScriptName).BaseName)
+        $this.set__Action($(
+            if ($this.Settings.JSON.Data.Action) {
+                $this.Settings.JSON.Data.Action
+            } else {
+                ([IO.FileInfo] $this.Debug.PSCallStack[2].ScriptName).BaseName
+            }
+        ))
 
         $this.SetUpLog()
     }
@@ -144,7 +158,13 @@ class Redstone {
         $this.set__Publisher($this.Settings.JSON.Data.Publisher)
         $this.set__Product($this.Settings.JSON.Data.Product)
         $this.set__Version($this.Settings.JSON.Data.Version)
-        $this.set__Action(([IO.FileInfo] $this.Debug.PSCallStack[1].ScriptName).BaseName)
+        $this.set__Action($(
+            if ($this.Settings.JSON.Data.Action) {
+                $this.Settings.JSON.Data.Action
+            } else {
+                ([IO.FileInfo] $this.Debug.PSCallStack[2].ScriptName).BaseName
+            }
+        ))
 
         $this.SetUpLog()
     }

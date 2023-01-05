@@ -1,22 +1,6 @@
-Describe 'Initialize' -Tag 'Class' {
+Describe 'RedstoneClassAndEnums' -Tag 'Class' {
     $script:psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
-    . ('{0}\PSRedstone\Private\Initialize.ps1' -f $psProjectRoot.FullName)
-
-    function Invoke-RedstoneTestLogFileA898F15E {
-        param(
-            [string] $LogFile
-        )
-
-        return $LogFile
-    }
-
-    function Invoke-RedstoneTestLogFileF7558260D {
-        param(
-            [string] $LogFileF
-        )
-
-        return $LogFileF
-    }
+    . ('{0}\PSRedstone\Private\RedstoneClassAndEnums.ps1' -f $psProjectRoot.FullName)
 
     $contexts = [ordered] @{
         'Default' = @{
@@ -68,7 +52,7 @@ Describe 'Initialize' -Tag 'Class' {
         NoParamsPwd = @{
             BeforeEach = {
                 $psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
-                . ('{0}\PSRedstone\Private\Initialize.ps1' -f $psProjectRoot.FullName)
+                . ('{0}\PSRedstone\Private\RedstoneClassAndEnums.ps1' -f $psProjectRoot.FullName)
 
                 $script:publisher = 'MyPublisher'
                 $script:product = 'MyProduct'
@@ -90,7 +74,7 @@ Describe 'Initialize' -Tag 'Class' {
         NoParamsPSScriptRoot = @{
             BeforeEach = {
                 $psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
-                . ('{0}\PSRedstone\Private\Initialize.ps1' -f $psProjectRoot.FullName)
+                . ('{0}\PSRedstone\Private\RedstoneClassAndEnums.ps1' -f $psProjectRoot.FullName)
 
                 $script:publisher = 'MyPublisher'
                 $script:product = 'MyProduct'
@@ -112,7 +96,7 @@ Describe 'Initialize' -Tag 'Class' {
         FourParams = @{
             BeforeEach = {
                 $psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
-                . ('{0}\PSRedstone\Private\Initialize.ps1' -f $psProjectRoot.FullName)
+                . ('{0}\PSRedstone\Private\RedstoneClassAndEnums.ps1' -f $psProjectRoot.FullName)
 
                 $script:publisher = 'MyPublisher'
                 $script:product = 'MyProduct'
@@ -269,7 +253,7 @@ Describe 'Initialize' -Tag 'Class' {
     Context ('Redstone Class') {
         BeforeAll {
             $psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
-            . ('{0}\PSRedstone\Private\Initialize.ps1' -f $psProjectRoot.FullName)
+            . ('{0}\PSRedstone\Private\RedstoneClassAndEnums.ps1' -f $psProjectRoot.FullName)
 
             $script:publisher = 'MyPublisher'
             $script:product = 'MyProduct'
@@ -306,7 +290,7 @@ Describe 'Initialize' -Tag 'Class' {
     Context ('GetCimInstance') {
         BeforeAll {
             $psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
-            . ('{0}\PSRedstone\Private\Initialize.ps1' -f $psProjectRoot.FullName)
+            . ('{0}\PSRedstone\Private\RedstoneClassAndEnums.ps1' -f $psProjectRoot.FullName)
 
             $script:publisher = 'MyPublisher'
             $script:product = 'MyProduct'
@@ -350,7 +334,7 @@ Describe 'Initialize' -Tag 'Class' {
     Context ('Is64BitOperatingSystem') {
         BeforeAll {
             $psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
-            . ('{0}\PSRedstone\Private\Initialize.ps1' -f $psProjectRoot.FullName)
+            . ('{0}\PSRedstone\Private\RedstoneClassAndEnums.ps1' -f $psProjectRoot.FullName)
 
             $script:publisher = 'MyPublisher'
             $script:product = 'MyProduct'
@@ -395,7 +379,7 @@ Describe 'Initialize' -Tag 'Class' {
     Context ('Is64BitProcess') {
         BeforeAll {
             $psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
-            . ('{0}\PSRedstone\Private\Initialize.ps1' -f $psProjectRoot.FullName)
+            . ('{0}\PSRedstone\Private\RedstoneClassAndEnums.ps1' -f $psProjectRoot.FullName)
 
             $script:publisher = 'MyPublisher'
             $script:product = 'MyProduct'
@@ -440,7 +424,7 @@ Describe 'Initialize' -Tag 'Class' {
     Context ('Env') {
         BeforeAll {
             $psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
-            . ('{0}\PSRedstone\Private\Initialize.ps1' -f $psProjectRoot.FullName)
+            . ('{0}\PSRedstone\Private\RedstoneClassAndEnums.ps1' -f $psProjectRoot.FullName)
 
             $script:publisher = 'MyPublisher'
             $script:product = 'MyProduct'
@@ -570,7 +554,7 @@ Describe 'Initialize' -Tag 'Class' {
     Context ('OS') {
         BeforeAll {
             $psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
-            . ('{0}\PSRedstone\Private\Initialize.ps1' -f $psProjectRoot.FullName)
+            . ('{0}\PSRedstone\Private\RedstoneClassAndEnums.ps1' -f $psProjectRoot.FullName)
 
             $script:publisher = 'MyPublisher'
             $script:product = 'MyProduct'
@@ -591,7 +575,7 @@ Describe 'Initialize' -Tag 'Class' {
     Context ('ProfileList') {
         BeforeAll {
             $psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
-            . ('{0}\PSRedstone\Private\Initialize.ps1' -f $psProjectRoot.FullName)
+            . ('{0}\PSRedstone\Private\RedstoneClassAndEnums.ps1' -f $psProjectRoot.FullName)
 
             $script:publisher = 'MyPublisher'
             $script:product = 'MyProduct'
@@ -652,7 +636,7 @@ Describe 'Initialize' -Tag 'Class' {
     Context ('GetSpecialFolders') {
         BeforeAll {
             $psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
-            . ('{0}\PSRedstone\Private\Initialize.ps1' -f $psProjectRoot.FullName)
+            . ('{0}\PSRedstone\Private\RedstoneClassAndEnums.ps1' -f $psProjectRoot.FullName)
 
             $script:publisher = 'MyPublisher'
             $script:product = 'MyProduct'
@@ -693,7 +677,7 @@ Describe 'Initialize' -Tag 'Class' {
     Context ('Quit') {
         BeforeAll {
             $psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
-            . ('{0}\PSRedstone\Private\Initialize.ps1' -f $psProjectRoot.FullName)
+            . ('{0}\PSRedstone\Private\RedstoneClassAndEnums.ps1' -f $psProjectRoot.FullName)
 
             $script:publisher = 'MyPublisher'
             $script:product = 'MyProduct'
