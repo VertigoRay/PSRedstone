@@ -18,20 +18,20 @@ Describe ('New-Redstone') {
             $script:product = 'MyProduct'
             $script:version = '1.2.3'
             $script:action = 'install'
-            [IO.FileInfo] $json = [IO.Path]::Combine($script:psProjectRoot.FullName, 'dev', 'settings.json')
+            [IO.FileInfo] $json = [IO.Path]::Combine($PWD.ProviderPath, 'settings.json')
             $jsonData = @{
                 Publisher = $script:publisher
                 Product = $script:product
                 Version = $script:version
                 Action = $script:action
             }
-            $jsonData | ConvertTo-Json | Out-File -Encoding 'ascii' -LiteralPath $json.FullName
+            # $jsonData | ConvertTo-Json | Out-File -Encoding 'ascii' -LiteralPath $json.FullName
             $json.Refresh()
         }
 
         AfterEach {
             $script:psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
-            Remove-Item -LiteralPath ([IO.Path]::Combine($script:psProjectRoot.FullName, 'dev', 'settings.json')) -Force
+            Remove-Item -LiteralPath ([IO.Path]::Combine($PWD.ProviderPath, 'settings.json')) -Force
         }
 
         It ('Redstone Type') {
@@ -39,7 +39,6 @@ Describe ('New-Redstone') {
             $RedstonePester.GetType().FullName | Should -Be 'Redstone'
         }
     }
-
 
     Context ('SettingsJson') {
         BeforeEach {

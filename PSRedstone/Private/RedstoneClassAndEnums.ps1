@@ -110,7 +110,7 @@ class Redstone {
         }
 
         if (-not $this.Settings.JSON.File.Exists) {
-            Throw [System.IO.FileNotFoundException] $this.Settings.JSON.File.FullName
+            Throw [System.IO.FileNotFoundException] ('Could NOT find settings file in any of these locations: {0}' -f ($settingsFiles.FullName -join ', '))
         }
 
         $this.SetDefaultSettingsFromRegistry($this.Settings.Registry.Key)
