@@ -6,7 +6,7 @@
 [![Codacy Security Scan](https://github.com/VertigoRay/PSRedstone/actions/workflows/codacy.yml/badge.svg)](https://github.com/VertigoRay/PSRedstone/actions/workflows/codacy.yml)
 [![DevSkim](https://github.com/VertigoRay/PSRedstone/actions/workflows/devskim.yml/badge.svg)](https://github.com/VertigoRay/PSRedstone/actions/workflows/devskim.yml)
 
-![PSRedstone](https://t.ly/_jxT) is a module used to streamline installation of Windows Applications.
+![PSRedstone](t.ly/9YJ-) is a module used to streamline installation of Windows Applications.
 It includes a *Redstone* class, which is the core building block for the included functions.
 
 - [Quick Start](#quick-start)
