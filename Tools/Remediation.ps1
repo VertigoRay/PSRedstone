@@ -24,7 +24,7 @@
 param (
     [Parameter(HelpMessage = 'Set the version that we started using PSRedstone here. We know none of our scripts will use anything older than this.')]
     [version]
-    $MinimumVersionRequired = '2023.1.5.17477',
+    $MinimumVersionRequired = '2022.12.30.35018',
 
     [Parameter(HelpMessage = 'How many days shall a script go unused before it is removed?')]
     [int]
@@ -43,7 +43,7 @@ $registerVersion = {
         [hashtable] $ItemProperty
     )
 
-    Write-Verbose ('Version Registered: {0}' -f ($ItemProperty | ConvertTo-Json))
+    Write-Verbose ('[REMEDIATION] Version Registered: {0}' -f ($ItemProperty | ConvertTo-Json))
     if (-not (Test-Path $ItemProperty.LiteralPath)) {
         New-Item -Path $ItemProperty.LiteralPath -Force
     }
@@ -55,15 +55,12 @@ if (Get-Module 'PSRedstone' -ListAvailable) {
     Update-Module 'PSRedstone' -Force
 
     # Cleanup Old Versions
-    Get-Module 'PSRedstone' -ListAvailable | Where-Object {
-        # Where versions are less than the current version installed ...
-        $_.Version -lt ((Find-Module 'PSRedstone' -ErrorAction 'Ignore').Version | Sort-Object -Descending | Select-Object -First 1)
-    } | Foreach-Object {
+    Get-Module 'PSRedstone' -ListAvailable | Foreach-Object {
         $dateInstalled = (Get-ItemProperty -LiteralPath $versionInstalled.LiteralPath -Name $_.Version -ErrorAction 'Ignore').($_.Version) -as [datetime]
         if ($dateInstalled) {
             if ($dateInstalled -lt (Get-Date).AddDays(-$DaysAfterUnusedVersionAreUninstalled)) {
                 # If it has gone unused for longer than desired
-                Write-Information ('# Removing Unused Version: {0}' -f $_.Version)
+                Write-Information ('[REMEDIATION] # Removing Unused Version: {0}' -f $_.Version)
                 Uninstall-Module $_.Name -RequiredVersion $_.Version -Force
                 Remove-ItemProperty -LiteralPath $versionInstalled.LiteralPath -Name $_.Version -ErrorAction 'Ignore'
             }
@@ -75,24 +72,24 @@ if (Get-Module 'PSRedstone' -ListAvailable) {
     }
 } else {
     # PSRedstone not currently installed.
-    Write-Information '# Enable TLS v1.2 (for PSGallery, et al.)'
-    Write-Verbose "[BUILD] SecurityProtocol OLD: $([System.Net.ServicePointManager]::SecurityProtocol)"
+    Write-Information '[REMEDIATION] # Enable TLS v1.2 (for PSGallery, et al.)'
+    Write-Verbose "[REMEDIATION] SecurityProtocol OLD: $([System.Net.ServicePointManager]::SecurityProtocol)"
     [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor [System.Net.SecurityProtocolType]::Tls12
-    Write-Verbose "[BUILD] SecurityProtocol NEW: $([System.Net.ServicePointManager]::SecurityProtocol)"
+    Write-Verbose "[REMEDIATION] SecurityProtocol NEW: $([System.Net.ServicePointManager]::SecurityProtocol)"
 
-    Write-Information '# Setup NuGet PP'
+    Write-Information '[REMEDIATION] # Setup NuGet PP'
     [version] $NuGetPPMinVersion = '2.8.5.201'
     if (-not (Get-PackageProvider 'NuGet' -ErrorAction 'Ignore' | Where-Object { $_.Version -ge $NuGetPPMinVersion })) {
         Install-PackageProvider -Name 'NuGet' -MinimumVersion $NuGetPPMinVersion -Force
     }
 
-    Write-Information 'Install all versions greater than or equal to the minimum version required; set above.'
+    Write-Information '[REMEDIATION] Install all versions greater than or equal to the minimum version required; set above.'
     Find-Module 'PSRedstone' -Repository 'PSGallery' -AllVersions | Where-Object {
         $_.Version -lt (Find-Module 'PSRedstone' -ErrorAction 'Ignore').Version
     } | Where-Object {
         $_.Version -ge $MinimumVersionRequired
     } | Foreach-Object {
-        Install-Module $_.Name -RequiredVersion $_.Version -Scope 'CurrentUser' -Repository 'PSGallery' -Force
+        Install-Module $_.Name -RequiredVersion $_.Version -Scope 'CurrentUser' -Repository 'PSGallery' -Force -AllowClobber
         $versionInstalled.Set_Item('Name', $_.Version)
         & $registerVersion $versionInstalled
     }
