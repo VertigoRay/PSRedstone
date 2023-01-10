@@ -85,8 +85,6 @@ if (Get-Module 'PSRedstone' -ListAvailable) {
 
     Write-Information '[REMEDIATION] Install all versions greater than or equal to the minimum version required; set above.'
     Find-Module 'PSRedstone' -Repository 'PSGallery' -AllVersions | Where-Object {
-        $_.Version -lt (Find-Module 'PSRedstone' -ErrorAction 'Ignore').Version
-    } | Where-Object {
         $_.Version -ge $MinimumVersionRequired
     } | Foreach-Object {
         Install-Module $_.Name -RequiredVersion $_.Version -Scope 'CurrentUser' -Repository 'PSGallery' -Force -AllowClobber
