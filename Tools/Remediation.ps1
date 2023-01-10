@@ -19,6 +19,7 @@
     Why go through all this trouble? I'm glad you asked, refer to the README:
         https://github.com/VertigoRay/PSRedstone#advanced-start
 #>
+#Requires -RunAsAdministrator
 [CmdletBinding()]
 param (
     [Parameter(HelpMessage = 'Set the version that we started using PSRedstone here. We know none of our scripts will use anything older than this.')]
@@ -44,9 +45,9 @@ $registerVersion = {
 
     Write-Verbose ('Version Registered: {0}' -f ($ItemProperty | ConvertTo-Json))
     if (-not (Test-Path $ItemProperty.LiteralPath)) {
-        New-Item -Path $ItemProperty.LiteralPath –Force
+        New-Item -Path $ItemProperty.LiteralPath -Force
     }
-    Set-ItemProperty @versionUsed
+    Set-ItemProperty @ItemProperty
 }
 
 if (Get-Module 'PSRedstone' -ListAvailable) {
@@ -56,7 +57,7 @@ if (Get-Module 'PSRedstone' -ListAvailable) {
     # Cleanup Old Versions
     Get-Module 'PSRedstone' -ListAvailable | Where-Object {
         # Where versions are less than the current version installed ...
-        $_.Version -lt (Find-Module 'PSRedstone' -ErrorAction 'Ignore').Version
+        $_.Version -lt ((Find-Module 'PSRedstone' -ErrorAction 'Ignore').Version | Sort-Object -Descending | Select-Object -First 1)
     } | Foreach-Object {
         $dateInstalled = (Get-ItemProperty -LiteralPath $versionInstalled.LiteralPath -Name $_.Version -ErrorAction 'Ignore').($_.Version) -as [datetime]
         if ($dateInstalled) {
@@ -91,7 +92,7 @@ if (Get-Module 'PSRedstone' -ListAvailable) {
     } | Where-Object {
         $_.Version -ge $MinimumVersionRequired
     } | Foreach-Object {
-        Install-Module $_.Name -RequiredVersion $_.Version -Repository 'PSGallery' -Force
+        Install-Module $_.Name -RequiredVersion $_.Version -Scope 'CurrentUser' -Repository 'PSGallery' -Force
         $versionInstalled.Set_Item('Name', $_.Version)
         & $registerVersion $versionInstalled
     }
