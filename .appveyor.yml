@@ -10,6 +10,10 @@ environment:
   CODECOV_TOKEN:
     secure: w+GT9vRf1O7O+fxXtIHV5UiCO1m8ICJEiHi/NFM8adnRUBVQoskrLY9teCdFVOF4
 
+artifacts:
+  - path: dev\PSRedstone.zip
+    name: PSRedstone.zip
+
 init:
   - ps: |
       if ($env:APPVEYOR_REPO_TAG -eq 'true' -and $env:APPVEYOR_REPO_TAG_NAME.StartsWith('v')) {
@@ -89,7 +93,3 @@ on_success:
           $Host.SetShouldExit(1)
         }
       }
-
-artifacts:
-  - path: dev\PSRedstone.zip
-    name: PSRedstone.zip

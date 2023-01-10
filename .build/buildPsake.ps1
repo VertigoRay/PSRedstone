@@ -186,10 +186,10 @@ task Build -Depends BuildManifest {
     Move-Item -LiteralPath $compress.ArchiveFileName -Destination ([IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'dev.7z')) -Force
 
     if ($env:CI -and $env:APPVEYOR) {
-        Write-Host ('[PSAKE Build] Push-AppveyorArtifact FileName: {0}' -f $compress.ArchiveFileName) -ForegroundColor 'DarkMagenta'
-        $newFileName = '{0}.{1}.7z' -f ([IO.FileInfo] $compress.ArchiveFileName).BaseName, $env:APPVEYOR_BUILD_VERSION
+        Write-Host ('[PSAKE Build] Push-AppveyorArtifact FileName: {0}' -f ([IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'dev.7z'))) -ForegroundColor 'DarkMagenta'
+        $newFileName = '{0}.{1}.7z' -f ([IO.FileInfo] ([IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'dev.7z'))).BaseName, $env:APPVEYOR_BUILD_VERSION
         Write-Host ('[PSAKE Build] Push-AppveyorArtifact NewFileName: {0}' -f $newFileName) -ForegroundColor 'DarkMagenta'
-        Push-AppveyorArtifact $compress.ArchiveFileName -FileName $newFileName
+        Push-AppveyorArtifact ([IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'dev.7z')) -FileName $newFileName
     }
 
     $compress = @{
@@ -324,6 +324,20 @@ task GitHubTagDelete {
     }
 
     if ($env:APPVEYOR_REPO_TAG -eq 'true') {
+        # https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-a-release-by-tag-name
+        $webRequest = @{
+            Uri = 'https://api.github.com/repos/{0}/releases/tags/{1}' -f $env:APPVEYOR_REPO_NAME, $env:APPVEYOR_REPO_TAG_NAME
+            Method = 'Get'
+            Headers = @{
+                Accept = 'application/vnd.github+json'
+                Authorization = 'Bearer {0}' -f $env:GITHUB_PERSONAL_ACCESS_TOKEN
+                'X-GitHub-Api-Version' = '2022-11-28'
+            }
+        }
+        Write-Host ('[PSAKE GitHubTagDelete] Invoke-RestMethod: {0}' -f ($webRequest | ConvertTo-Json).Replace($env:GITHUB_PERSONAL_ACCESS_TOKEN, '********')) -ForegroundColor 'DarkMagenta'
+        $release = Invoke-RestMethod @webRequest
+        Write-Host ('[PSAKE GitHubTagDelete] Release ID: {0}; Commit: {1}' -f $release.id, $release.target_commitish) -ForegroundColor 'DarkMagenta'
+
         $gitFormatters = @(
             $env:GITHUB_PERSONAL_ACCESS_TOKEN
             $env:APPVEYOR_REPO_NAME
@@ -351,6 +365,19 @@ task GitHubTagDelete {
             Write-Host ('PS > {0}' -f ($config -f $gitFormatters)).Replace($env:GITHUB_PERSONAL_ACCESS_TOKEN, '********')
             Invoke-Config -Config $config
         }
+
+        # https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#delete-a-release
+        $webRequest = @{
+            Uri = 'https://api.github.com/repos/{0}/releases/{1}' -f $env:APPVEYOR_REPO_NAME, $release.id
+            Method = 'Delete'
+            Headers = @{
+                Accept = 'application/vnd.github+json'
+                Authorization = 'Bearer {0}' -f $env:GITHUB_PERSONAL_ACCESS_TOKEN
+                'X-GitHub-Api-Version' = '2022-11-28'
+            }
+        }
+        Write-Host ('[PSAKE GitHubTagDelete] Invoke-RestMethod: {0}' -f ($webRequest | ConvertTo-Json).Replace($env:GITHUB_PERSONAL_ACCESS_TOKEN, '********')) -ForegroundColor 'DarkMagenta'
+        Invoke-RestMethod @webRequest
     }
 }
 

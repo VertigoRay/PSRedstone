@@ -28,10 +28,27 @@ if (Test-Path ([IO.Path]::Combine($PSScriptRoot, 'env.ps1'))) {
     . ([IO.Path]::Combine($PSScriptRoot, 'env.ps1'))
 }
 
-Write-Information '# Enable TLS v1.2 (for GitHub, et al.)'
+Write-Information '# Enable TLS v1.2 (for GitHub et al.)'
 Write-Verbose "[BUILD] SecurityProtocol OLD: $([System.Net.ServicePointManager]::SecurityProtocol)"
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor [System.Net.SecurityProtocolType]::Tls12
 Write-Verbose "[BUILD] SecurityProtocol NEW: $([System.Net.ServicePointManager]::SecurityProtocol)"
+
+@(
+    'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\.NETFramework\v4.0.30319'
+    'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\WoW6432Node\Microsoft\.NETFramework\v4.0.30319'
+) | ForEach-Object {
+    if (-not (Test-Path $_)) {
+        New-Item -Path (Split-Path $_) -Name (Split-Path $_ -Leaf) -Force
+    }
+    $itemProperty = [ordered] @{
+        LiteralPath = $_
+        Name = 'SchUseStrongCrypto'
+        Type = 'DWORD'
+        Value = 1
+    }
+    Write-Verbose ('[BUILD] Adding Registry Value: {0}' -f ($itemProperty | ConvertTo-Json))
+    Set-ItemProperty @itemProperty
+}
 
 Write-Information '# Setup NuGet PP'
 if (-not (Get-PackageProvider 'NuGet' -ErrorAction 'Ignore' | Where-Object { $_.Version -ge $NuGetPPMinVersion })) {
