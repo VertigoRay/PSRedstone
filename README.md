@@ -117,8 +117,8 @@ That's great, but there's a few questions left to be answered:
 1. How do I ensure all versions of *PSRedstone* that I need are pre-loaded on a brand new system?
 2. How do I prevent version bloat and remove old *PSRedstone* versions that are no longer needed?
 
-Luckilye for you, anytime this Module is used, the version and timestamp will be stored in the registry under `HKEY_LOCAL_MACHINE\SOFTWARE\VertigoRay\PSRedstone\VersionsUsed`.
-This will allow us to know what versions are still being used so that we can intelligently purge of unused versions.
+Anytime this Module is used, the version and timestamp will be stored in the registry under `HKEY_LOCAL_MACHINE\SOFTWARE\VertigoRay\PSRedstone\VersionsUsed`.
+This will allow us to know what versions are still being used so that we can intelligently purge any unused versions.
 Of course, a brand new computer will not have older versions of *PSRedstone* installed.
 The easiest way around this (for now) would be to just install all versions os *PSRedstone* during imaging and let the script purge things after they have proven to not be in use.
 
@@ -186,11 +186,11 @@ See the [Quick Start](#quick-start) for an example.
 # Logging
 
 There are a many ways to log with PowerShell.
-I for one, have found a way that works well for me whether I'm in development, or troubleshooting a production run of a PowerShell script.
+I have created a way that works well for me whether I'm in development, or troubleshooting a production run of a PowerShell script.
 However, I did not build it into *PSRedstone*.
 I believe that it can, and should, stand alone as its own module and be used regardless of if you are using *PSRedstone* or not.
 So, check out [*PSWriteLog*](https://github.com/VertigoRay/PSWriteLog) and decide for yourself.
-If you don't love it, come up with your own way of logging that suites your needs.
+If you don't love it, come up with your own way of logging that suits your needs.
 
 Here's how I set up *PSWriteLog* in my *PSRedstone Block*.
 
@@ -200,7 +200,6 @@ Here's how I set up *PSWriteLog* in my *PSRedstone Block*.
 $redstone, $settings = New-Redstone
 
 $PSDefaultParameterValues.Set_Item('Write-Log:FilePath', $redstone.Settings.Log.File.FullName)
-$PSDefaultParameterValues.Set_Item('Write-Log:LogType', 'CMTrace')
 $InformationPreference = 'Continue'
 #endregion Redstone Block
 ```

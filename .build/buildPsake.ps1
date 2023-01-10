@@ -82,7 +82,7 @@ task BuildManifest {
     }
 
     $Manifest.Copyright = $Manifest.Copyright -f [DateTime]::Now.Year
-    Write-Verbose ('[PSAKE BuildManifest] $script:parentDevModulePath: {0}' -f $script:parentDevModulePath)
+    Write-Host ('[PSAKE BuildManifest] $script:parentDevModulePath: {0}' -f $script:parentDevModulePath) -ForegroundColor 'DarkMagenta'
     [System.Collections.ArrayList] $cmdletsToExport = @()
     [System.Collections.ArrayList] $functionsToExport = @()
 
@@ -109,7 +109,7 @@ task BuildManifest {
         $Manifest.VariablesToExport = @()
     }
 
-    $Manifest.Path = [IO.Path]::Combine($script:parentDevModulePath, ('{0}.psd1' -f $script:thisModuleName))
+    $Manifest.Path = [IO.Path]::Combine($script:parentModulePath, ('{0}.psd1' -f $script:thisModuleName))
     $Manifest.RootModule = "${script:thisModuleName}.psm1"
     $Manifest.ModuleVersion = [version] $Version
 
@@ -151,10 +151,12 @@ task Build -Depends BuildManifest {
     }
 
     $license = @{
-        Source = [IO.Path]::Combine($script:psScriptRootParent, 'LICENSE.md')
-        Destination = [IO.Path]::Combine($script:parentDevModulePath, 'LICENSE.md')
+        LiteralPath = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'LICENSE.md')
+        Destination = [IO.Path]::Combine($script:parentModulePath, 'LICENSE.md')
     }
-    Copy-Item -LiteralPath $license.Source -Destination $license.Destination -Force
+    Write-Host ('[PSAKE Build] Copy License: {0}' -f ($license | ConvertTo-Json)) -ForegroundColor 'Black' -BackgroundColor 'Cyan'
+    Copy-Item @license -Force
+
 
     # Sign Code
     # $pfxESE = [IO.Path]::Combine($env:Temp, 'ese.pfx')
@@ -172,11 +174,40 @@ task Build -Depends BuildManifest {
     # }
 
     $compress = @{
-        Path = (Get-ChildItem $script:parentModulePath -File -Recurse).FullName
-        CompressionLevel = 'Optimal'
-        DestinationPath = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', ('{0}.zip' -f $script:thisModuleName))
+        Path = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev')
+        Filter = '*'
+        Format = 'SevenZip'
+        CompressionLevel = 'Ultra'
+        ArchiveFileName = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev.7z')
     }
-    Compress-Archive @compress
+    Write-Host ('[PSAKE Build] Compress Archive: {0}' -f ($compress | ConvertTo-Json)) -ForegroundColor 'Black' -BackgroundColor 'Cyan'
+    Compress-7Zip @compress
+
+    Move-Item -LiteralPath $compress.ArchiveFileName -Destination ([IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'dev.7z')) -Force
+
+    if ($env:CI -and $env:APPVEYOR) {
+        Write-Host ('[PSAKE Build] Push-AppveyorArtifact FileName: {0}' -f $compress.ArchiveFileName) -ForegroundColor 'DarkMagenta'
+        $newFileName = '{0}.{1}.7z' -f ([IO.FileInfo] $compress.ArchiveFileName).BaseName, $env:APPVEYOR_BUILD_VERSION
+        Write-Host ('[PSAKE Build] Push-AppveyorArtifact NewFileName: {0}' -f $newFileName) -ForegroundColor 'DarkMagenta'
+        Push-AppveyorArtifact $compress.ArchiveFileName -FileName $newFileName
+    }
+
+    $compress = @{
+        Path = $script:parentModulePath
+        Filter = '*'
+        Format = 'Zip'
+        CompressionLevel = 'Normal'
+        ArchiveFileName = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', ('{0}.zip' -f $script:thisModuleName))
+    }
+    Write-Host ('[PSAKE Build] Compress Archive: {0}' -f ($compress | ConvertTo-Json)) -ForegroundColor 'Black' -BackgroundColor 'Cyan'
+    Compress-7Zip @compress
+
+    if ($env:CI -and $env:APPVEYOR) {
+        Write-Host ('[PSAKE Build] Push-AppveyorArtifact FileName: {0}' -f $compress.ArchiveFileName) -ForegroundColor 'DarkMagenta'
+        $newFileName = '{0}.{1}.zip' -f ([IO.FileInfo] $compress.ArchiveFileName).BaseName, $env:APPVEYOR_BUILD_VERSION
+        Write-Host ('[PSAKE Build] Push-AppveyorArtifact NewFileName: {0}' -f $newFileName) -ForegroundColor 'DarkMagenta'
+        Push-AppveyorArtifact $compress.ArchiveFileName -FileName $newFileName
+    }
 }
 
 task PostAnalyze {
@@ -218,6 +249,7 @@ task Test {
                 }
                 TestResult = @{
                     Enabled = $true
+                    OutputPath = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'testResults.xml')
                 }
                 CodeCoverage = @{
                     Enabled = $true
@@ -378,12 +410,4 @@ task DeployPSGallery {
     }
     Write-Host ('[PSAKE DeployPSGallery] Publish-Module: {0}' -f ($publishModule | ConvertTo-Json).Replace($env:PSGALLERY_API_KEY, '********')) -ForegroundColor 'DarkMagenta'
     Publish-Module @publishModule
-}
-
-task AppveyorArtifact {
-    $fileName = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, 'dev', 'PSRedstone.zip')
-    Write-Host ('[PSAKE AppveyorArtifact] Push-AppveyorArtifact FileName: {0}' -f $fileName) -ForegroundColor 'DarkMagenta'
-    $newFileName = 'PSRedstone.{0}.zip' -f $env:APPVEYOR_BUILD_VERSION
-    Write-Host ('[PSAKE AppveyorArtifact] Push-AppveyorArtifact NewFileName: {0}' -f $newFileName) -ForegroundColor 'DarkMagenta'
-    Push-AppveyorArtifact $fileName -FileName $newFileName
 }
