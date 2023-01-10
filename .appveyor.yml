@@ -70,7 +70,6 @@ deploy:
     release: v$(APPVEYOR_BUILD_VERSION)
     provider: GitHub
     auth_token: $(GITHUB_PERSONAL_ACCESS_TOKEN)
-      secure: NegQQNxnvn93My5EI3I24WexZixb/9kXU+PpSaVYLoUHkqISEMZLkpwLjOHtqWsa
     artifact: PSRedstone.zip
     draft: false
     prerelease: false
