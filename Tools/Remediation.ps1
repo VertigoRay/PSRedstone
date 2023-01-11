@@ -22,14 +22,20 @@
 #Requires -RunAsAdministrator
 [CmdletBinding()]
 param (
+    [Parameter(HelpMessage = 'DO NOT CHANGE THIS. MECM always sends "the expected compliant value" to remediation scripts allowing you to use the same script for remediation and detection scripts. In my case, I use a boolean detection.', Position = 0)]
+    [bool]
+    $IsRemediation = $false,
+
     [Parameter(HelpMessage = 'Set the version that we started using PSRedstone here. We know none of our scripts will use anything older than this.')]
     [version]
-    $MinimumVersionRequired = '2022.12.30.35018',
+    $MinimumVersionRequired = '2023.1.10.23208',
 
     [Parameter(HelpMessage = 'How many days shall a script go unused before it is removed?')]
     [int]
     $DaysAfterUnusedVersionAreUninstalled = 90
 )
+
+Start-Transcript -LiteralPath ([IO.Path]::Combine($env:SystemRoot, 'Logs', 'PSRedstone-Remediation.log')) -IncludeInvocationHeader
 
 [hashtable] $versionInstalled = @{
     LiteralPath = 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\VertigoRay\PSRedstone\VersionsUsed'
@@ -56,7 +62,9 @@ if (Get-Module 'PSRedstone' -ListAvailable) {
 
     # Cleanup Old Versions
     Get-Module 'PSRedstone' -ListAvailable | Foreach-Object {
+        Write-Information ('[REMEDIATION] # Checking Version: {0}' -f $_.Version)
         $dateInstalled = (Get-ItemProperty -LiteralPath $versionInstalled.LiteralPath -Name $_.Version -ErrorAction 'Ignore').($_.Version) -as [datetime]
+        Write-Verbose ('[REMEDIATION] Date: {0}' -f $dateInstalled)
         if ($dateInstalled) {
             if ($dateInstalled -lt (Get-Date).AddDays(-$DaysAfterUnusedVersionAreUninstalled)) {
                 # If it has gone unused for longer than desired
@@ -92,3 +100,5 @@ if (Get-Module 'PSRedstone' -ListAvailable) {
         & $registerVersion $versionInstalled
     }
 }
+
+Stop-Transcript

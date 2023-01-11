@@ -5,4 +5,4 @@
 
     Just see if we have the latest version of PSRedstone installed.
 #>
-(Get-Module 'PSRedstone' -ListAvailable).Version -eq (Find-Module 'PSRedstone' -ErrorAction 'Ignore').Version
+(Get-Module 'PSRedstone' -ListAvailable).Version -contains (Find-Module 'PSRedstone' -ErrorAction 'Ignore').Version
