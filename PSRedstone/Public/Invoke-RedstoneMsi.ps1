@@ -289,7 +289,7 @@ function Invoke-RedstoneMSI {
         ## If MSI install, check to see if the MSI installer service is available or if another MSI install is already underway.
         ## Please note that a race condition is possible after this check where another process waiting for the MSI installer
         ##  to become available grabs the MSI Installer mutex before we do. Not too concerned about this possible race condition.
-        [boolean] $msiExecAvailable = Test-IsMutexAvailable -MutexName 'Global\_MSIExecute'
+        [boolean] $msiExecAvailable = Assert-RedstoneIsMutexAvailable -MutexName 'Global\_MSIExecute'
         Start-Sleep -Seconds 1
         if (-not $msiExecAvailable) {
             #  Default MSI exit code for install already in progress
