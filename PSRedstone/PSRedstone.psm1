@@ -28,7 +28,7 @@ if ((New-Object System.Security.Principal.WindowsPrincipal([System.Security.Prin
     }
     Write-Debug ('Version Used: {0}' -f ($versionUsed | ConvertTo-Json))
     if (-not (Test-Path $versionUsed.LiteralPath)) {
-        New-Item -Path $versionUsed.LiteralPath –Force
+        New-Item -Path $versionUsed.LiteralPath -Force
     }
     Set-ItemProperty @versionUsed
 }
