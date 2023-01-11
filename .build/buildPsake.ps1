@@ -323,7 +323,11 @@ task GitHubTagDelete {
         }
     }
 
+    Write-Host ('[PSAKE GitHubTagDelete] APPVEYOR_REPO_TAG: {0}' -f $env:APPVEYOR_REPO_TAG)
+
     if ($env:APPVEYOR_REPO_TAG -eq 'true') {
+        Write-Host ('[PSAKE GitHubTagDelete] APPVEYOR_REPO_TAG_NAME: {0}' -f $env:APPVEYOR_REPO_TAG_NAME)
+
         # https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-a-release-by-tag-name
         $webRequest = @{
             Uri = 'https://api.github.com/repos/{0}/releases/tags/{1}' -f $env:APPVEYOR_REPO_NAME, $env:APPVEYOR_REPO_TAG_NAME

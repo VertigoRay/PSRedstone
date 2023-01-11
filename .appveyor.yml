@@ -59,7 +59,7 @@ after_build:
   - ps: |
       $invokePsake = @{
         BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
-        TaskList = @('CodeCov', 'GitHubTagDelete', 'AppveyorArtifact')
+        TaskList = @('CodeCov', 'GitHubTagDelete')
       }
       Invoke-psake @invokePsake
       if (-not $psake.build_success) {
