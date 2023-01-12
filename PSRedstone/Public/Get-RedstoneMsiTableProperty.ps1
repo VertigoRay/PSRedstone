@@ -20,19 +20,22 @@ Summary Information property descriptions: https://msdn.microsoft.com/en-us/libr
 Continue if an error is encountered. Default is: $true.
 .EXAMPLE
 # Retrieve all of the properties from the default 'Property' table.
-Get-MsiTableProperty -Path 'C:\Package\AppDeploy.msi' -TransformPath 'C:\Package\AppDeploy.mst'
+Get-RedstoneMsiTableProperty -Path 'C:\Package\AppDeploy.msi' -TransformPath 'C:\Package\AppDeploy.mst'
+Get-RedstoneMsiTableProperty -Path 'C:\Package\AppDeploy.msi' -TransformPath 'C:\Package\AppDeploy.mst'
 .EXAMPLE
 # Retrieve all of the properties from the 'Property' table and then pipe to Select-Object to select the ProductCode property.
-Get-MsiTableProperty -Path 'C:\Package\AppDeploy.msi' -TransformPath 'C:\Package\AppDeploy.mst' -Table 'Property' | Select-Object -ExpandProperty ProductCode
+Get-RedstoneMsiTableProperty -Path 'C:\Package\AppDeploy.msi' -TransformPath 'C:\Package\AppDeploy.mst' -Table 'Property' | Select-Object -ExpandProperty ProductCode
+Get-RedstoneMsiTableProperty -Path 'C:\Package\AppDeploy.msi' -TransformPath 'C:\Package\AppDeploy.mst' -Table 'Property' | Select-Object -ExpandProperty ProductCode
 .EXAMPLE
 # Retrieves the Summary Information for the Windows Installer database.
-Get-MsiTableProperty -Path 'C:\Package\AppDeploy.msi' -GetSummaryInformation
+Get-RedstoneMsiTableProperty -Path 'C:\Package\AppDeploy.msi' -GetSummaryInformation
+Get-RedstoneMsiTableProperty -Path 'C:\Package\AppDeploy.msi' -GetSummaryInformation
 .NOTES
 This is an internal script function and should typically not be called directly.
 .LINK
 http://psappdeploytoolkit.com
 #>
-function Global:Get-MsiTableProperty {
+function Get-RedstoneMsiTableProperty {
 	[CmdletBinding(DefaultParameterSetName='TableInfo')]
 	Param (
 		[Parameter(Mandatory=$true, Position=0)]
@@ -70,8 +73,6 @@ function Global:Get-MsiTableProperty {
 		[boolean]
 		$ContinueOnError = $true
 	)
-	
-
 
 	Begin {
 		<#
@@ -104,7 +105,7 @@ function Global:Get-MsiTableProperty {
 				[Parameter(Mandatory=$false,Position=2)]
 				[object[]]$ArgumentList
 			)
-			
+
 			Begin { }
 			Process {
 				## Retrieve property
@@ -124,7 +125,7 @@ function Global:Get-MsiTableProperty {
 			Else {
 				Write-Information "Read the Summary Information from the Windows Installer database file [${Path}]."
 			}
-			
+
 			## Create a Windows Installer object
 			[__comobject]$Installer = New-Object -ComObject 'WindowsInstaller.Installer' -ErrorAction 'Stop'
 			## Determine if the database file is a patch (.msp) or not
@@ -143,16 +144,16 @@ function Global:Get-MsiTableProperty {
 					$null = Invoke-ObjectMethod -InputObject $Database -MethodName 'ApplyTransform' -ArgumentList @($Transform, $msiSuppressApplyTransformErrors)
 				}
 			}
-			
+
 			## Get either the requested windows database table information or summary information
 			if ($PSCmdlet.ParameterSetName -eq 'TableInfo') {
 				## Open the requested table view from the database
 				[__comobject]$View = Invoke-ObjectMethod -InputObject $Database -MethodName 'OpenView' -ArgumentList @("SELECT * FROM ${Table}")
 				$null = Invoke-ObjectMethod -InputObject $View -MethodName 'Execute'
-				
+
 				## Create an empty object to store properties in
 				[psobject]$TableProperties = New-Object -TypeName 'PSObject'
-				
+
 				## Retrieve the first row from the requested table. If the first row was successfully retrieved, then save data and loop through the entire table.
 				#  https://msdn.microsoft.com/en-us/library/windows/desktop/aa371136(v=vs.85).aspx
 				[__comobject]$Record = Invoke-ObjectMethod -InputObject $View -MethodName 'Fetch'
@@ -190,9 +191,10 @@ function Global:Get-MsiTableProperty {
 			}
 		}
 		Catch {
-			Write-Error "Failed to get the MSI table [${Table}]. `n$(Resolve-Error)"
+            $resolvedError = if (Get-Command 'Resolve-Error' -ErrorAction 'Ignore') { Resolve-Error } else { $null }
+			Write-Error ('Failed to get the MSI table [{0}]. {1}' -f $Table, $resolvedError)
 			If (-not $ContinueOnError) {
-				Throw "Failed to get the MSI table [${Table}]: $($_.Exception.Message)"
+				Throw ('Failed to get the MSI table [{0}]. {1}' -f $Table, $_.Exception.Message)
 			}
 		}
 		Finally {
@@ -210,8 +212,6 @@ function Global:Get-MsiTableProperty {
 			Try { $null = [Runtime.Interopservices.Marshal]::ReleaseComObject($Installer) } Catch { }
 		}
 	}
-	
-
 
 	End {}
 }

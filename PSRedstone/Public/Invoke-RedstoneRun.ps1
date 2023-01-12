@@ -96,13 +96,12 @@ function Invoke-RedstoneRun {
         $LogFile
     )
 
-    Write-Information "> $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
-    Write-Debug "Function Invocation: $($MyInvocation | Out-String)"
-
+    Write-Information ('[Invoke-RedstoneRun] > {0}' -f ($MyInvocation.BoundParameters | ConvertTo-Json -Compress)) -Tags 'Redstone','Invoke-RedstoneRun'
+    Write-Debug ('[Invoke-RedstoneRun] Function Invocation: {0}' -f ($MyInvocation | Out-String))
 
     if ($PsCmdlet.ParameterSetName -ieq 'Cmd') {
-        Write-Verbose "Executing: $cmd"
-        if ($cmd -match '^(?:"([^"]+)")$|^(?:"([^"]+)") (.+)$|^(?:([^\s]+))$|^(?:([^\s]+)) (.+)$') {
+        Write-Verbose ('[Invoke-RedstoneRun] Executing: {0}' -f $cmd)
+        if ($Cmd -match '^(?:"([^"]+)")$|^(?:"([^"]+)") (.+)$|^(?:([^\s]+))$|^(?:([^\s]+)) (.+)$') {
             # https://regex101.com/r/uU4vH1/1
 
             Write-Verbose "Cmd Match: $($Matches | Out-String)"
@@ -119,9 +118,7 @@ function Invoke-RedstoneRun {
                 $ArgumentList = $Matches[6]
             }
         } else {
-            $msg = "Cmd Match Error: ${cmd}"
-            Write-Error $msg
-            Throw [System.Management.Automation.ParameterBindingException] $msg
+            Throw [System.Management.Automation.ParameterBindingException] ('Cmd Match Error: {0}' -f $cmd)
         }
     }
 
@@ -137,8 +134,8 @@ function Invoke-RedstoneRun {
         'PassThru'                  = $PassThru
         'Wait'                      = $Wait
         'WindowStyle'               = $WindowStyle
-        'RedirectStandardError'     = $stderr
-        'RedirectStandardOutput'    = $stdout
+        'RedirectStandardError'     = $stderr.FullName
+        'RedirectStandardOutput'    = $stdout.FullName
     }
 
     if ($ArgumentList) {
@@ -173,26 +170,26 @@ function Invoke-RedstoneRun {
         }
 }
 
-    Write-Information "Start-Process: $(ConvertTo-Json $startProcess)"
+    Write-Information ('[Invoke-RedstoneRun] Start-Process: {0}' -f (ConvertTo-Json $startProcess)) -Tags 'Redstone','Invoke-RedstoneRun'
     $proc = Start-Process @startProcess
-    Write-Verbose "ExitCode: $($proc.ExitCode)"
+    Write-Verbose ('[Invoke-RedstoneRun] ExitCode:' -f $proc.ExitCode)
 
-    $stdout_job | Stop-Job
-    $stderr_job | Stop-Job
+    $stdout_job | Stop-Job -ErrorAction 'SilentlyContinue'
+    $stderr_job | Stop-Job -ErrorAction 'SilentlyContinue'
 
     $return = @{
         'Process' = $proc
-        'StdOut'  = Get-Content $stdout
-        'StdErr'  = Get-Content $stderr
+        'StdOut'  = (Get-Content $stdout.FullName | Out-String).Trim().Split([System.Environment]::NewLine)
+        'StdErr'  = (Get-Content $stderr.FullName | Out-String).Trim().Split([System.Environment]::NewLine)
     }
 
-    $stdout | Remove-Item -Force
-    $stderr | Remove-Item -Force
+    $stdout.FullName | Remove-Item -ErrorAction 'SilentlyContinue' -Force
+    $stderr.FullName | Remove-Item -ErrorAction 'SilentlyContinue' -Force
 
     try {
-        Write-Information "Return (converted to json): $(ConvertTo-Json $return -Depth 1 -ErrorAction 'Stop')"
+        Write-Information ('[Invoke-RedstoneRun] Return: {0}' -f (ConvertTo-Json $return -Depth 1 -ErrorAction 'Stop')) -Tags 'Redstone','Invoke-RedstoneRun'
     } catch {
-        Write-Information "Return: $($return | Out-String)"
+        Write-Information ('[Invoke-RedstoneRun] Return: {0}' -f ($return | Out-String)) -Tags 'Redstone','Invoke-RedstoneRun'
     }
     return $return
 }

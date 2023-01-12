@@ -172,10 +172,10 @@ function Invoke-RedstoneMSI {
     ## If the MSI is in the Files directory, set the full path to the MSI
     if ($PathIsProductCode) {
         [string] $msiFile = $Path
-        [string] $msiLogFile = $LogsPathF -f ".msi.${Action}", ($Path -as [guid]).Guid
+        [string] $msiLogFile = $LogFileF -f ".msi.${Action}", ($Path -as [guid]).Guid
     } else {
         [string] $msiFile = (Resolve-Path $Path -ErrorAction 'Stop').Path
-        [string] $msiLogFile = $LogsPathF -f ".msi.${Action}", ($Path -as [IO.FileInfo]).BaseName
+        [string] $msiLogFile = $LogFileF -f ".msi.${Action}", ($Path -as [IO.FileInfo]).BaseName
     }
 
     ## Set the working directory of the MSI
@@ -227,7 +227,7 @@ function Invoke-RedstoneMSI {
                 $Get_MsiTablePropertySplat.Add('TransformPath', $mst)
             }
 
-            [string] $MSIProductCode = Get-MsiTableProperty @Get_MsiTablePropertySplat | Select-Object -ExpandProperty 'ProductCode' -ErrorAction 'Stop'
+            [string] $MSIProductCode = Get-RedstoneMsiTableProperty @Get_MsiTablePropertySplat | Select-Object -ExpandProperty 'ProductCode' -ErrorAction 'Stop'
             Write-Information "[Invoke-RedstoneMsi] Got the ProductCode from the MSI file: ${MSIProductCode}"
         } catch {
             Write-Information "[Invoke-RedstoneMsi] Failed to get the ProductCode from the MSI file. Continuing with requested action [${Action}].$([Environment]::NewLine)$([Environment]::NewLine)$_"
@@ -260,7 +260,7 @@ function Invoke-RedstoneMSI {
     ## Check if the MSI is already installed. If no valid ProductCode to check, then continue with requested MSI action.
     [boolean] $IsMsiInstalled = $false
     if ($MSIProductCode -and (-not $SkipMSIAlreadyInstalledCheck)) {
-        [psobject] $MsiInstalled = Get-InstalledApplication -ProductCode $MSIProductCode
+        [psobject] $MsiInstalled = Get-RedstoneInstalledApplication -ProductCode $MSIProductCode
         if ($MsiInstalled) {
             [boolean] $IsMsiInstalled = $true
         }
@@ -277,9 +277,9 @@ function Invoke-RedstoneMSI {
 
         #  Build the hashtable with the options that will be passed to Invoke-Run using splatting
         [hashtable] $invokeRun =  @{
-            'FilePath' = (Get-Command 'msiexec' -ErrorAction 'Stop').Source;
-            'ArgumentList' = $argsMSI;
-            'PassThru' = $PassThru;
+            'FilePath' = (Get-Command 'msiexec' -ErrorAction 'Stop').Source
+            'ArgumentList' = $argsMSI
+            'PassThru' = $PassThru.IsPresent -as [bool]
         }
         if ($WorkingDirectory) {
             $invokeRun.Add( 'WorkingDirectory', $WorkingDirectory)
