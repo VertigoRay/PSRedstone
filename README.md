@@ -6,7 +6,7 @@
 [![Codacy Security Scan](https://github.com/VertigoRay/PSRedstone/actions/workflows/codacy.yml/badge.svg)](https://github.com/VertigoRay/PSRedstone/actions/workflows/codacy.yml)
 [![DevSkim](https://github.com/VertigoRay/PSRedstone/actions/workflows/devskim.yml/badge.svg)](https://github.com/VertigoRay/PSRedstone/actions/workflows/devskim.yml)
 
-![PSRedstone](https://t.ly/9YJ-) is a module used to streamline installation of Windows Applications.
+![PSRedstone](https://tinyurl.com/2p8xny2m) is a module used to streamline installation of Windows Applications.
 It includes a *Redstone* class, which is the core building block for the included functions.
 It is designed to be light-weight and easy to deploy.
 While I use [MECM for my CM tool](https://learn.microsoft.com/en-us/mem/configmgr/), you should be able to use *PSRedstone* with [whatever tool you choose](https://www.reddit.com/r/sysadmin/comments/2go43q/comment/ckkydh4/).
