@@ -9,7 +9,8 @@ Describe 'Invoke-RedstoneRun' {
 
     Context 'Invoke-RedstoneRun File Does Not Exist' {
         It 'Should Throw' {
-            { Invoke-RedstoneRun ('fileDoesNotExist_{0}.exe' -f (New-Guid).Guid.Replace('-','_')) } | Should -Throw
+            $randomExe = 'fileDoesNotExist_{0}.exe' -f (New-Guid).Guid.Replace('-','_')
+            { Invoke-RedstoneRun $randomExe } | Should -Throw
         }
     }
 
@@ -294,21 +295,19 @@ Describe 'Invoke-RedstoneRun' {
 
     Context 'Simple WorkingDirectory' {
         BeforeAll {
-            $script:randomExe = Get-ChildItem 'C:\Program Files' -Filter '*.exe' -File -Recurse | Where-Object {
-                $env:Path.Split(';') -notcontains $_.DirectoryName
-            } | Select-Object -First 1
+            [IO.FileInfo] $script:randomExe = 'C:\Program Files\DoesNotExist\fileDoesNotExist_{0}.exe' -f (New-Guid).Guid.Replace('-','_')
         }
 
-        AfterEach {
-            $script:result.Process | Stop-Process -Force -ErrorAction 'Ignore'
+        BeforeEach {
+            Mock Start-Process { param($FilePath, $WorkingDirectory) return $WorkingDirectory }
         }
 
-        It 'Should Throw' {
-            { $script:result = Invoke-RedstoneRun -FilePath $script:randomExe.Name -Wait $false } | Should -Throw
+        It 'Should Not Pass WorkingDirectory' {
+            (Invoke-RedstoneRun -FilePath $script:randomExe.Name).Process | Should -BeNullOrEmpty
         }
 
-        It 'Should Not Throw' {
-            { $script:result = Invoke-RedstoneRun -FilePath $script:randomExe.FullName -WorkingDirectory $script:randomExe.DirectoryName -Wait $false } | Should -Not -Throw
+        It 'Should Pass WorkingDirectory' {
+            (Invoke-RedstoneRun -FilePath $script:randomExe.FullName -WorkingDirectory $script:randomExe.DirectoryName).Process | Should -Be 'C:\Program Files\DoesNotExist'
         }
     }
 }
