@@ -20,7 +20,7 @@ init:
         Add-AppveyorMessage -Message ('Git tag already published; Stopping Build.') -Category 'Information' -Details ($details | ConvertTo-Json)
         Exit-AppVeyorBuild
       } elseif ($env:APPVEYOR_REPO_TAG -eq 'true') {
-        $env:MODULE_VERSION = ((Get-Date -Format 'yyyy.MM.dd'), ((New-TimeSpan -Start ([datetime]::Today)).TotalSeconds -as [int])) -join '.'
+        $env:MODULE_VERSION = ((Get-Date -Format 'yyyy.MM.dd'), $env:APPVEYOR_BUILD_NUMBER) -join '.'
         Update-AppveyorBuild -Version ${env:MODULE_VERSION}
         $details = [ordered] @{
           APPVEYOR_REPO_TAG = $env:APPVEYOR_REPO_TAG

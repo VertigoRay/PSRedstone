@@ -6,7 +6,6 @@
         If a versions has already been setup in this environment, returns that.
         Otherwise, creates a version using the format: "yyyy.MM.dd.sssss"
         Where "sssss" is the total number of seconds since midnight.
-        If on AppVeyor, will use the Build Number for instead of seconds.
     .Example
         $version = & .\version.ps1
     .Example
@@ -25,12 +24,7 @@ if (-not $env:MODULE_VERSION) {
     $versionR = (New-TimeSpan -Start ([datetime]::Today)).TotalSeconds -as [int]
     Write-Debug ('[version.ps1] versionR: {0}' -f $versionR)
 
-    if ($env:APPVEYOR_BUILD_NUMBER) {
-        Write-Debug ('[version.ps1] APPVEYOR_BUILD_NUMBER: {0}' -f $env:APPVEYOR_BUILD_NUMBER)
-        $env:MODULE_VERSION = '{0}.{1}' -f $versionMMB, $env:APPVEYOR_BUILD_NUMBER
-    } else {
-        $env:MODULE_VERSION = '{0}.{1}' -f $versionMMB, $versionR
-    }
+    $env:MODULE_VERSION = '{0}.{1}' -f $versionMMB, $versionR
 } else {
     Write-Debug ('[version.ps1] env:MODULE_VERSION already set.')
 }
