@@ -279,7 +279,7 @@ function Invoke-RedstoneMSI {
         [hashtable] $invokeRun =  @{
             'FilePath' = (Get-Command 'msiexec' -ErrorAction 'Stop').Source
             'ArgumentList' = $argsMSI
-            'PassThru' = $PassThru.IsPresent -as [bool]
+            'PassThru' = $PassThru
         }
         if ($WorkingDirectory) {
             $invokeRun.Add( 'WorkingDirectory', $WorkingDirectory)
@@ -311,7 +311,7 @@ function Invoke-RedstoneMSI {
             Write-Information "[Invoke-RedstoneMsi] Return: $($result | Out-String)"
             return $result
         } else {
-            Invoke-RedstoneRun @invokeRun
+            Invoke-RedstoneRun @invokeRun | Out-Null
         }
     } else {
         Write-Warning "[Invoke-RedstoneMsi] The MSI is not installed on this system. Skipping action [${Action}]..."
