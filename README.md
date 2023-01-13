@@ -192,14 +192,15 @@ I believe that it can, and should, stand alone as its own module and be used reg
 So, check out [*PSWriteLog*](https://github.com/VertigoRay/PSWriteLog) and decide for yourself.
 If you don't love it, come up with your own way of logging that suits your needs.
 
-Here's how I set up *PSWriteLog* in my *PSRedstone Block*.
+Here's how I set up *PSWriteLog* in my *Redstone Block*:
 
 ```powershell
 #region Redstone Block
 #Requires -Modules @{ModuleName = 'PSRedstone'; RequiredVersion = '2023.1.4.62137'},@{ModuleName = 'PSWriteLog'}
 $redstone, $settings = New-Redstone
 
-$PSDefaultParameterValues.Set_Item('Write-Log:FilePath', $redstone.Settings.Log.File.FullName)
+$env:PSWriteLogFilePath = $redstone.Settings.Log.File.FullName
+$env:PSWriteLogIncludeInvocationHeader = $true
 $InformationPreference = 'Continue'
 #endregion Redstone Block
 ```
