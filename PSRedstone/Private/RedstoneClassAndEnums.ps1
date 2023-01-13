@@ -123,7 +123,10 @@ class Redstone {
             if ($this.Settings.JSON.Data.Action) {
                 $this.Settings.JSON.Data.Action
             } else {
-                ([IO.FileInfo] $this.Debug.PSCallStack[2].ScriptName).BaseName
+                $scriptName = ($this.Debug.PSCallStack | Where-Object {
+                    ([IO.FileInfo] $_.ScriptName).Name -ne 'PSRedstone.psm1'
+                } | Select-Object -First 1).ScriptName
+                ([IO.FileInfo] $scriptName).BaseName
             }
         ))
 
@@ -151,7 +154,10 @@ class Redstone {
             if ($this.Settings.JSON.Data.Action) {
                 $this.Settings.JSON.Data.Action
             } else {
-                ([IO.FileInfo] $this.Debug.PSCallStack[2].ScriptName).BaseName
+                $scriptName = ($this.Debug.PSCallStack | Where-Object {
+                    ([IO.FileInfo] $_.ScriptName).Name -ne 'PSRedstone.psm1'
+                } | Select-Object -First 1).ScriptName
+                ([IO.FileInfo] $scriptName).BaseName
             }
         ))
 
