@@ -24,7 +24,7 @@ This is an internal script function and should typically not be called directly.
 .LINK
 http://psappdeploytoolkit.com
 #>
-Function Global:Invoke-ObjectMethod {
+Function Invoke-RedstoneObjectMethod {
 	[CmdletBinding(DefaultParameterSetName='Positional')]
 	Param (
 		[Parameter(Mandatory=$true,Position=0)]
@@ -39,7 +39,7 @@ Function Global:Invoke-ObjectMethod {
 		[ValidateNotNull()]
 		[hashtable]$Parameter
 	)
-	
+
 	Begin { }
 	Process {
 		If ($PSCmdlet.ParameterSetName -eq 'Named') {

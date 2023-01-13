@@ -29,29 +29,29 @@ http://psappdeploytoolkit.com
 Function Get-RedstoneInstalledApplication {
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false, Position = 0)]
         [ValidateNotNullorEmpty()]
         [string[]]
         $Name,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [switch]
         $Exact = $false,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [switch]
         $WildCard,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullorEmpty()]
         [string]
         $ProductCode,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [switch]
         $IncludeUpdatesAndHotfixes,
 
-        [Parameter(Mandatory=$false, HelpMessage="Private Parameter; used for debug overrides.")]
+        [Parameter(Mandatory = $false, HelpMessage="Private Parameter; used for debug overrides.")]
         [ValidateNotNullorEmpty()]
         [string[]]
         $UninstallRegKeys = @(

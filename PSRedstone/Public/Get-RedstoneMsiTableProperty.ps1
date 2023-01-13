@@ -137,31 +137,31 @@ function Get-RedstoneMsiTableProperty {
 			[int32]$msiOpenDatabaseModePatchFile = 32
 			If ($IsMspFile) { [int32]$msiOpenDatabaseMode = $msiOpenDatabaseModePatchFile }
 			## Open database in read only mode
-			[__comobject]$Database = Invoke-ObjectMethod -InputObject $Installer -MethodName 'OpenDatabase' -ArgumentList @($Path, $msiOpenDatabaseMode)
+			[__comobject]$Database = Invoke-RedstoneObjectMethod -InputObject $Installer -MethodName 'OpenDatabase' -ArgumentList @($Path, $msiOpenDatabaseMode)
 			## Apply a list of transform(s) to the database
 			If (($TransformPath) -and (-not $IsMspFile)) {
 				ForEach ($Transform in $TransformPath) {
-					$null = Invoke-ObjectMethod -InputObject $Database -MethodName 'ApplyTransform' -ArgumentList @($Transform, $msiSuppressApplyTransformErrors)
+					$null = Invoke-RedstoneObjectMethod -InputObject $Database -MethodName 'ApplyTransform' -ArgumentList @($Transform, $msiSuppressApplyTransformErrors)
 				}
 			}
 
 			## Get either the requested windows database table information or summary information
 			if ($PSCmdlet.ParameterSetName -eq 'TableInfo') {
 				## Open the requested table view from the database
-				[__comobject]$View = Invoke-ObjectMethod -InputObject $Database -MethodName 'OpenView' -ArgumentList @("SELECT * FROM ${Table}")
-				$null = Invoke-ObjectMethod -InputObject $View -MethodName 'Execute'
+				[__comobject]$View = Invoke-RedstoneObjectMethod -InputObject $Database -MethodName 'OpenView' -ArgumentList @("SELECT * FROM ${Table}")
+				$null = Invoke-RedstoneObjectMethod -InputObject $View -MethodName 'Execute'
 
 				## Create an empty object to store properties in
 				[psobject]$TableProperties = New-Object -TypeName 'PSObject'
 
 				## Retrieve the first row from the requested table. If the first row was successfully retrieved, then save data and loop through the entire table.
 				#  https://msdn.microsoft.com/en-us/library/windows/desktop/aa371136(v=vs.85).aspx
-				[__comobject]$Record = Invoke-ObjectMethod -InputObject $View -MethodName 'Fetch'
+				[__comobject]$Record = Invoke-RedstoneObjectMethod -InputObject $View -MethodName 'Fetch'
 				While ($Record) {
 					#  Read string data from record and add property/value pair to custom object
 					$TableProperties | Add-Member -MemberType 'NoteProperty' -Name (Get-ObjectProperty -InputObject $Record -PropertyName 'StringData' -ArgumentList @($TablePropertyNameColumnNum)) -Value (Get-ObjectProperty -InputObject $Record -PropertyName 'StringData' -ArgumentList @($TablePropertyValueColumnNum)) -Force
 					#  Retrieve the next row in the table
-					[__comobject]$Record = Invoke-ObjectMethod -InputObject $View -MethodName 'Fetch'
+					[__comobject]$Record = Invoke-RedstoneObjectMethod -InputObject $View -MethodName 'Fetch'
 				}
 				Write-Output -InputObject $TableProperties
 			} else {
@@ -200,7 +200,7 @@ function Get-RedstoneMsiTableProperty {
 		Finally {
 			Try {
 				If ($View) {
-					$null = Invoke-ObjectMethod -InputObject $View -MethodName 'Close' -ArgumentList @()
+					$null = Invoke-RedstoneObjectMethod -InputObject $View -MethodName 'Close' -ArgumentList @()
 					Try { $null = [Runtime.Interopservices.Marshal]::ReleaseComObject($View) } Catch { }
 				}
 				ElseIf($SummaryInformation) {

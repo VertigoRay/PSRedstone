@@ -130,8 +130,8 @@ function Invoke-RedstoneMSI {
 
         [Parameter(Mandatory=$false)]
         [ValidateNotNullorEmpty()]
-        [switch]
-        $PassThru,
+        [bool]
+        $PassThru = $true,
 
         [Parameter(Mandatory=$false, HelpMessage='When using [Redstone], this will be overridden via $PSDefaultParameters.')]
         [ValidateNotNullorEmpty()]
