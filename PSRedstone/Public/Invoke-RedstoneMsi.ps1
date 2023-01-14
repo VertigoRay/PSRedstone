@@ -136,7 +136,7 @@ function Invoke-RedstoneMSI {
         [Parameter(Mandatory=$false, HelpMessage='When using [Redstone], this will be overridden via $PSDefaultParameters.')]
         [ValidateNotNullorEmpty()]
         [string]
-        $LogFileF = "${env:Temp}\{Invoke-RedstoneMsi_{1}_{0}.log"
+        $LogFileF = "${env:Temp}\Invoke-RedstoneMsi_{1}_{0}.log"
     )
 
     Write-Verbose "[Invoke-RedstoneMsi] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
