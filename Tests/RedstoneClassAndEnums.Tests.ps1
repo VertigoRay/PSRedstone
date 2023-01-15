@@ -7,14 +7,14 @@ Describe 'RedstoneClassAndEnums' -Tag 'Class' {
             Publisher = 'MyPublisher'
             Product = 'MyProduct'
             Version = '1.2.3'
-            Action = { if ($instantiation.Name -eq 'FourParams') { 'test' } else { ([IO.FileInfo] $PSCommandPath).BaseName.Replace('.Tests', '') } }
+            Action = { if ($instantiation.Name -eq 'FourParams') { 'test' } else { ([IO.FileInfo] $PSCommandPath).BaseName } }
             Run = {}
         }
         'Publisher Change' = @{
             Publisher = 'YourPublisher'
             Product = 'MyProduct'
             Version = '1.2.3'
-            Action = { if ($instantiation.Name -eq 'FourParams') { 'test' } else { ([IO.FileInfo] $PSCommandPath).BaseName.Replace('.Tests', '') } }
+            Action = { if ($instantiation.Name -eq 'FourParams') { 'test' } else { ([IO.FileInfo] $PSCommandPath).BaseName } }
             Run = {
                 $script:Redstone.Publisher = 'YourPublisher'
             }
@@ -23,7 +23,7 @@ Describe 'RedstoneClassAndEnums' -Tag 'Class' {
             Publisher = 'MyPublisher'
             Product = 'YourProduct'
             Version = '1.2.3'
-            Action = { if ($instantiation.Name -eq 'FourParams') { 'test' } else { ([IO.FileInfo] $PSCommandPath).BaseName.Replace('.Tests', '') } }
+            Action = { if ($instantiation.Name -eq 'FourParams') { 'test' } else { ([IO.FileInfo] $PSCommandPath).BaseName } }
             Run = {
                 $script:Redstone.Product = 'YourProduct'
             }
@@ -32,7 +32,7 @@ Describe 'RedstoneClassAndEnums' -Tag 'Class' {
             Publisher = 'MyPublisher'
             Product = 'MyProduct'
             Version = '2.3.4'
-            Action = { if ($instantiation.Name -eq 'FourParams') { 'test' } else { ([IO.FileInfo] $PSCommandPath).BaseName.Replace('.Tests', '') } }
+            Action = { if ($instantiation.Name -eq 'FourParams') { 'test' } else { ([IO.FileInfo] $PSCommandPath).BaseName } }
             Run = {
                 $script:Redstone.Version = '2.3.4'
             }
@@ -57,7 +57,7 @@ Describe 'RedstoneClassAndEnums' -Tag 'Class' {
                 $script:publisher = 'MyPublisher'
                 $script:product = 'MyProduct'
                 $script:version = '1.2.3'
-                $script:action = ([IO.FileInfo] $PSCommandPath).BaseName.Replace('.Tests', '')
+                $script:action = ([IO.FileInfo] $PSCommandPath).BaseName
                 [IO.FileInfo] $json = [IO.Path]::Combine($PWD.Path, 'settings.json')
                 $jsonData = @{
                     Publisher = $script:publisher
@@ -79,7 +79,7 @@ Describe 'RedstoneClassAndEnums' -Tag 'Class' {
                 $script:publisher = 'MyPublisher'
                 $script:product = 'MyProduct'
                 $script:version = '1.2.3'
-                $script:action = ([IO.FileInfo] $PSCommandPath).BaseName.Replace('.Tests', '')
+                $script:action = ([IO.FileInfo] $PSCommandPath).BaseName
                 [IO.FileInfo] $json = [IO.Path]::Combine($PSScriptRoot, 'settings.json')
                 $jsonData = @{
                     Publisher = $script:publisher

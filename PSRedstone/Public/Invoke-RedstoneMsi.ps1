@@ -71,69 +71,69 @@ http://psappdeploytoolkit.com
 function Invoke-RedstoneMSI {
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [ValidateSet('Install','Uninstall','Patch','Repair','ActiveSetup')]
         [string]
         $Action = 'Install',
 
-        [Parameter(Position=0, Mandatory=$true, HelpMessage='Please enter either the path to the MSI/MSP file or the ProductCode')]
+        [Parameter(Position=0, Mandatory = $true, HelpMessage = 'Please enter either the path to the MSI/MSP file or the ProductCode')]
         [ValidateNotNullorEmpty()]
         [Alias('FilePath')]
         [string]
         $Path,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullorEmpty()]
         [string[]]
         $Transforms,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [Alias('Arguments')]
         [ValidateNotNullorEmpty()]
         [string[]]
         $Parameters = @('REBOOT=ReallySuppress'),
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullorEmpty()]
         [switch]
         $SecureParameters = $false,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullorEmpty()]
         [string[]]
         $Patches,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullorEmpty()]
         [string]
         $LoggingOptions = '/log',
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullorEmpty()]
         [string]
-        $WorkingDirectory,
+        $WorkingDirectory = $PWD.Path,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullorEmpty()]
         [switch]
         $SkipMSIAlreadyInstalledCheck = $false,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullorEmpty()]
         [string]
         $MsiDisplay = '/qn',
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullorEmpty()]
         [string]
         $WindowStyle = 'Hidden',
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [ValidateNotNullorEmpty()]
         [bool]
         $PassThru = $true,
 
-        [Parameter(Mandatory=$false, HelpMessage='When using [Redstone], this will be overridden via $PSDefaultParameters.')]
+        [Parameter(Mandatory = $false, HelpMessage = 'When using [Redstone], this will be overridden via $PSDefaultParameters.')]
         [ValidateNotNullorEmpty()]
         [string]
         $LogFileF = "${env:Temp}\Invoke-RedstoneMsi_{1}_{0}.log"
@@ -219,9 +219,9 @@ function Invoke-RedstoneMSI {
     } elseif ([IO.Path]::GetExtension($msiFile) -eq '.msi') {
         try {
             [hashtable] $Get_MsiTablePropertySplat = @{
-                'Path'              = $msiFile;
-                'Table'             = 'Property';
-                'ContinueOnError'   = $false;
+                Path              = $msiFile;
+                Table             = 'Property';
+                ContinueOnError   = $false;
             }
             if ($mst) {
                 $Get_MsiTablePropertySplat.Add('TransformPath', $mst)
@@ -277,9 +277,11 @@ function Invoke-RedstoneMSI {
 
         #  Build the hashtable with the options that will be passed to Invoke-Run using splatting
         [hashtable] $invokeRun =  @{
-            'FilePath' = (Get-Command 'msiexec' -ErrorAction 'Stop').Source
-            'ArgumentList' = $argsMSI
-            'PassThru' = $PassThru
+            FilePath = (Get-Command 'msiexec' -ErrorAction 'Stop').Source
+            ArgumentList = $argsMSI
+            WindowStyle = $WindowStyle
+            PassThru = $PassThru
+            Wait = $true
         }
         if ($WorkingDirectory) {
             $invokeRun.Add( 'WorkingDirectory', $WorkingDirectory)

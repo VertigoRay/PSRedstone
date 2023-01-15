@@ -20,47 +20,128 @@ Describe 'Invoke-RedstoneMsi' {
         }
     }
 
+    # [Invoke-RedstoneRun] Start-Process: {
+    #     "FilePath":  "C:\\WINDOWS\\system32\\msiexec.exe",
+    #     "ArgumentList":  [
+    #                          "/qn",
+    #                          "/i",
+    #                          "\"C:\\WINDOWS\\Installer\\10150aa8.msi\"",
+    #                          "REBOOT=ReallySuppress",
+    #                          "/log",
+    #                          "\"C:\\Users\\qhm067\\AppData\\Local\\Temp\\Logs\\Redstone\\MyPublisher MyProduct 1.2.3 test.msi.Install.log\""
+    #                      ],
+    #     "WorkingDirectory":  "C:\\WINDOWS\\Installer",
+    #     "WindowStyle":  "Hidden",
+    #     "PassThru":  true
+    #     "Wait":  true,
+    #     "RedirectStandardError":  "C:\\Users\\qhm067\\AppData\\Local\\Temp\\tmp206C.tmp",
+    #     "RedirectStandardOutput":  "C:\\Users\\qhm067\\AppData\\Local\\Temp\\tmp206B.tmp",
+    # }
     Context 'Simple Msiexec' {
         BeforeEach {
-            Mock Invoke-RedstoneRun { param($FilePath, $ArgumentList) return @{Process = @{ExitCode = 0}; Foo = @($FilePath, $ArgumentList)} }
+            Mock Invoke-RedstoneRun {
+                param ($Cmd, $FilePath, $ArgumentList, $WorkingDirectory, $PassThru, $Wait, $WindowStyle, $LogFile)
+                return @{Process = @{
+                    ExitCode = 0}
+                    Parameters = @{
+                        Bound = $MyInvocation.BoundParameters
+                        Unbound = $MyInvocation.UnboundParameters
+                    }
+                }
+            }
             Mock Get-RedstoneInstalledApplication { param($ProductCode) return $null } # Msi Not Installed
             Mock Assert-RedstoneIsMutexAvailable { param($ProductCode) return $true }
             Mock Get-RedstoneMsiExitCodeMessage { param($ExitCode, $MsiLog) return 0 }
         }
 
-        It 'Should send msiexec' {
-            $FilePath, $ArgumentList = (Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName).Foo
-            $FilePath | Should -Be ('{0}\System32\msiexec.exe' -f $env:SystemRoot)
+        It 'Send msiexec Type' {
+            $result = Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName
+            $result.Parameters.Bound.FilePath | Should -BeOfType 'System.String'
         }
 
-        It 'Should send /qn' {
-            $FilePath, $ArgumentList = (Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName).Foo
-            $ArgumentList[0] | Should -Be '/qn'
+        It 'Send msiexec' {
+            $result = Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName
+            $result.Parameters.Bound.FilePath | Should -Be ('{0}\System32\msiexec.exe' -f $env:SystemRoot)
         }
 
-        It 'Should send /i' {
-            $FilePath, $ArgumentList = (Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName).Foo
-            $ArgumentList[1] | Should -Be '/i'
+        It 'ArgumentList Type' {
+            $result = Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName
+            ($result.Parameters.Bound.ArgumentList) | Should -BeOfType 'System.String[]'
         }
 
-        It 'Should send filename.msi' {
-            $FilePath, $ArgumentList = (Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName).Foo
-            $ArgumentList[2] | Should -Be ('"{0}"' -f $script:randomMsi.FullName)
+        It 'ArgumentList Count' {
+            $result = Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName
+            $result.Parameters.Bound.ArgumentList.Count | Should -Be 6
         }
 
-        It 'Should send REBOOT=ReallySuppress' {
-            $FilePath, $ArgumentList = (Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName).Foo
-            $ArgumentList[3] | Should -Be 'REBOOT=ReallySuppress'
+        It 'Send /qn' {
+            $result = Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName
+            $result.Parameters.Bound.ArgumentList[0] | Should -Be '/qn'
         }
 
-        It 'Should send /log' {
-            $FilePath, $ArgumentList = (Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName).Foo
-            $ArgumentList[4] | Should -Be '/log'
+        It 'Send /i' {
+            $result = Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName
+            $result.Parameters.Bound.ArgumentList[1] | Should -Be '/i'
         }
 
-        It 'Should send /i' {
-            $FilePath, $ArgumentList = (Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName).Foo
-            $ArgumentList[5] | Should -BeLike '"*\Logs\Redstone\*.msi.Install.log"'
+        It 'Send filename.msi' {
+            $result = Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName
+            $result.Parameters.Bound.ArgumentList[2] | Should -Be ('"{0}"' -f $script:randomMsi.FullName)
+        }
+
+        It 'Send REBOOT=ReallySuppress' {
+            $result = Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName
+            $result.Parameters.Bound.ArgumentList[3] | Should -Be 'REBOOT=ReallySuppress'
+        }
+
+        It 'Send /log' {
+            $result = Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName
+            $result.Parameters.Bound.ArgumentList[4] | Should -Be '/log'
+        }
+
+        It 'Send Log File' {
+            $result = Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName
+            $result.Parameters.Bound.ArgumentList[5] | Should -BeLike '"*.msi.Install.log"'
+        }
+
+        It 'Send WorkingDirectory Type' {
+            $result = Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName
+            $result.Parameters.Bound.FilePath | Should -BeOfType 'System.String'
+        }
+
+        It 'Send WorkingDirectory' {
+            $result = Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName
+            $result.Parameters.Bound.WorkingDirectory | Should -Be (Get-Location).Path
+        }
+
+        It 'Send WindowStyle Type' {
+            $result = Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName
+            $result.Parameters.Bound.FilePath | Should -BeOfType 'System.String'
+        }
+
+        It 'Send WindowStyle' {
+            $result = Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName
+            $result.Parameters.Bound.WindowStyle | Should -Be 'Hidden'
+        }
+
+        It 'Send PassThru Type' {
+            $result = Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName
+            $result.Parameters.Bound.FilePath | Should -BeOfType 'System.Boolean'
+        }
+
+        It 'Send PassThru' {
+            $result = Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName
+            $result.Parameters.Bound.PassThru | Should -Be $true
+        }
+
+        It 'Send Wait Type' {
+            $result = Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName
+            $result.Parameters.Bound.FilePath | Should -BeOfType 'System.Boolean'
+        }
+
+        It 'Send Wait' {
+            $result = Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName
+            $result.Parameters.Bound.Wait | Should -Be $true
         }
     }
 }
