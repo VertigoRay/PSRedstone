@@ -18,7 +18,6 @@ Obviously, mining [redstone](https://minecraft.fandom.com/wiki/Redstone_Ore) is 
 I believe that using PSRedstone will be a good first step to building more elaborate, yet simple, deployment packages.
 
 - [Quick Start](#quick-start)
-- [Advanced Start](#advanced-start)
 - [Instantiating *Redstone*](#instantiating-redstone)
   - [The Settings JSON File](#the-settings-json-file)
     - [Sample JSON](#sample-json)
@@ -98,46 +97,7 @@ if ([System.Environment]::Is64BitOperatingSystem) {
 
 The goal has been achieved: a simplified install script with predictable results.
 
-# Advanced Start
-
-As *PSRedstone* evolves, backwards compatibility will be a concern.
-The only way for you to be sure that your install scripts will not break as *PSRedstone* updates, is to lock in the version of the module that you tested during package development.
-Luckily, [the `#Requires` statement](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_requires?view=powershell-5.1) has this capability built right in.
-Here's how you would set up a Redstone Block defining the tested version of *PSRedstone*.
-
-```powershell
-#region Redstone Block
-#Requires -Modules @{ModuleName = 'PSRedstone'; RequiredVersion = '2023.1.4.62137'}
-$redstone, $settings = New-Redstone
-#endregion Redstone Block
-```
-
-That's great, but there's a few questions left to be answered:
-
-1. How do I ensure all versions of *PSRedstone* that I need are pre-loaded on a brand new system?
-2. How do I prevent version bloat and remove old *PSRedstone* versions that are no longer needed?
-
-Anytime this Module is used, the version and timestamp will be stored in the registry under `HKEY_LOCAL_MACHINE\SOFTWARE\VertigoRay\PSRedstone\VersionsUsed`.
-This will allow us to know what versions are still being used so that we can intelligently purge any unused versions.
-Of course, a brand new computer will not have older versions of *PSRedstone* installed.
-The easiest way around this (for now) would be to just install all versions os *PSRedstone* during imaging and let the script purge things after they have proven to not be in use.
-
-I use an [MECM configuration item](https://learn.microsoft.com/en-us/mem/configmgr/compliance/deploy-use/create-configuration-items) to solve this, but you can use any method you have to deploy a script to your systems.
-Take a look at the provided [`Remediation.ps1`](https://github.com/VertigoRay/PSRedstone/blob/master/Tools/Remediation.ps1), which will do the following:
-
-> On first run, this script will install every version of *PSRedstone* from the minimum version required (see parameter `$MinimumVersionRequired`) to the latest version.
-> It will timestamp each version in the registry with the current date at midnight (e.g.: `2023-01-08T00:00:00.0000000`).
-> This should stand out to you as a version that was likely installed and never actually used.
->
-> *PSRedstone* will also update the timestamp of it's current version each time the module is imported.
-> This makes it very easy to tell what versions are active on the system.
-> The second parameter (`$DaysAfterUnusedVersionAreUninstalled`) helps us decide when to uninstall unused versions.
->
-> On the second run and all subsequent runs, this script will update to the lastest version of PSRestone, if needed.
-> It will also go through all versions that are currently installed and purge any versions from the system that have not been used.
-
-Of course, every good remediation needs a detection.
-Take a look at the provided [`Detection.ps1`](https://github.com/VertigoRay/PSRedstone/blob/master/Tools/Detection.ps1) to see how I'm doing it.
+> ℹ: Check out the [Advanced Start](https://github.com/VertigoRay/PSRedstone/wiki/Advanced-Start) wiki for more assistance getting started.
 
 # Instantiating *Redstone*
 
