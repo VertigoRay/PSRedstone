@@ -424,10 +424,13 @@ class Redstone {
             Get-RedstoneRegistryValueOrDefault $this.Settings.Registry.KeyRoot 'RegistryKeyRootPublisher' $regKeyPSRedstonePublisher
         }
 
+        $keyProduct = [IO.Path]::Combine($regKeyPSRedstonePublisher, 'Product')
+
         $this.Vars = @{
             Org = (if (Test-Path $keyOrg) { $this.GetVars($keyOrg) })
-            Publisher = (if (Test-Path $keyPublisher) { $this.GetVars($keyPublisher) })
         }
+        $this.Vars.Add($this._Publisher, (if (Test-Path $keyPublisher) { $this.GetVars($keyPublisher) }))
+        $this.Vars.Add($this._Product, (if (Test-Path $keyProduct) { $this.GetVars($keyProduct) }))
     }
 
     hidden [void] PSDefaultParameterValuesSetUp() {
