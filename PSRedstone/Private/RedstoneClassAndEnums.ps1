@@ -5,51 +5,26 @@
 #endregion
 
 class Redstone {
-    hidden [string] $_Publisher = $null
-    hidden [string] $_Product = $null
-    hidden [string] $_Version = 'None'
-    hidden [string] $_Action = $null
-    hidden [hashtable] $_CimInstance = $null
-    hidden [hashtable] $_Env = $null
-    hidden [hashtable] $_OS = $null
-    hidden [hashtable] $_ProfileList = $null
-    [int] $ExitCode = 0
-    [System.Collections.ArrayList] $Exiting = @()
-    [hashtable] $Settings = @{}
-    [bool] $IsElevated = $null
+    hidden  [string]                $_Action                = $null
+    hidden  [hashtable]             $_CimInstance           = $null
+    hidden  [hashtable]             $_Env                   = $null
+    hidden  [hashtable]             $_OS                    = $null
+    hidden  [hashtable]             $_Vars                  = $null
+    hidden  [string]                $_Product               = $null
+    hidden  [hashtable]             $_ProfileList           = $null
+    hidden  [string]                $_Publisher             = $null
+    hidden  [string]                $_Version               = 'None'
+    [int]                           $ExitCode               = 0
+    [System.Collections.ArrayList]  $Exiting                = @()
+    [bool]                          $IsElevated             = $null
+    [hashtable]                     $Settings               = @{}
+
     # Use the default settings, don't read any of the settings in from the registry. In production this is never set.
-    [bool] $OnlyUseDefaultSettings = $false
-    [hashtable] $Debug = @{}
+    [bool]                          $OnlyUseDefaultSettings = $false
+    [hashtable]                     $Debug                  = @{}
 
     static Redstone() {
         # Creating some custom setters that update other properties, like Log Paths, when related properties are changed.
-        Update-TypeData -TypeName 'Redstone' -MemberName 'Publisher' -MemberType 'ScriptProperty' -Value {
-            # Getter
-            return $this._Publisher
-        } -SecondValue {
-            param($value)
-            # Setter
-            $this._Publisher = $value
-            $this.SetUpLog()
-        } -Force
-        Update-TypeData -TypeName 'Redstone' -MemberName 'Product' -MemberType 'ScriptProperty' -Value {
-            # Getter
-            return $this._Product
-        } -SecondValue {
-            param($value)
-            # Setter
-            $this._Product = $value
-            $this.SetUpLog()
-        } -Force
-        Update-TypeData -TypeName 'Redstone' -MemberName 'Version' -MemberType 'ScriptProperty' -Value {
-            # Getter
-            return $this._Version
-        } -SecondValue {
-            param($value)
-            # Setter
-            $this._Version = $value
-            $this.SetUpLog()
-        } -Force
         Update-TypeData -TypeName 'Redstone' -MemberName 'Action' -MemberType 'ScriptProperty' -Value {
             # Getter
             return $this._Action
@@ -80,6 +55,23 @@ class Redstone {
             }
             return $this._OS
         } -Force
+        Update-TypeData -TypeName 'Redstone' -MemberName 'Vars' -MemberType 'ScriptProperty' -Value {
+            # Getter
+            if (-not $this._Vars) {
+                # This is the Lazy Loading logic.
+                $this.SetUpVars()
+            }
+            return $this._Vars
+        } -Force
+        Update-TypeData -TypeName 'Redstone' -MemberName 'Product' -MemberType 'ScriptProperty' -Value {
+            # Getter
+            return $this._Product
+        } -SecondValue {
+            param($value)
+            # Setter
+            $this._Product = $value
+            $this.SetUpLog()
+        } -Force
         Update-TypeData -TypeName 'Redstone' -MemberName 'ProfileList' -MemberType 'ScriptProperty' -Value {
             # Getter
             if (-not $this._ProfileList) {
@@ -87,6 +79,24 @@ class Redstone {
                 $this.SetUpProfileList()
             }
             return $this._ProfileList
+        } -Force
+        Update-TypeData -TypeName 'Redstone' -MemberName 'Publisher' -MemberType 'ScriptProperty' -Value {
+            # Getter
+            return $this._Publisher
+        } -SecondValue {
+            param($value)
+            # Setter
+            $this._Publisher = $value
+            $this.SetUpLog()
+        } -Force
+        Update-TypeData -TypeName 'Redstone' -MemberName 'Version' -MemberType 'ScriptProperty' -Value {
+            # Getter
+            return $this._Version
+        } -SecondValue {
+            param($value)
+            # Setter
+            $this._Version = $value
+            $this.SetUpLog()
         } -Force
     }
 
@@ -113,7 +123,7 @@ class Redstone {
             Throw [System.IO.FileNotFoundException] ('Could NOT find settings file in any of these locations: {0}' -f ($settingsFiles.FullName -join ', '))
         }
 
-        $this.SetDefaultSettingsFromRegistry($this.Settings.Registry.Key)
+        $this.SetDefaultSettingsFromRegistry($this.Settings.Registry.KeyRoot)
         $this.SetPSDefaultParameterValues($this.Settings.Functions)
 
         $this.set__Publisher($this.Settings.JSON.Data.Publisher)
@@ -144,7 +154,7 @@ class Redstone {
             Throw [System.IO.FileNotFoundException] $this.Settings.JSON.File.FullName
         }
 
-        $this.SetDefaultSettingsFromRegistry($this.Settings.Registry.Key)
+        $this.SetDefaultSettingsFromRegistry($this.Settings.Registry.KeyRoot)
         $this.SetPSDefaultParameterValues($this.Settings.Functions)
 
         $this.set__Publisher($this.Settings.JSON.Data.Publisher)
@@ -167,7 +177,7 @@ class Redstone {
     Redstone([string] $Publisher, [string] $Product, [string] $Version, [string] $Action) {
         $this.SetUpSettings()
 
-        $this.SetDefaultSettingsFromRegistry($this.Settings.Registry.Key)
+        $this.SetDefaultSettingsFromRegistry($this.Settings.Registry.KeyRoot)
         $this.SetPSDefaultParameterValues($this.Settings.Functions)
 
         $this.set__Publisher($Publisher)
@@ -294,10 +304,18 @@ class Redstone {
             MyInvocation = $MyInvocation
             PSCallStack = (Get-PSCallStack)
         }
+
         $this.IsElevated = (New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
         $this.Settings = @{}
+
+        $regKeyPSRedstone = 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\VertigoRay\PSRedstone'
+        $key = if ($env:PSRedstoneRegistryKeyRoot) {
+            $env:PSRedstoneRegistryKeyRoot
+        } else {
+            Get-RedstoneRegistryValueOrDefault $regKeyPSRedstone 'RegistryKeyRoot' $regKeyPSRedstone
+        }
         $this.Settings.Registry = @{
-            Key = Get-RedstoneRegistryValueOrDefault ([string]::Empty) 'RegistryKeyRoot' 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\PSRedstone' -RegistryKeyRoot 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\PSRedstone'
+            KeyRoot = $key
         }
     }
 
@@ -391,12 +409,32 @@ class Redstone {
         }
     }
 
+    hidden [void] SetUpVars() {
+        $regKeyPSRedstoneOrg = [IO.Path]::Combine($this.Settings.Registry.KeyRoot, 'Org')
+        $keyOrg = if ($env:PSRedstoneRegistryKeyRootOrg) {
+            $env:PSRedstoneRegistryKeyRootOrg
+        } else {
+            Get-RedstoneRegistryValueOrDefault $this.Settings.Registry.KeyRoot 'RegistryKeyRootOrg' $regKeyPSRedstoneOrg
+        }
+
+        $regKeyPSRedstonePublisher = [IO.Path]::Combine($this.Settings.Registry.KeyRoot, 'Publisher')
+        $keyPublisher = if ($env:PSRedstoneRegistryKeyRootPublisher) {
+            $env:PSRedstoneRegistryKeyRootPublisher
+        } else {
+            Get-RedstoneRegistryValueOrDefault $this.Settings.Registry.KeyRoot 'RegistryKeyRootPublisher' $regKeyPSRedstonePublisher
+        }
+
+        $this.Vars = @{
+            Org = (if (Test-Path $keyOrg) { $this.GetVars($keyOrg) })
+            Publisher = (if (Test-Path $keyPublisher) { $this.GetVars($keyPublisher) })
+        }
+    }
+
     hidden [void] PSDefaultParameterValuesSetUp() {
         $global:PSDefaultParameterValues.Set_Item('*-Redstone*:LogFile', $this.Settings.Log.File.FullName)
         $global:PSDefaultParameterValues.Set_Item('*-Redstone*:LogFileF', $this.Settings.Log.FileF)
         $global:PSDefaultParameterValues.Set_Item('*-Redstone*:LogFileF', $this.Settings.Log.FileF)
-        $global:PSDefaultParameterValues.Set_Item('Get-RedstoneRegistryValueOrDefault:OnlyUseDefaultSettings', (Get-RedstoneRegistryValueOrDefault 'Settings\Functions\Get-RedstoneRegistryValueOrDefault' 'OnlyUseDefaultSettings' $false -RegistryKeyRoot $this.Settings.Registry.Key))
-        $global:PSDefaultParameterValues.Set_Item('Get-RedstoneRegistryValueOrDefault:RegistryKeyRoot', $this.Settings.Registry.Key)
+        $global:PSDefaultParameterValues.Set_Item('Get-RedstoneRegistryValueOrDefault:OnlyUseDefaultSettings', (Get-RedstoneRegistryValueOrDefault 'Settings\Functions\Get-RedstoneRegistryValueOrDefault' 'OnlyUseDefaultSettings' $false -RegistryKeyRoot $this.Settings.Registry.KeyRoot))
         $global:PSDefaultParameterValues.Set_Item('Write-Log:FilePath', $this.Settings.Log.File.FullName)
     }
 
@@ -443,6 +481,30 @@ class Redstone {
 
     [IO.DirectoryInfo] GetSpecialFolder([string] $Name) {
         return ([Environment]::GetFolderPath($Name) -as [IO.DirectoryInfo])
+    }
+
+    hidden [hashtable] GetVars($Key) {
+        $vars = @{}
+        foreach ($property in (Get-Item $Key).Property) {
+            $value = Get-ItemPropertyValue -Path $Key -Name $property
+            Write-Verbose ('[Redstone GetVars] Var: {0}:{1}' -f $property, $value)
+            $vars.Add($property, $value)
+        }
+
+        foreach ($subKey in (Get-ChildItem $Key)) {
+            if ($vars.ContainsKey($subKey.PSChildName)) {
+                Write-Warning ('[Redstone GetVars] Var Exists: {0}:{1}; Overriding with SubKey: {2}' -f $subKey.PSChildName, $vars.($subKey.PSChildName), $subKey.PSPath)
+            }
+            $subKeyData = @{}
+            foreach ($property in (Get-Item $subKey.PSPath).Property) {
+                $value = Get-ItemPropertyValue -Path $subKey.PSPath -Name $property
+                Write-Verbose ('[Redstone GetVars] Var {0}: {1}:{2}' -f $subKey.PSChildName, $property, $value)
+                $subKeyData.Add($property, $value)
+            }
+            $vars.($subKey.PSChildName) = [PSCustomObject] $subKeyData
+        }
+
+        return $vars
     }
 
     [void] Quit() {
