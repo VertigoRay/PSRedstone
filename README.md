@@ -6,14 +6,13 @@
 [![Codacy Security Scan](https://github.com/VertigoRay/PSRedstone/actions/workflows/codacy.yml/badge.svg)](https://github.com/VertigoRay/PSRedstone/actions/workflows/codacy.yml)
 [![DevSkim](https://github.com/VertigoRay/PSRedstone/actions/workflows/devskim.yml/badge.svg)](https://github.com/VertigoRay/PSRedstone/actions/workflows/devskim.yml)
 
-![PSRedstone](https://tinyurl.com/2p8xny2m) is a module used to streamline installation of Windows Applications.
+![PSRedstone](https://tinyurl.com/2p8xny2m) is a module used to streamline the installation of Windows applications.
 It includes a *Redstone* class, which is the core building block for the included functions.
-It is designed to be light-weight and easy to deploy.
+It is designed to be lightweight and easy to deploy.
 While I use [MECM for my CM tool](https://learn.microsoft.com/en-us/mem/configmgr/), you should be able to use *PSRedstone* with [whatever tool you choose](https://www.reddit.com/r/sysadmin/comments/2go43q/comment/ckkydh4/).
 
-**Why did I name this module *Redstone*?**
-It shoud go without saying that [I'm a fan](https://namemc.com/profile/VertigoRay) of [Minecraft](https://www.minecraft.net).
-The simplicity of the game and how far you can push things into automation, even with out any mods, is quite enthralling.
+**Why did I name this module *Redstone*?**It should go without saying that [I'm a fan](https://namemc.com/profile/VertigoRay) of [Minecraft](https://www.minecraft.net).
+The simplicity of the game and how far you can push things into automation, even without any mods, is quite enthralling.
 Obviously, mining [redstone](https://minecraft.fandom.com/wiki/Redstone_Ore) is the first step to building more elaborate creations in Minecraft.
 I believe that using PSRedstone will be a good first step to building more elaborate, yet simple, deployment packages.
 
@@ -98,71 +97,3 @@ if ([System.Environment]::Is64BitOperatingSystem) {
 The goal has been achieved: a simplified install script with predictable results.
 
 > ℹ: Check out the [Advanced Start](https://github.com/VertigoRay/PSRedstone/wiki/Advanced-Start) wiki for more assistance getting started.
-
-# Instantiating *Redstone*
-
-*Redstone* can be instantiated in one of three way:
-
-- Without parameters: `New-Redstone`
-- With a parameter: `New-Redstone $fullPathToSettingsJson`; where the parameter can be cast as `[IO.FileInfo]`, so a UNC path will not work.
-- With parameters: `New-Redstone $Publisher $Product $Version $Action`; where all of those parameters are `[string]`s.
-
-If *Redstone* is instantiated with no parameters, [a `settings.json`](#the-settings-json-file) must exist.
-## The Settings JSON File
-
-*Redstone* will look for the case-insensitive JSON file named `settings.json` file in the following order:
-
-1. In the current working directory using [`$PWD`](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables#pwd).
-1. In the same directory where the executing script is; the [`$PSScriptRoot`](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables#psscriptroot) of the file that instantiated *Redstone*.
-1. In the parent of the current working directory using [`$PWD`](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables#pwd).
-1. In the parent of the directory where the executing script is; the [`$PSScriptRoot`](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables#psscriptroot) of the file that instantiated *Redstone*.
-
-If a `settings.json` is provided *Redstone* will import the data to `$Redstone.Settings.JSON.Data`.
-To make the data more accessible, *Redstone* will output the JSON data as the second item of the returned array.
-That's why we suggest setting up the *Redstone Block* the way we have.
-
-### Sample JSON
-
-At a minimum, the following structure is required:
-
-```json
-{
-    "Publisher": "Mozilla",
-    "Product": "Firefox RR",
-    "Version": "1.2.3"
-}
-```
-
-Assuming your *Redstone Block* was setup the same as our example above, `Publisher` should be accessed via:
-
-- `$redstone.Settings.JSON.Data.Publisher`
-- `$settings.Publisher`
-
-> ℹ: If you instantiate with parameters, the `$settings` variable will be empty.
-
-Anything else in the `settings.json` is arbitrary and is purely for use in your scripts.
-See the [Quick Start](#quick-start) for an example.
-
-# Logging
-
-There are a many ways to log with PowerShell.
-I have created a way that works well for me whether I'm in development, or troubleshooting a production run of a PowerShell script.
-However, I did not build it into *PSRedstone*.
-I believe that it can, and should, stand alone as its own module and be used regardless of if you are using *PSRedstone* or not.
-So, check out [*PSWriteLog*](https://github.com/VertigoRay/PSWriteLog) and decide for yourself.
-If you don't love it, come up with your own way of logging that suits your needs.
-
-Here's how I set up *PSWriteLog* in my *Redstone Block*:
-
-```powershell
-#region Redstone Block
-#Requires -Modules @{ModuleName = 'PSRedstone'; RequiredVersion = '2023.1.4.62137'},@{ModuleName = 'PSWriteLog'}
-$redstone, $settings = New-Redstone
-
-$env:PSWriteLogFilePath = $redstone.Settings.Log.File.FullName
-$env:PSWriteLogIncludeInvocationHeader = $true
-$InformationPreference = 'Continue'
-#endregion Redstone Block
-```
-
-> ℹ: If any of that is confusing to you, I suggest that you head over to the [*PSWriteLog* README](https://github.com/VertigoRay/PSWriteLog) for details.
