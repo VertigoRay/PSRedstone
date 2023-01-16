@@ -429,7 +429,7 @@ class Redstone {
         $this.Vars = @{
             Org = (if (Test-Path $keyOrg) { $this.GetVars($keyOrg) })
         }
-        $this.Vars.Add($this._Publisher, (if (Test-Path $keyPublisher) { $this.GetVars($keyPublisher) }))
+        $this.Vars.Add($this._Publisher, (if (Test-Path $keyPublisher) { $this.GetVars($keyPublisher, $false) }))
         $this.Vars.Add($this._Product, (if (Test-Path $keyProduct) { $this.GetVars($keyProduct) }))
     }
 
@@ -487,6 +487,10 @@ class Redstone {
     }
 
     hidden [hashtable] GetVars($Key) {
+        return $this.GetVars($Key, $true)
+    }
+
+    hidden [hashtable] GetVars($Key, $Recurse) {
         $vars = @{}
         foreach ($property in (Get-Item $Key).Property) {
             $value = Get-ItemPropertyValue -Path $Key -Name $property
@@ -494,17 +498,26 @@ class Redstone {
             $vars.Add($property, $value)
         }
 
-        foreach ($subKey in (Get-ChildItem $Key)) {
-            if ($vars.ContainsKey($subKey.PSChildName)) {
-                Write-Warning ('[Redstone GetVars] Var Exists: {0}:{1}; Overriding with SubKey: {2}' -f $subKey.PSChildName, $vars.($subKey.PSChildName), $subKey.PSPath)
+        if ($Recurse) {
+            foreach ($subKey in (Get-ChildItem $Key)) {
+                if ($vars.ContainsKey($subKey.PSChildName)) {
+                    Write-Warning ('[Redstone GetVars] Var Exists: {0}:{1}; Overriding with SubKey: {2}' -f @(
+                        $subKey.PSChildName
+                        $vars.($subKey.PSChildName)
+                        $subKey.PSPath
+                    ))
+                }
+                $subKeyData = @{}
+                foreach ($property in (Get-Item $subKey.PSPath).Property) {
+                    $value = Get-ItemPropertyValue -Path $subKey.PSPath -Name $property
+                    Write-Verbose ('[Redstone GetVars] Var {0}: {1}:{2}' -f @(
+                        $subKey.PSChildName
+                        $property, $value
+                    ))
+                    $subKeyData.Add($property, $value)
+                }
+                $vars.($subKey.PSChildName) = [PSCustomObject] $subKeyData
             }
-            $subKeyData = @{}
-            foreach ($property in (Get-Item $subKey.PSPath).Property) {
-                $value = Get-ItemPropertyValue -Path $subKey.PSPath -Name $property
-                Write-Verbose ('[Redstone GetVars] Var {0}: {1}:{2}' -f $subKey.PSChildName, $property, $value)
-                $subKeyData.Add($property, $value)
-            }
-            $vars.($subKey.PSChildName) = [PSCustomObject] $subKeyData
         }
 
         return $vars
