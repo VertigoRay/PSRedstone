@@ -22,7 +22,7 @@ Describe 'Invoke-RedstoneRun' {
 
     Context 'Invoke-RedstoneRun Simple Cmd StdOut' {
         BeforeAll {
-            $script:result = Invoke-RedstoneRun 'hostname'
+            $script:result = Invoke-RedstoneRun 'hostname' -CaptureConsoleOut
             # Write-Host ('[Invoke-RedstoneRun Simple Cmd StdOut][BeforeAll] Result: {0}' -f ($script:result | ConvertTo-Json)) -ForegroundColor Cyan
         }
 
@@ -61,7 +61,7 @@ Describe 'Invoke-RedstoneRun' {
 
     Context 'Invoke-RedstoneRun Simple w Quotes Cmd StdOut' {
         BeforeAll {
-            $script:result = Invoke-RedstoneRun '"hostname.exe"'
+            $script:result = Invoke-RedstoneRun '"hostname.exe"' -CaptureConsoleOut
             # Write-Host ('[Invoke-RedstoneRun Simple Cmd StdOut][BeforeAll] Result: {0}' -f ($script:result | ConvertTo-Json)) -ForegroundColor Cyan
         }
 
@@ -100,7 +100,7 @@ Describe 'Invoke-RedstoneRun' {
 
     Context 'Invoke-RedstoneRun Simple Cmd StdErr' {
         BeforeAll {
-            $script:result = Invoke-RedstoneRun 'hostname /////'
+            $script:result = Invoke-RedstoneRun 'hostname /////' -CaptureConsoleOut
             # Write-Host ('[Invoke-RedstoneRun Simple Cmd StdErr][BeforeAll] Result: {0}' -f ($script:result | ConvertTo-Json)) -ForegroundColor Cyan
         }
 
@@ -139,7 +139,7 @@ Describe 'Invoke-RedstoneRun' {
 
     Context 'Invoke-RedstoneRun Complex Cmd StdOut' {
         BeforeAll {
-            $script:result = Invoke-RedstoneRun '"ipconfig" /all'
+            $script:result = Invoke-RedstoneRun '"ipconfig" /all' -CaptureConsoleOut
             # Write-Host ('[Invoke-RedstoneRun Simple Cmd StdOut][BeforeAll] Result: {0}' -f ($script:result | ConvertTo-Json)) -ForegroundColor Cyan
         }
 
@@ -178,7 +178,7 @@ Describe 'Invoke-RedstoneRun' {
 
     Context 'Invoke-RedstoneRun Simple Cmd StdErr' {
         BeforeAll {
-            $script:result = Invoke-RedstoneRun '"ipconfig" /alllllllllll'
+            $script:result = Invoke-RedstoneRun '"ipconfig" /alllllllllll' -CaptureConsoleOut
             # Write-Host ('[Invoke-RedstoneRun Simple Cmd StdErr][BeforeAll] Result: {0}' -f ($script:result | ConvertTo-Json)) -ForegroundColor Cyan
         }
 
@@ -217,7 +217,7 @@ Describe 'Invoke-RedstoneRun' {
 
     Context 'Invoke-RedstoneRun Simple FilePath StdOut' {
         BeforeAll {
-            $script:result = Invoke-RedstoneRun -FilePath 'hostname'
+            $script:result = Invoke-RedstoneRun -FilePath 'hostname' -CaptureConsoleOut
             # Write-Host ('[Invoke-RedstoneRun Simple Cmd StdOut][BeforeAll] Result: {0}' -f ($script:result | ConvertTo-Json)) -ForegroundColor Cyan
         }
 
@@ -256,7 +256,7 @@ Describe 'Invoke-RedstoneRun' {
 
     Context 'Invoke-RedstoneRun Simple FilePath and Argument List' {
         BeforeAll {
-            $script:result = Invoke-RedstoneRun -FilePath 'ipconfig' -ArgumentList '/all'
+            $script:result = Invoke-RedstoneRun -FilePath 'ipconfig' -ArgumentList '/all' -CaptureConsoleOut
             # Write-Host ('[Invoke-RedstoneRun Simple Cmd StdOut][BeforeAll] Result: {0}' -f ($script:result | ConvertTo-Json)) -ForegroundColor Cyan
         }
 

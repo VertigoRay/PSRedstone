@@ -63,35 +63,39 @@ function Invoke-RedstoneRun {
     [OutputType([hashtable])]
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true, Position=0, ParameterSetName='Cmd')]
+        [Parameter(Mandatory = $true, Position = 0, ParameterSetName = 'Cmd')]
         [string]
         $Cmd,
 
-        [Parameter(Mandatory=$true, ParameterSetName='FilePath')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'FilePath')]
         [string]
         $FilePath,
 
-        [Parameter(Mandatory=$false, ParameterSetName='FilePath')]
+        [Parameter(Mandatory = $false, ParameterSetName = 'FilePath')]
         [string[]]
         $ArgumentList,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
+        [switch]
+        $CaptureConsoleOut,
+
+        [Parameter(Mandatory = $false)]
         [string]
         $WorkingDirectory,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [boolean]
         $PassThru = $true,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [boolean]
         $Wait = $true,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string]
         $WindowStyle = 'Hidden',
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [IO.FileInfo]
         $LogFile
     )
@@ -122,69 +126,78 @@ function Invoke-RedstoneRun {
         }
     }
 
-    [string] $processGuid = New-Guid
-    [IO.FileInfo] $stdout = New-TemporaryFile
-    [IO.FileInfo] $stderr = New-TemporaryFile
-    [string] $stdoutFullName = $stdout.FullName
-    [string] $stderrFullName = $stderr.FullName
-    [string] $logFileFullName = $logFile.FullName
-
     [hashtable] $startProcess = @{
-        'FilePath'                  = $FilePath
-        'PassThru'                  = $PassThru
-        'Wait'                      = $Wait
-        'WindowStyle'               = $WindowStyle
-        'RedirectStandardError'     = $stderr.FullName
-        'RedirectStandardOutput'    = $stdout.FullName
+        FilePath                  = $FilePath
+        PassThru                  = $PassThru
+        Wait                      = $Wait
+        WindowStyle               = $WindowStyle
     }
 
     if ($ArgumentList) {
-        [void] $startProcess.Add('ArgumentList', $ArgumentList)
+        $startProcess.Add('ArgumentList', $ArgumentList)
     }
 
     if ($WorkingDirectory) {
-        [void] $startProcess.Add('WorkingDirectory', $WorkingDirectory)
+        $startProcess.Add('WorkingDirectory', $WorkingDirectory)
     }
 
-    if ($LogFile) {
-        # Monitor STDOUT and send to Log
-        $stdout_job = Start-Job -Name "StdOut ${processGuid}" -ScriptBlock {
-            while (-not (Test-Path $using:stdoutFullName)) {
-                Start-Sleep -Milliseconds 100
-            }
-            Write-Verbose "Monitoring STDOUT!"
-            Get-Content $using:stdoutFullName -Wait | ForEach-Object {
-                "STDOUT: $_"  | Out-File -Encoding 'utf8' -LiteralPath $using:logFileFullName -Append -Force
+    if ($CaptureConsoleOut.IsPresent) {
+        [IO.FileInfo] $stdout = New-TemporaryFile
+        [IO.FileInfo] $stderr = New-TemporaryFile
+
+        while (-not $stdout.Exists -or -not $stderr.Exists) {
+            # Sometimes this is too fast
+            # Let's wait for the tmp file to show up.
+            Start-Sleep -Milliseconds 100
+            $stdout.Refresh()
+            $stderr.Refresh()
+        }
+
+        $startProcess.Add('RedirectStandardOutput', $stdout.FullName)
+        $startProcess.Add('RedirectStandardError', $stderr.FullName)
+
+        $monScript = {
+            Param ([string] $Std, [IO.FileInfo] $Tmp, [IO.FileInfo] $LogFile)
+            Get-Content $Tmp.FullName -Wait | ForEach-Object {
+                ('STD{0}: {1}' -f $Std.ToUpper(), $_) | Out-File -Encoding 'utf8' -LiteralPath $LogFile.FullName -Append -Force
             }
         }
 
-        # Monitor STDERR and send to Log
-        $stderr_job = Start-Job -Name "StdErr ${processGuid}" -ScriptBlock {
-            while (-not (Test-Path $using:stderrFullName)) {
-                Start-Sleep -Milliseconds 100
-            }
-            Write-Verbose "Monitoring STDERR!"
-            Get-Content $using:stderrFullName -Wait | ForEach-Object {
-                "STDERR: $_" | Out-File -Encoding 'utf8' -LiteralPath $using:logFileFullName -Append -Force
-            }
-        }
-}
+        $stdoutMon = [powershell]::Create()
+        [void] $stdoutMon.AddScript($monScript).AddParameters(@{
+            Std = 'Out'
+            Tmp = $stdout.FullName
+            LogFile = $LogFile.FullName
+        })
+        [void] $stdoutMon.BeginInvoke()
+
+        $stderrMon = [powershell]::Create()
+        [void] $stderrMon.AddScript($monScript).AddParameters(@{
+            Std = 'Out'
+            Tmp = $stderr.FullName
+            LogFile = $LogFile.FullName
+        })
+        [void] $stderrMon.BeginInvoke()
+    }
 
     Write-Information ('[Invoke-RedstoneRun] Start-Process: {0}' -f (ConvertTo-Json $startProcess)) -Tags 'Redstone','Invoke-RedstoneRun'
     $proc = Start-Process @startProcess
     Write-Verbose ('[Invoke-RedstoneRun] ExitCode:' -f $proc.ExitCode)
 
-    $stdout_job | Stop-Job -ErrorAction 'SilentlyContinue'
-    $stderr_job | Stop-Job -ErrorAction 'SilentlyContinue'
-
     $return = @{
-        'Process' = $proc
-        'StdOut'  = (Get-Content $stdout.FullName | Out-String).Trim().Split([System.Environment]::NewLine)
-        'StdErr'  = (Get-Content $stderr.FullName | Out-String).Trim().Split([System.Environment]::NewLine)
+        Process = $proc
     }
 
-    $stdout.FullName | Remove-Item -ErrorAction 'SilentlyContinue' -Force
-    $stderr.FullName | Remove-Item -ErrorAction 'SilentlyContinue' -Force
+    if ($CaptureConsoleOut.IsPresent) {
+        $return.Add('StdOut', ((Get-Content $stdout.FullName | Out-String).Trim().Split([System.Environment]::NewLine)))
+        $return.Add('StdErr', ((Get-Content $stderr.FullName | Out-String).Trim().Split([System.Environment]::NewLine)))
+
+        $stdoutMon.Dispose()
+        $stderrMon.Dispose()
+
+        $stdout.FullName | Remove-Item -ErrorAction 'SilentlyContinue' -Force
+        $stderr.FullName | Remove-Item -ErrorAction 'SilentlyContinue' -Force
+    }
 
     try {
         Write-Information ('[Invoke-RedstoneRun] Return: {0}' -f (ConvertTo-Json $return -Depth 1 -ErrorAction 'Stop')) -Tags 'Redstone','Invoke-RedstoneRun'
