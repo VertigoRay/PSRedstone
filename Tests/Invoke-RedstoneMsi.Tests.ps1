@@ -1,8 +1,9 @@
 $script:psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
 . ('{0}\PSRedstone\Public\Invoke-RedstoneMsi.ps1' -f $psProjectRoot.FullName)
-. ('{0}\PSRedstone\Public\Invoke-RedstoneMsi.ps1' -f $psProjectRoot.FullName)
-. ('{0}\PSRedstone\Public\Invoke-RedstoneMsi.ps1' -f $psProjectRoot.FullName)
-. ('{0}\PSRedstone\Public\Invoke-RedstoneMsi.ps1' -f $psProjectRoot.FullName)
+. ('{0}\PSRedstone\Public\Invoke-RedstoneRun.ps1' -f $psProjectRoot.FullName)
+. ('{0}\PSRedstone\Public\Get-RedstoneInstalledApplication.ps1' -f $psProjectRoot.FullName)
+. ('{0}\PSRedstone\Public\Assert-RedstoneIsMutexAvailable.ps1' -f $psProjectRoot.FullName)
+. ('{0}\PSRedstone\Public\Get-RedstoneMsiExitCodeMessage.ps1' -f $psProjectRoot.FullName)
 
 Describe 'Invoke-RedstoneMsi' {
     BeforeAll {
@@ -41,8 +42,10 @@ Describe 'Invoke-RedstoneMsi' {
         BeforeEach {
             Mock Invoke-RedstoneRun {
                 param ($Cmd, $FilePath, $ArgumentList, $WorkingDirectory, $PassThru, $Wait, $WindowStyle, $LogFile)
-                return @{Process = @{
-                    ExitCode = 0}
+                return @{
+                    Process = @{
+                        ExitCode = 0
+                    }
                     Parameters = @{
                         Bound = $MyInvocation.BoundParameters
                         Unbound = $MyInvocation.UnboundParameters
@@ -66,7 +69,7 @@ Describe 'Invoke-RedstoneMsi' {
 
         It 'ArgumentList Type' {
             $result = Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName
-            ($result.Parameters.Bound.ArgumentList) | Should -BeOfType 'System.String[]'
+            $result.Parameters.Bound.ArgumentList | Should -BeOfType 'System.String[]'
         }
 
         It 'ArgumentList Count' {
@@ -126,7 +129,7 @@ Describe 'Invoke-RedstoneMsi' {
 
         It 'Send PassThru Type' {
             $result = Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName
-            $result.Parameters.Bound.FilePath | Should -BeOfType 'System.Boolean'
+            $result.Parameters.Bound.PassThru | Should -BeOfType 'System.Boolean'
         }
 
         It 'Send PassThru' {
@@ -136,7 +139,7 @@ Describe 'Invoke-RedstoneMsi' {
 
         It 'Send Wait Type' {
             $result = Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName
-            $result.Parameters.Bound.FilePath | Should -BeOfType 'System.Boolean'
+            $result.Parameters.Bound.Wait | Should -BeOfType 'System.Boolean'
         }
 
         It 'Send Wait' {

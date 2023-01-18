@@ -34,7 +34,7 @@ function Get-RedstoneRegistryValueOrDefault {
     }
 
     if ($RegistryKeyRoot -as [bool]) {
-        $RegistryDrives = (Get-PSDrive -PSProvider Registry).Name + 'Registry:' | ForEach-Object { '{0}:' -f $_ }
+        $RegistryDrives = (Get-PSDrive -PSProvider 'Registry').Name + 'Registry:' | ForEach-Object { '{0}:' -f $_ }
         if ($RegistryKey -notmatch ($RegistryDrives -join '|')) {
             $RegistryKey = Join-Path $RegistryKeyRoot $RegistryKey
             Write-Debug "[Get-RedstoneRegistryValueOrDefault] RegistryKey adjusted to: ${RegistryKey}"

@@ -36,7 +36,7 @@ When using [Redstone], this will be overridden via $PSDefaultParameters.
 Default: $global:Winstall.Settings.Logs.PathF
 .EXAMPLE
 # Installs an MSI
-Invoke-RedstoneMSI -Action 'Install' -Path 'Adobe_FlashPlayer_11.2.202.233_x64_EN.msi'
+Invoke-RedstoneMSI 'Adobe_FlashPlayer_11.2.202.233_x64_EN.msi'
 .EXAMPLE
 # Installs an MSI, applying a transform and overriding the default MSI toolkit parameters
 Invoke-RedstoneMSI -Action 'Install' -Path 'Adobe_FlashPlayer_11.2.202.233_x64_EN.msi' -Transform 'Adobe_FlashPlayer_11.2.202.233_x64_EN_01.mst' -Parameters '/QN'

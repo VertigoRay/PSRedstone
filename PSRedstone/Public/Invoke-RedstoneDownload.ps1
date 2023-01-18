@@ -18,7 +18,8 @@ function Invoke-RedstoneDownload {
         $Checksum
     )
 
-    Write-Debug ('[Invoke-RedstoneDownload] MyInvocation: {0}' -f ($MyInvocation | Out-String))
+    Write-Information ('[Invoke-RedstoneDownload] > {0}' -f ($MyInvocation.BoundParameters | ConvertTo-Json -Compress))
+    Write-Debug ('[Invoke-RedstoneDownload] Function Invocation: {0}' -f ($MyInvocation | Out-String))
 
     if (-not $OutFile.Directory.Exists -and -not $OutFolder.Exists) {
         $directory = if ($OutFile) { $OutFile.DirectoryName } else { $OutFolder.FullName }
