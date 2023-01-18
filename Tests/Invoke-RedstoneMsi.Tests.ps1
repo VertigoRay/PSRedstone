@@ -69,7 +69,7 @@ Describe 'Invoke-RedstoneMsi' {
 
         It 'ArgumentList Type' {
             $result = Invoke-RedstoneMsi -FilePath $script:randomMsi.FullName
-            $result.Parameters.Bound.ArgumentList | Should -BeOfType 'System.String[]'
+            ,$result.Parameters.Bound.ArgumentList | Should -BeOfType 'System.String[]'
         }
 
         It 'ArgumentList Count' {
