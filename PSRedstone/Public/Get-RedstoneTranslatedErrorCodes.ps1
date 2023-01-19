@@ -2,7 +2,7 @@
 .NOTES
     https://learn.microsoft.com/en-us/dotnet/api/system.componentmodel.win32exception
 #>
-function Get-RedstoneTranslateErrorCode {
+function Get-RedstoneTranslatedErrorCode {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true, Position = 0)]

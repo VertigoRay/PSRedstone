@@ -25,7 +25,7 @@ function Invoke-RedstoneElevateCurrentProcess {
     foreach ($privilege in $privileges.GetEnumerator()) {
         Write-Debug ('[Invoke-RedstoneElevateCurrentProcess] Adjusting Priv: {0}: {1}' -f $privilege.Name, $privilege.Value)
         $rtlAdjustPrivilege = $ntdll::RtlAdjustPrivilege($privilege.Value, 1, 0, [ref] 0)
-        $returnedMessage = Get-RedstoneTranslateErrorCode $rtlAdjustPrivilege
+        $returnedMessage = Get-RedstoneTranslatedErrorCode $rtlAdjustPrivilege
         Write-Debug ('[Invoke-RedstoneElevateCurrentProcess] Adjusted Prif: {0}' -f ($returnedMessage | ConvertFrom-Json))
     }
 }

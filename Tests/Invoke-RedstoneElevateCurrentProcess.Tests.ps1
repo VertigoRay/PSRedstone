@@ -5,6 +5,14 @@ Describe 'Invoke-RedstoneElevateCurrentProcess' {
     BeforeAll {
         $script:psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
         . ('{0}\PSRedstone\Public\Invoke-RedstoneElevateCurrentProcess.ps1' -f $psProjectRoot.FullName)
+
+        Mock Get-RedstoneTranslateErrorCode {
+            param([int] $ErrorCode)
+            return ([PSObject] @{
+                ErrorCode = $ErrorCode
+                Message = 'Pester Mock. (PESTERMOCK 0x{0:x})' -f $ErrorCode
+            })
+        }
     }
 
     Context 'Invoke-RedstoneElevateCurrentProcess Existant EXE' {
