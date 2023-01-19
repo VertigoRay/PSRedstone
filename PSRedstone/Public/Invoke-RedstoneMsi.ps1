@@ -172,10 +172,10 @@ function Invoke-RedstoneMSI {
     ## If the MSI is in the Files directory, set the full path to the MSI
     if ($PathIsProductCode) {
         [string] $msiFile = $Path
-        [string] $msiLogFile = $LogFileF -f ".msi.${Action}", ($Path -as [guid]).Guid
+        [string] $msiLogFile = $LogFileF -f "msi.${Action}", ($Path -as [guid]).Guid
     } else {
         [string] $msiFile = (Resolve-Path $Path -ErrorAction 'Stop').Path
-        [string] $msiLogFile = $LogFileF -f ".msi.${Action}", ($Path -as [IO.FileInfo]).BaseName
+        [string] $msiLogFile = $LogFileF -f "msi.${Action}", ($Path -as [IO.FileInfo]).BaseName
     }
 
     ## Set the working directory of the MSI
@@ -306,8 +306,7 @@ function Invoke-RedstoneMSI {
         if ($PassThru) {
             $result = Invoke-RedstoneRun @invokeRun
             if ($result.Process.ExitCode -ne 0) {
-                $Redstone.ExitCode = $result.Process.ExitCode
-                $msg = Get-RedstoneMsiExitCodeMessage $Redstone.ExitCode -MsiLog $msiLogFile
+                $msg = Get-RedstoneMsiExitCodeMessage $result.Process.ExitCode -MsiLog $msiLogFile
                 Write-Warning "[Invoke-RedstoneMsi] $($result.Process.ExitCode): ${msg}"
             }
             Write-Information "[Invoke-RedstoneMsi] Return: $($result | Out-String)"

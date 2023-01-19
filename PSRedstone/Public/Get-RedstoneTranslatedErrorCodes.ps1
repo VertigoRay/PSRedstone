@@ -12,6 +12,15 @@ function Get-RedstoneTranslatedErrorCode {
 
     if ($result = $ErrorCode -as [ComponentModel.Win32Exception]) {
         if ($result.Message.StartsWith('Unknown error (')) {
+            Get-CMErrorMessage {
+                [CmdletBinding()]
+                    param
+                        (
+                        [Parameter(Mandatory=$True,ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True)]
+                            [int64]$ErrorCode
+                        )
+                [void][System.Reflection.Assembly]::LoadFrom('C:\Program Files (x86)\Microsoft Configuration Manager\AdminConsole\bin\SrsResources.dll')
+                [SrsResources.Localization]::GetErrorMessage($ErrorCode,"en-US")
             switch ($result.ErrorCode) {
                 -1073741728 {
                     return ([PSObject] @{

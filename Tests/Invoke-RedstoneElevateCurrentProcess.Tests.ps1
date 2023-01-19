@@ -5,21 +5,18 @@ Describe 'Invoke-RedstoneElevateCurrentProcess' {
     BeforeAll {
         $script:psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
         . ('{0}\PSRedstone\Public\Invoke-RedstoneElevateCurrentProcess.ps1' -f $psProjectRoot.FullName)
-
-        Mock Get-RedstoneTranslateErrorCode {
-            param([int] $ErrorCode)
-            return ([PSObject] @{
-                ErrorCode = $ErrorCode
-                Message = 'Pester Mock. (PESTERMOCK 0x{0:x})' -f $ErrorCode
-            })
-        }
+        . ('{0}\PSRedstone\Public\Get-RedstoneTranslateErrorCode.ps1' -f $psProjectRoot.FullName)
     }
 
     Context 'Invoke-RedstoneElevateCurrentProcess Existant EXE' {
-
-
         BeforeAll {
-            # Write-Host ('[Invoke-RedstoneElevateCurrentProcess Full Path][BeforeAll] Result: {0}' -f ($script:result | ConvertTo-Json)) -ForegroundColor Cyan
+            Mock Get-RedstoneTranslatedErrorCode {
+                param([int] $ErrorCode)
+                return ([PSObject] @{
+                    ErrorCode = $ErrorCode
+                    Message = 'Pester Mock. (PESTERMOCK 0x{0:x})' -f $ErrorCode
+                })
+            }
         }
 
         It '<File>: Returns IO.FileInfo' -TestCases $script:testCases {

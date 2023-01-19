@@ -295,7 +295,7 @@ class Redstone {
         }
 
         $this.Settings.Log.File = [IO.FileInfo] (Join-Path $private:Directory.FullName ('{0} {1} {2} {3}.log' -f $this.Publisher, $this.Product, $this.Version, $this.Action))
-        $this.Settings.Log.FileF = (Join-Path $private:Directory.FullName ('{0} {1} {2} {3}{{0}}.log' -f $this.Publisher, $this.Product, $this.Version, $this.Action)) -as [string]
+        $this.Settings.Log.FileF = (Join-Path $private:Directory.FullName ('{0} {1} {2} {3}.{{0}}.log' -f $this.Publisher, $this.Product, $this.Version, $this.Action)) -as [string]
         $this.PSDefaultParameterValuesSetUp()
     }
 
