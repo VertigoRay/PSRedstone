@@ -35,7 +35,7 @@ init:
 install:
   # Bootstrap PSDepend and Install Dependencies
   - ps: |
-      $InformationPreference = 'Continue'
+      # $InformationPreference = 'Continue'
       & ([IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPrep.ps1'))
     on:
       branch: master                 # release from master branch only
