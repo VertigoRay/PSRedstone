@@ -4,6 +4,7 @@ Wait, up to a timeout value, to check if current thread is able to acquire an ex
 .DESCRIPTION
 A mutex can be used to serialize applications and prevent multiple instances from being opened at the same time.
 Wait, up to a timeout (default is 1 millisecond), for the mutex to become available for an exclusive lock.
+This is an internal script function and should typically not be called directly.
 .PARAMETER MutexName
 The name of the system mutex.
 .PARAMETER MutexWaitTimeInMilliseconds
@@ -16,22 +17,24 @@ Assert-RedstoneIsMutexAvailable -MutexName 'Global\_MSIExecute' -MutexWaitTimeIn
 .EXAMPLE
 Assert-RedstoneIsMutexAvailable -MutexName 'Global\_MSIExecute' -MutexWaitTimeInMilliseconds (New-TimeSpan -Seconds 60).TotalMilliseconds
 .NOTES
-This is an internal script function and should typically not be called directly.
+Copyright (C) 2015 - PowerShell App Deployment Toolkit Team
+Copyright (C) 2023 - Raymond Piller (VertigoRay)
 .LINK
 http://msdn.microsoft.com/en-us/library/aa372909(VS.85).asp
-http://psappdeploytoolkit.com
+.LINK
+https://psappdeploytoolkit.com
 #>
 function Assert-RedstoneIsMutexAvailable {
     [OutputType([bool])]
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [ValidateLength(1,260)]
         [string]
         $MutexName,
 
-        [Parameter(Mandatory=$false)]
-        [ValidateRange(-1,[int32]::MaxValue)]
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(-1, [int32]::MaxValue)]
         [int32]
         $MutexWaitTimeInMilliseconds = 300000 #5min
     )
@@ -104,7 +107,9 @@ function Assert-RedstoneIsMutexAvailable {
             $null = $OpenExistingMutex.ReleaseMutex()
             $OpenExistingMutex.Close()
         }
-        if ($private:previousErrorActionPreference) { $ErrorActionPreference = $private:previousErrorActionPreference }
+        if ($private:previousErrorActionPreference) {
+            $ErrorActionPreference = $private:previousErrorActionPreference
+        }
     }
 
     return $IsMutexFree
