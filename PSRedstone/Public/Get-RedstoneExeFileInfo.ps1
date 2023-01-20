@@ -22,5 +22,5 @@ function Get-RedstoneExeFileInfo {
             $result = $Path
         }
     }
-    return ([IO.FileInfo] $result)
+    return ([IO.FileInfo] $result.Trim('"'))
 }
