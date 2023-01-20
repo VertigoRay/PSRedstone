@@ -107,6 +107,10 @@ Describe 'RedstoneClassAndEnums' -Tag 'Class' {
         }
     }
 
+    BeforeAll {
+        $env:PSRedstoneRegistryKeyRoot = 'Registry::{0}' -f (Get-PSDrive 'TestRegistry').Root
+    }
+
     foreach ($instantiation in $instantiations.GetEnumerator()) {
         Context ('Redstone Class {0}' -f $instantiation.Name) {
             BeforeEach $instantiation.Value.BeforeEach
@@ -179,7 +183,7 @@ Describe 'RedstoneClassAndEnums' -Tag 'Class' {
                 if ($context.Value -and $context.Value.ToString()) {
                     $context.Value.ToString() | Invoke-Expression
                 }
-                $script:Redstone.Settings.Registry.Key | Should -Be 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\PSRedstone'
+                $script:Redstone.Settings.Registry.KeyRoot | Should -Be ('Registry::{0}' -f (Get-PSDrive 'TestRegistry').Root)
             }
 
             It 'Log File' {
@@ -200,9 +204,9 @@ Describe 'RedstoneClassAndEnums' -Tag 'Class' {
                     $context.Value.ToString() | Invoke-Expression
                 }
                 if ($isElevated) {
-                    $script:Redstone.Settings.Log.FileF | Should -Be "${env:SystemRoot}\Logs\Redstone\${publisher} ${product} ${version} ${action}{0}.log"
+                    $script:Redstone.Settings.Log.FileF | Should -Be "${env:SystemRoot}\Logs\Redstone\${publisher} ${product} ${version} ${action}.{0}.log"
                 } else {
-                    $script:Redstone.Settings.Log.FileF | Should -Be "${env:Temp}\Logs\Redstone\${publisher} ${product} ${version} ${action}{0}.log"
+                    $script:Redstone.Settings.Log.FileF | Should -Be "${env:Temp}\Logs\Redstone\${publisher} ${product} ${version} ${action}.{0}.log"
                 }
             }
 
@@ -236,9 +240,9 @@ Describe 'RedstoneClassAndEnums' -Tag 'Class' {
                     $context.Value.ToString() | Invoke-Expression
                 }
                 if ($isElevated) {
-                    $global:PSDefaultParameterValues.'*-Redstone*:LogFileF' | Should -Be "${env:SystemRoot}\Logs\Redstone\${publisher} ${product} ${version} ${action}{0}.log"
+                    $global:PSDefaultParameterValues.'*-Redstone*:LogFileF' | Should -Be "${env:SystemRoot}\Logs\Redstone\${publisher} ${product} ${version} ${action}.{0}.log"
                 } else {
-                    $global:PSDefaultParameterValues.'*-Redstone*:LogFileF' | Should -Be "${env:Temp}\Logs\Redstone\${publisher} ${product} ${version} ${action}{0}.log"
+                    $global:PSDefaultParameterValues.'*-Redstone*:LogFileF' | Should -Be "${env:Temp}\Logs\Redstone\${publisher} ${product} ${version} ${action}.{0}.log"
                 }
             }
         }
