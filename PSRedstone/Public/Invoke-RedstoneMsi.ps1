@@ -171,16 +171,12 @@ function Invoke-RedstoneMSI {
 
     ## If the MSI is in the Files directory, set the full path to the MSI
     if ($PathIsProductCode) {
-        Write-Host ('PathIsProductCode 1: {0}' -f $PathIsProductCode) -ForegroundColor 'Cyan'
         [string] $msiFile = $Path
         [string] $msiLogFile = $LogFileF -f "msi.${Action}", ($Path -as [guid]).Guid
     } else {
-        Write-Host ('PathIsProductCode 2: {0}' -f $PathIsProductCode) -ForegroundColor 'Cyan'
         [string] $msiFile = (Resolve-Path $Path -ErrorAction 'Stop').Path
         [string] $msiLogFile = $LogFileF -f "msi.${Action}", ($Path -as [IO.FileInfo]).BaseName
     }
-    Write-Host ('msiFile: {0}' -f $msiFile) -ForegroundColor 'Cyan'
-    Write-Host ('msiLogFile: {0}' -f $msiLogFile) -ForegroundColor 'Cyan'
 
     ## Set the working directory of the MSI
     if ((-not $PathIsProductCode) -and (-not $workingDirectory)) {
