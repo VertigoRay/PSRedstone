@@ -21,23 +21,6 @@ Describe 'Invoke-RedstoneMsi' {
         }
     }
 
-    # [Invoke-RedstoneRun] Start-Process: {
-    #     "FilePath":  "C:\\WINDOWS\\system32\\msiexec.exe",
-    #     "ArgumentList":  [
-    #                          "/qn",
-    #                          "/i",
-    #                          "\"C:\\WINDOWS\\Installer\\10150aa8.msi\"",
-    #                          "REBOOT=ReallySuppress",
-    #                          "/log",
-    #                          "\"C:\\Users\\qhm067\\AppData\\Local\\Temp\\Logs\\Redstone\\MyPublisher MyProduct 1.2.3 test.msi.Install.log\""
-    #                      ],
-    #     "WorkingDirectory":  "C:\\WINDOWS\\Installer",
-    #     "WindowStyle":  "Hidden",
-    #     "PassThru":  true
-    #     "Wait":  true,
-    #     "RedirectStandardError":  "C:\\Users\\qhm067\\AppData\\Local\\Temp\\tmp206C.tmp",
-    #     "RedirectStandardOutput":  "C:\\Users\\qhm067\\AppData\\Local\\Temp\\tmp206B.tmp",
-    # }
     Context 'Simple Msiexec' {
         BeforeEach {
             Mock Invoke-RedstoneRun {
