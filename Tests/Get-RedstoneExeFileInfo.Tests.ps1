@@ -5,6 +5,11 @@ Describe 'Get-RedstoneExeFileInfo' {
     }
 
     Context 'Get-RedstoneExeFileInfo Existant EXE' {
+        $getRandomExe = {
+            Get-ChildItem 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths' | Where-Object {
+                -not (Get-Command $_.PSChildName -ErrorAction 'Ignore') -and ($_.PSChildName -as [IO.FileInfo])
+            } | Select-Object -First 1 -ExpandProperty 'PSChildName'
+        }
         $script:testCases = @(
             @{
                 File = [IO.Path]::Combine($env:SystemRoot, 'notepad.exe')
@@ -15,13 +20,11 @@ Describe 'Get-RedstoneExeFileInfo' {
                 Run = { Get-RedstoneExeFileInfo 'notepad.exe' }
             }
             @{
-                File = $randomExe.Name
-                Run = {
-                    [IO.FileInfo] $randomExe = Get-ChildItem 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths' | Where-Object {
-                        -not (Get-Command $_.PSChildName -ErrorAction 'Ignore')
-                    } | Select-Object -First 1 -ExpandProperty 'PSChildName'
-                    Get-RedstoneExeFileInfo $randomExe.Name
-                }
+                File = & $getRandomExe
+                Run = [scriptblock]::Create(('$randomExe = {0}; {1}' -f @(
+                    $getRandomExe.ToString()
+                    ({ Get-RedstoneExeFileInfo $randomExe }).ToString()
+                )))
             }
         )
 
