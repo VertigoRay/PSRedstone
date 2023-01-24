@@ -4,8 +4,10 @@ Is the current process elevated (running as administrator)?
 .OUTPUTS
 [bool]
 .EXAMPLE
-PS > Assert-RedstoneIsElevated
-True
+Assert-RedstoneIsElevated
+Returns `$true` if you're  running as an administrator.
+.LINK
+https://github.com/VertigoRay/PSRedstone/wiki/Functions#assert-redstoneiselevated
 #>
 function Assert-RedstoneIsElevated {
     [OutputType([bool])]

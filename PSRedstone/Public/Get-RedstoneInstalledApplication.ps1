@@ -18,54 +18,57 @@ Include matches against updates and hotfixes in results.
 Default: `$global:Redstone.Settings.Functions.Get-InstalledApplication.UninstallRegKeys`
 
 Private Parameter; used for debug overrides.
+.OUTPUTS
+[hashtable[]]
 .EXAMPLE
 Get-RedstoneInstalledApplication -Name 'Adobe Flash'
 .EXAMPLE
 Get-RedstoneInstalledApplication -ProductCode '{1AD147D0-BE0E-3D6C-AC11-64F6DC4163F1}'
 .NOTES
 .LINK
-http://psappdeploytoolkit.com
+https://github.com/VertigoRay/PSRedstone/wiki/Functions#get-redstoneinstalledapplication
 #>
 function Get-RedstoneInstalledApplication {
-    [CmdletBinding(DefaultParameterSetName = 'like')]
+    [CmdletBinding(DefaultParameterSetName = 'Like')]
+    [OutputType([hashtable[]])]
     Param (
-        [Parameter(Mandatory = $false, Position = 0, ParameterSetName = 'eq')]
-        [Parameter(Mandatory = $false, Position = 0, ParameterSetName = 'exact')]
-        [Parameter(Mandatory = $false, Position = 0, ParameterSetName = 'like')]
-        [Parameter(Mandatory = $false, Position = 0, ParameterSetName = 'regex')]
+        [Parameter(Mandatory = $false, Position = 0, ParameterSetName = 'Eq')]
+        [Parameter(Mandatory = $false, Position = 0, ParameterSetName = 'Exact')]
+        [Parameter(Mandatory = $false, Position = 0, ParameterSetName = 'Like')]
+        [Parameter(Mandatory = $false, Position = 0, ParameterSetName = 'Regex')]
         [ValidateNotNullorEmpty()]
         [string[]]
         $Name = '*',
 
-        [Parameter(Mandatory = $false, ParameterSetName = 'eq')]
-        [Parameter(Mandatory = $false, ParameterSetName = 'exact')]
-        [Parameter(Mandatory = $false, ParameterSetName = 'like')]
-        [Parameter(Mandatory = $false, ParameterSetName = 'regex')]
+        [Parameter(Mandatory = $false, ParameterSetName = 'Eq')]
+        [Parameter(Mandatory = $false, ParameterSetName = 'Exact')]
+        [Parameter(Mandatory = $false, ParameterSetName = 'Like')]
+        [Parameter(Mandatory = $false, ParameterSetName = 'Regex')]
         [switch]
         $CaseSensitive,
 
-        [Parameter(Mandatory = $false, ParameterSetName = 'exact')]
+        [Parameter(Mandatory = $false, ParameterSetName = 'Exact')]
         [switch]
         $Exact,
 
-        [Parameter(Mandatory = $false, ParameterSetName = 'like')]
+        [Parameter(Mandatory = $false, ParameterSetName = 'Like')]
         [switch]
         $WildCard,
 
-        [Parameter(Mandatory = $false, ParameterSetName = 'regex')]
+        [Parameter(Mandatory = $false, ParameterSetName = 'Regex')]
         [switch]
         $RegEx,
 
-        [Parameter(Mandatory = $false, ParameterSetName = 'productcode')]
+        [Parameter(Mandatory = $false, ParameterSetName = 'Productcode')]
         [ValidateNotNullorEmpty()]
         [string]
         $ProductCode,
 
-        [Parameter(Mandatory = $false, ParameterSetName = 'eq')]
-        [Parameter(Mandatory = $false, ParameterSetName = 'exact')]
-        [Parameter(Mandatory = $false, ParameterSetName = 'like')]
-        [Parameter(Mandatory = $false, ParameterSetName = 'regex')]
-        [Parameter(Mandatory = $false, ParameterSetName = 'productcode')]
+        [Parameter(Mandatory = $false, ParameterSetName = 'Eq')]
+        [Parameter(Mandatory = $false, ParameterSetName = 'Exact')]
+        [Parameter(Mandatory = $false, ParameterSetName = 'Like')]
+        [Parameter(Mandatory = $false, ParameterSetName = 'Regex')]
+        [Parameter(Mandatory = $false, ParameterSetName = 'Productcode')]
         [switch]
         $IncludeUpdatesAndHotfixes,
 
@@ -112,7 +115,7 @@ function Get-RedstoneInstalledApplication {
     }
 
     ## Create a custom object with the desired properties for the installed applications and sanitize property details
-    [psobject[]] $installedApplication = @()
+    [Collections.ArrayList] $installedApplication = @()
     foreach ($regKeyApp in $regKeyApplication) {
         try {
             [string] $appDisplayName = ''
@@ -139,7 +142,7 @@ function Get-RedstoneInstalledApplication {
                 ## Verify if there is a match with the product code passed to the script
                 if (($regKeyApp.PSChildName -as [guid]).Guid -eq ($ProductCode -as [guid]).Guid) {
                     Write-Information "[Get-RedstoneInstalledApplication] Found installed application [$appDisplayName] version [$appDisplayVersion] matching product code [$productCode]."
-                    $installedApplication += [PSObject] @{
+                    $installedApplication.Add(@{
                         UninstallSubkey = $regKeyApp.PSChildName
                         ProductCode = $regKeyApp.PSChildName -as [guid]
                         DisplayName = $appDisplayName
@@ -152,7 +155,7 @@ function Get-RedstoneInstalledApplication {
                         Publisher = $appPublisher
                         Is64BitApplication = $Is64BitApp
                         PSPath = $regKeyApp.PSPath
-                    }
+                    }) | Out-Null
                 }
             } else {
                 ## Verify if there is a match with the application name(s) passed to the script
@@ -201,8 +204,7 @@ function Get-RedstoneInstalledApplication {
                     }
 
                     if ($applicationMatched) {
-                        # $installedApplication += $regKeyApp
-                        $installedApplication += [PSObject] @{
+                        $installedApplication.Add(@{
                             UninstallSubkey = $regKeyApp.PSChildName
                             ProductCode = $regKeyApp.PSChildName -as [guid]
                             DisplayName = $appDisplayName
@@ -215,7 +217,7 @@ function Get-RedstoneInstalledApplication {
                             Publisher = $appPublisher
                             Is64BitApplication = $Is64BitApp
                             PSPath = $regKeyApp.PSPath
-                        }
+                        }) | Out-Null
                     }
                 }
             }

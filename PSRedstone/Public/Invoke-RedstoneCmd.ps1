@@ -32,7 +32,7 @@ Applies /U:  Causes the output of internal commands to a pipe or file to be Unic
 .EXAMPLE
 Invoke-RedstoneCmd "MKLINK /D Temp C:\Temp"
 .LINK
-https://git.cas.unt.edu/winstall/winstall/wikis/Invoke-RedstoneCmd
+https://github.com/VertigoRay/PSRedstone/wiki/Functions#invoke-redstonecmd
 #>
 function Invoke-RedstoneCmd {
     [CmdletBinding()]

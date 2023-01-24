@@ -44,7 +44,7 @@ build_script:
   - ps: |
       $invokePsake = @{
         BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
-        # TaskList = 'default'
+        TaskList = @('Build', 'Docs')
       }
       Invoke-psake @invokePsake
       if (-not $psake.build_success) {

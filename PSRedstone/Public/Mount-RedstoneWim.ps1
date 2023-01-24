@@ -1,15 +1,9 @@
 #Requires -RunAsAdministrator
 <#
 .EXAMPLE
-try {
-    Mount-RedstoneWim
-
-    ... do some things ...
-} catch {
-
-} finally {
-    Dismount-RedstoneWim
-}
+Mount-RedstoneWim
+.LINK
+https://github.com/VertigoRay/PSRedstone/wiki/Functions#mount-redstonewim
 #>
 function Mount-RedstoneWim {
     [CmdletBinding()]

@@ -1,29 +1,18 @@
 <#
 .SYNOPSIS
 Create a RedStone Class.
-
 .DESCRIPTION
 Create a Redstone Class with an easy to use function.
-
 .PARAMETER SettingsJson
-Type: [string]
 Path to the settings.json file.
-
 .PARAMETER Publisher
-Type: [string]
 Name of the publisher, like "Mozilla".
-
 .PARAMETER Product
-Type: [string]
 Name of the product, like "Firefox ESR".
-
 .PARAMETER Version
-Type: [string]
 Version of the product, like "108.0.1".
 This was deliberatly not cast as a [version] to allow handling of non-semantic versioning.
-
 .PARAMETER Action
-Type: [string]
 Action that is being taken.
 This is purely cosmetic and directly affects the log name. For Example:
     - Using the examples from the Publisher, Product, and Version parameters.
@@ -32,16 +21,15 @@ This is purely cosmetic and directly affects the log name. For Example:
 The log file name will be: Mozilla Firefox ESR 108.0.1 Install.log
 
 If you don't specify an action, the action will be taken from the name of the script your calling this function from.
-
 .OUTPUTS
-System.Array with two Values:
+`System.Array` with two Values:
     1. Redstone. The Redstone class
     2. PSObject. The results of parsing the provided settings.json file. Null if parameters supplied.
-
 .NOTES
-
-- Allows access to the Redstone class without having to use `Using Module Redstone`.
+Allows access to the Redstone class without having to use `Using Module Redstone`.
     - Ref: https://stephanevg.github.io/powershell/class/module/DATA-How-To-Write-powershell-Modules-with-classes/
+.LINK
+https://github.com/VertigoRay/PSRedstone/wiki/Functions#new-redstone
 #>
 function New-Redstone {
     [OutputType([array])]

@@ -1,6 +1,8 @@
 <#
 .EXAMPLE
 $MountPath.FullName | Invoke-RedstoneForceEmptyDirectory
+.LINK
+https://github.com/VertigoRay/PSRedstone/wiki/Functions#invoke-redstoneforceemptydirectory
 #>
 function Invoke-RedstoneForceEmptyDirectory {
     [CmdletBinding()]

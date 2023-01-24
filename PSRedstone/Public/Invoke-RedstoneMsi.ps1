@@ -18,7 +18,6 @@ Multiple transforms can be specified; separated by a comma.
 The name of the patch (msp) file(s) to be applied to the MSI for use with the "Install" action. The patch file is expected to be in the same directory as the MSI file.
 .PARAMETER MsiDisplay
 Overrides the default MSI Display Settings.
-Default: $global:Winstall.Settings.Functions.InvokeMSI.Display
 .PARAMETER Parameters
 Overrides the default parameters specified in the XML configuration file. Install default is: "REBOOT=ReallySuppress /QB!". Uninstall default is: "REBOOT=ReallySuppress /QN".
 .PARAMETER SecureParameters
@@ -33,7 +32,6 @@ Skips the check to determine if the MSI is already installed on the system. Defa
 Returns ExitCode, StdOut, and StdErr output from the process.
 .PARAMETER LogFileF
 When using [Redstone], this will be overridden via $PSDefaultParameters.
-Default: $global:Winstall.Settings.Logs.PathF
 .EXAMPLE
 # Installs an MSI
 Invoke-RedstoneMSI 'Adobe_FlashPlayer_11.2.202.233_x64_EN.msi'
@@ -65,8 +63,10 @@ if ([Environment]::Is64BitOperatingSystem) {
     Invoke-RedstoneMSI @msi -Path 'Origin2016Sr2Setup32Bit.msi'
 }
 .NOTES
+Copyright (C) 2015 - PowerShell App Deployment Toolkit Team
+Copyright (C) 2023 - Raymond Piller (VertigoRay)
 .LINK
-http://psappdeploytoolkit.com
+https://github.com/VertigoRay/PSRedstone/wiki/Functions#invoke-redstonemsi
 #>
 function Invoke-RedstoneMSI {
     [CmdletBinding()]

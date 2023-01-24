@@ -32,8 +32,11 @@ Get-RedstoneMsiTableProperty -Path 'C:\Package\AppDeploy.msi' -GetSummaryInforma
 Get-RedstoneMsiTableProperty -Path 'C:\Package\AppDeploy.msi' -GetSummaryInformation
 .NOTES
 This is an internal script function and should typically not be called directly.
+
+Copyright (C) 2015 - PowerShell App Deployment Toolkit Team
+Copyright (C) 2023 - Raymond Piller (VertigoRay)
 .LINK
-http://psappdeploytoolkit.com
+https://github.com/VertigoRay/PSRedstone/wiki/Functions#get-redstonemsitableproperty
 #>
 function Get-RedstoneMsiTableProperty {
 	[CmdletBinding(DefaultParameterSetName='TableInfo')]

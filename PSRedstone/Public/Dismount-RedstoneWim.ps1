@@ -1,5 +1,8 @@
 #Requires -RunAsAdministrator
-
+<#
+.LINK
+https://github.com/VertigoRay/PSRedstone/wiki/Functions#dismount-redstonewim
+#>
 function Dismount-RedstoneWim {
     [CmdletBinding()]
     param (

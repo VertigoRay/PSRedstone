@@ -6,6 +6,8 @@ Get a registry value without expanding environment variables.
 .EXAMPLE
 PS > Get-RedstoneRegistryValueDoNotExpandEnvironmentName HKCU:\Thing Foo
 True
+.LINK
+https://github.com/VertigoRay/PSRedstone/wiki/Functions#get-redstoneregistryvaluedonotexpandenvironmentname
 #>
 function Get-RedstoneRegistryValueDoNotExpandEnvironmentName {
     [OutputType([bool])]

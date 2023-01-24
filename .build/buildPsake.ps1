@@ -7,6 +7,48 @@ trap {
     }
 }
 
+$global:gitFormatters = @(
+    $env:GITHUB_PERSONAL_ACCESS_TOKEN
+    $env:APPVEYOR_REPO_NAME
+    $env:APPVEYOR_REPO_TAG_NAME
+)
+
+function global:Invoke-Config {
+    [CmdletBinding()]
+    param (
+        [Parameter()]
+        [string]
+        $Config
+    )
+
+    if ($Config.StartsWith('&')) {
+        $cmd = $Config.Split(' ', 3)
+        $process = @{
+            FilePath = $cmd[1]
+            ArgumentList = $cmd[2] -f $gitFormatters
+            RedirectStandardOutput = [IO.Path]::Combine($env:Temp, 'stdout.txt')
+            RedirectStandardError = [IO.Path]::Combine($env:Temp, 'stderr.txt')
+            Wait = $true
+            PassThru = $true
+        }
+        $result = Start-Process @process
+        if ($stdout = (Get-Content ([IO.Path]::Combine($env:Temp, 'stdout.txt')) | Out-String).Trim()) {
+            Write-Host $stdout
+        }
+        if ($stderr = (Get-Content ([IO.Path]::Combine($env:Temp, 'stderr.txt')) | Out-String).Trim()) {
+            if ($result.ExitCode) {
+                Write-Host ('# ExitCode: {0}' -f $result.ExitCode) -BackgroundColor 'DarkRed'
+                Write-Error $stderr
+            } else {
+                Write-Host $stderr -BackgroundColor 'DarkYellow'
+                Write-Host ('# ExitCode: {0}' -f $result.ExitCode)
+            }
+        }
+    } else {
+        $config -f $gitFormatters | Invoke-Expression
+    }
+}
+
 properties {
     # foreach ($item in (Get-ChildItem 'env:' | Where-Object { $_.Name.StartsWith('APPVEYOR') })) {
     #     Write-Host ('{0}: {1}' -f $item.Name, $item.Value) -ForegroundColor 'Black'
@@ -27,6 +69,8 @@ properties {
     }
 
     $script:ManifestJsonFile = [IO.Path]::Combine($script:psScriptRootParent.FullName, $script:thisModuleName, 'Manifest.json')
+    [IO.DirectoryInfo] $script:dev = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev')
+    [IO.DirectoryInfo] $script:devDocs = [IO.Path]::Combine($script:dev, 'docs')
     $script:BuildOutput = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'BuildOutput')
 
     $script:parentDevModulePath = [IO.Path]::Combine($script:psScriptRootParent.FullName, $script:thisModuleName)
@@ -173,40 +217,146 @@ task Build -Depends BuildManifest {
     #     Set-AuthenticodeSignature @authenticodeSignature
     # }
 
-    $compress = @{
-        Path = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev')
-        Filter = '*'
-        Format = 'SevenZip'
-        CompressionLevel = 'Ultra'
-        ArchiveFileName = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev.7z')
+    if ($SkipCompression) {
+        Write-Host '[PSAKE Build] Skipping compressions step; set via a Psake parameter.' -ForegroundColor 'Black' -BackgroundColor 'Cyan'
+    } else {
+        $compress = @{
+            Path = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev')
+            Filter = '*'
+            Format = 'SevenZip'
+            CompressionLevel = 'Ultra'
+            ArchiveFileName = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev.7z')
+        }
+        Write-Host ('[PSAKE Build] Compress Archive: {0}' -f ($compress | ConvertTo-Json)) -ForegroundColor 'Black' -BackgroundColor 'Cyan'
+        Compress-7Zip @compress
+
+        Move-Item -LiteralPath $compress.ArchiveFileName -Destination ([IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'dev.7z')) -Force
+
+        if ($env:CI -and $env:APPVEYOR) {
+            Write-Host ('[PSAKE Build] Push-AppveyorArtifact FileName: {0}' -f ([IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'dev.7z'))) -ForegroundColor 'DarkMagenta'
+            $newFileName = '{0}.{1}.7z' -f ([IO.FileInfo] ([IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'dev.7z'))).BaseName, $env:APPVEYOR_BUILD_VERSION
+            Write-Host ('[PSAKE Build] Push-AppveyorArtifact NewFileName: {0}' -f $newFileName) -ForegroundColor 'DarkMagenta'
+            Push-AppveyorArtifact ([IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'dev.7z')) -FileName $newFileName
+        }
+
+        $compress = @{
+            Path = $script:parentModulePath
+            Filter = '*'
+            Format = 'Zip'
+            CompressionLevel = 'Normal'
+            ArchiveFileName = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', ('{0}.zip' -f $script:thisModuleName))
+        }
+        Write-Host ('[PSAKE Build] Compress Archive: {0}' -f ($compress | ConvertTo-Json)) -ForegroundColor 'Black' -BackgroundColor 'Cyan'
+        Compress-7Zip @compress
+
+        if ($env:CI -and $env:APPVEYOR) {
+            Write-Host ('[PSAKE Build] Push-AppveyorArtifact FileName: {0}' -f $compress.ArchiveFileName) -ForegroundColor 'DarkMagenta'
+            $newFileName = '{0}.{1}.zip' -f ([IO.FileInfo] $compress.ArchiveFileName).BaseName, $env:APPVEYOR_BUILD_VERSION
+            Write-Host ('[PSAKE Build] Push-AppveyorArtifact NewFileName: {0}' -f $newFileName) -ForegroundColor 'DarkMagenta'
+            Push-AppveyorArtifact $compress.ArchiveFileName -FileName $newFileName
+        }
     }
-    Write-Host ('[PSAKE Build] Compress Archive: {0}' -f ($compress | ConvertTo-Json)) -ForegroundColor 'Black' -BackgroundColor 'Cyan'
-    Compress-7Zip @compress
+}
 
-    Move-Item -LiteralPath $compress.ArchiveFileName -Destination ([IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'dev.7z')) -Force
+# .\.build\env.ps1; Remove-Item .\dev\docs -Recurse -Force; Remove-Module PSRedstone
+# Invoke-psake -buildFile .\.build\buildPsake.ps1 -TaskList Docs -Parameters @{FunctionsMD = [IO.Path]::Combine(([IO.DirectoryInfo] $PWD.Path).Parent.FullName, 'PSRedstone.wiki', 'Functions.md'); SkipCompression = $true}
+task Docs -Depends Build {
+    if (Get-Module $script:thisModuleName) { Remove-Module $script:thisModuleName }
+    if ($FunctionsMD) {
+        Write-Host ('[PSAKE Docs] FunctionsMD Passed in') -ForegroundColor 'Black' -BackgroundColor 'Cyan'
+        [IO.FileInfo] $FunctionsMD = $FunctionsMD
+    } else {
+        Write-Host ('[PSAKE Docs] FunctionsMD generated') -ForegroundColor 'Black' -BackgroundColor 'Cyan'
+        [IO.FileInfo] $FunctionsMD = [IO.Path]::Combine($script:dev, 'wiki', 'Functions.md')
+        if ($FunctionsMD.Directory.Exists) {
+            $FunctionsMD.Directory | Remove-Item -Recurse -Force
+        }
+        $configs = @(
+            '& git clone "https://{{0}}:x-oauth-basic@github.com/{{1}}.wiki.git" "{0}"' -f $FunctionsMD.Directory.FullName
+        )
+        foreach ($config in $configs) {
+            Write-Host ('PS > {0}' -f ($config -f $global:gitFormatters)).Replace($env:GITHUB_PERSONAL_ACCESS_TOKEN, '********')
+            Invoke-Config -Config $config
+        }
+    }
+    Write-Host ('[PSAKE Docs] FunctionsMD: {0}' -f ($FunctionsMD.FullName | ConvertTo-Json)) -ForegroundColor 'Black' -BackgroundColor 'Cyan'
 
-    if ($env:CI -and $env:APPVEYOR) {
-        Write-Host ('[PSAKE Build] Push-AppveyorArtifact FileName: {0}' -f ([IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'dev.7z'))) -ForegroundColor 'DarkMagenta'
-        $newFileName = '{0}.{1}.7z' -f ([IO.FileInfo] ([IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'dev.7z'))).BaseName, $env:APPVEYOR_BUILD_VERSION
-        Write-Host ('[PSAKE Build] Push-AppveyorArtifact NewFileName: {0}' -f $newFileName) -ForegroundColor 'DarkMagenta'
-        Push-AppveyorArtifact ([IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'dev.7z')) -FileName $newFileName
+    Import-Module ([IO.Path]::Combine($script:parentModulePath, ('{0}.psd1' -f $script:thisModuleName))) -Force
+    Get-Module $script:thisModuleName | Format-List
+
+    $markdownHelp = @{
+        Module = $script:thisModuleName
+        OutputFolder = $script:devDocs.FullName
+        UseFullTypeName = $true
+        NoMetadata = $true
+    }
+    Write-Host ('[PSAKE Docs] Markdown Help: {0}' -f ($markdownHelp | ConvertTo-Json))
+
+    $script:devDocs.Refresh()
+    if (-not $script:devDocs.Exists) {
+        New-MarkdownHelp @markdownHelp
+    } else {
+        Update-MarkdownHelp $markdownHelp.OutputFolder
+    }
+    $script:devDocs.Refresh()
+
+    # Copy all of the generated MD files into a single Functions.ms and place it in the path provided.
+    $mds = Get-ChildItem $script:devDocs -Filter '*.md' -File
+    [Collections.ArrayList] $allLines = @(
+        '{0} `{1}` functions are fully documented in this article.' -f $script:thisModuleName, $script:Version
+        'This article has been made availble for your convenience and for easy searching.'
+        'The same information is availble using the [`Get-Help`](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/get-help) function in PowerShell.'
+        'The sections of this document have been automatically generated with [platyPS](https://github.com/PowerShell/platyPS) and glued together into a single document.'
+        'To review documentation for a previous version of *{0}*, [review the history](Functions/_history).' -f $script:thisModuleName
+        ''
+        '**Table of Contents:**'
+        ''
+    )
+
+    # Build TOC
+    foreach ($md in $mds) {
+        $line = '- [{0}](#{1})' -f $md.BaseName, $md.BaseName.ToLower()
+        Write-Host ('[PSAKE Docs] TOC: {0}' -f $line) -ForegroundColor 'DarkMagenta'
+        $allLines.Add($line) | Out-Null
     }
 
-    $compress = @{
-        Path = $script:parentModulePath
-        Filter = '*'
-        Format = 'Zip'
-        CompressionLevel = 'Normal'
-        ArchiveFileName = [IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', ('{0}.zip' -f $script:thisModuleName))
-    }
-    Write-Host ('[PSAKE Build] Compress Archive: {0}' -f ($compress | ConvertTo-Json)) -ForegroundColor 'Black' -BackgroundColor 'Cyan'
-    Compress-7Zip @compress
+    # Create Header/Intro
+    $allLines.Add('') | Out-Null
+    $allLines | Out-File -LiteralPath $FunctionsMD.FullName -Encoding 'utf8' -Force
 
-    if ($env:CI -and $env:APPVEYOR) {
-        Write-Host ('[PSAKE Build] Push-AppveyorArtifact FileName: {0}' -f $compress.ArchiveFileName) -ForegroundColor 'DarkMagenta'
-        $newFileName = '{0}.{1}.zip' -f ([IO.FileInfo] $compress.ArchiveFileName).BaseName, $env:APPVEYOR_BUILD_VERSION
-        Write-Host ('[PSAKE Build] Push-AppveyorArtifact NewFileName: {0}' -f $newFileName) -ForegroundColor 'DarkMagenta'
-        Push-AppveyorArtifact $compress.ArchiveFileName -FileName $newFileName
+    # Add MDs
+    foreach ($md in $mds) {
+        @(
+            ''
+            '***'
+            ''
+        ) | Out-File -LiteralPath $FunctionsMD.FullName -Encoding 'utf8' -Append -Force
+
+        Write-Host "[PSAKE Docs] `tAdding:`t`t$($md.FullName | ConvertTo-Json)" -ForegroundColor 'DarkMagenta'
+        $allLines = foreach ($line in (Get-Content $md.FullName)) {
+            if ($line.Trim() -eq '## SYNOPSIS') {
+                # Don't add "SYNOPSIS" header.
+                # Ref: https://apastyle.apa.org/style-grammar-guidelines/paper-format/headings#:~:text=Headings%20in%20the%20introduction
+            if ($line -match '\\([^\\])') {
+                # https://regex101.com/r/a7QMx3
+                $line -replace '\\([^\\])', '$1'
+            }
+            } else {
+                Write-Output $line
+            }
+        }
+        $allLines | Out-File -LiteralPath $FunctionsMD.FullName -Encoding 'utf8' -Append -Force
+    }
+
+    $configs = @(
+        'Push-Location "{0}"' -f $FunctionsMD.Directory.FullName
+        '& git commit -m "Functions.md v{0}"' -f $env:APPVEYOR_BUILD_VERSION
+        '& git push'
+        'Pop-Location'
+    )
+    foreach ($config in $configs) {
+        Write-Host ('PS > {0}' -f ($config -f $global:gitFormatters)).Replace($env:GITHUB_PERSONAL_ACCESS_TOKEN, '********')
+        Invoke-Config -Config $config
     }
 }
 
@@ -287,42 +437,6 @@ task CodeCov {
 }
 
 task GitHubTagDelete {
-    function Invoke-Config {
-        [CmdletBinding()]
-        param (
-            [Parameter()]
-            [string]
-            $Config
-        )
-
-        if ($Config.StartsWith('&')) {
-            $cmd = $Config.Split(' ', 3)
-            $process = @{
-                FilePath = $cmd[1]
-                ArgumentList = $cmd[2] -f $gitFormatters
-                RedirectStandardOutput = [IO.Path]::Combine($env:Temp, 'stdout.txt')
-                RedirectStandardError = [IO.Path]::Combine($env:Temp, 'stderr.txt')
-                Wait = $true
-                PassThru = $true
-            }
-            $result = Start-Process @process
-            if ($stdout = (Get-Content ([IO.Path]::Combine($env:Temp, 'stdout.txt')) | Out-String).Trim()) {
-                Write-Host $stdout
-            }
-            if ($stderr = (Get-Content ([IO.Path]::Combine($env:Temp, 'stderr.txt')) | Out-String).Trim()) {
-                if ($result.ExitCode) {
-                    Write-Host ('# ExitCode: {0}' -f $result.ExitCode) -BackgroundColor 'DarkRed'
-                    Write-Error $stderr
-                } else {
-                    Write-Host $stderr -BackgroundColor 'DarkYellow'
-                    Write-Host ('# ExitCode: {0}' -f $result.ExitCode)
-                }
-            }
-        } else {
-            $config -f $gitFormatters | Invoke-Expression
-        }
-    }
-
     Write-Host ('[PSAKE GitHubTagDelete] APPVEYOR_REPO_TAG: {0}' -f $env:APPVEYOR_REPO_TAG)
 
     if ($env:APPVEYOR_REPO_TAG -eq 'true') {
@@ -342,12 +456,6 @@ task GitHubTagDelete {
         $release = Invoke-RestMethod @webRequest
         Write-Host ('[PSAKE GitHubTagDelete] Release ID: {0}; Commit: {1}' -f $release.id, $release.target_commitish) -ForegroundColor 'DarkMagenta'
 
-        $gitFormatters = @(
-            $env:GITHUB_PERSONAL_ACCESS_TOKEN
-            $env:APPVEYOR_REPO_NAME
-            $env:APPVEYOR_REPO_TAG_NAME
-        )
-
         Write-Host 'Git Config' -ForegroundColor 'Black' -BackgroundColor 'DarkCyan'
         $configs = @(
             '& git remote rm origin'
@@ -356,7 +464,7 @@ task GitHubTagDelete {
             '& git config --global user.email "VertigoBot@80.vertigion.com"'
         )
         foreach ($config in $configs) {
-            Write-Host ('PS > {0}' -f ($config -f $gitFormatters)).Replace($env:GITHUB_PERSONAL_ACCESS_TOKEN, '********')
+            Write-Host ('PS > {0}' -f ($config -f $global:gitFormatters)).Replace($env:GITHUB_PERSONAL_ACCESS_TOKEN, '********')
             Invoke-Config -Config $config
         }
 
@@ -366,7 +474,7 @@ task GitHubTagDelete {
             '& git push --set-upstream origin :refs/tags/{2}'
         )
         foreach ($config in $configs) {
-            Write-Host ('PS > {0}' -f ($config -f $gitFormatters)).Replace($env:GITHUB_PERSONAL_ACCESS_TOKEN, '********')
+            Write-Host ('PS > {0}' -f ($config -f $global:gitFormatters)).Replace($env:GITHUB_PERSONAL_ACCESS_TOKEN, '********')
             Invoke-Config -Config $config
         }
 

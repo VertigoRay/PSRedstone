@@ -1,6 +1,8 @@
 <#
 .NOTES
-    https://learn.microsoft.com/en-us/dotnet/api/system.componentmodel.win32exception
+https://learn.microsoft.com/en-us/dotnet/api/system.componentmodel.win32exception
+.LINK
+https://github.com/VertigoRay/PSRedstone/wiki/Functions#get-redstonetranslatederrorcode
 #>
 function Get-RedstoneTranslatedErrorCode {
     [CmdletBinding()]

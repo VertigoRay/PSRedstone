@@ -1,7 +1,8 @@
 <#
 .NOTES
-
 Ref: https://stackoverflow.com/a/35843420/17552750
+.LINK
+https://github.com/VertigoRay/PSRedstone/wiki/Functions#invoke-redstoneregistrytakeownership
 #>
 function Invoke-RedstoneRegistryTakeOwnership {
     [CmdletBinding()]

@@ -12,17 +12,19 @@ Argument to pass to the method being executed. Allows execution of method withou
 .PARAMETER Parameter
 Argument to pass to the method being executed. Allows execution of method by using named parameters.
 .EXAMPLE
-# Minimizes all windows.
 $ShellApp = New-Object -ComObject 'Shell.Application'
 $null = Invoke-ObjectMethod -InputObject $ShellApp -MethodName 'MinimizeAll'
+
+Minimizes all windows.
 .EXAMPLE
-# Opens the C:\Windows folder in a Windows Explorer window.
 $ShellApp = New-Object -ComObject 'Shell.Application'
 $null = Invoke-ObjectMethod -InputObject $ShellApp -MethodName 'Explore' -Parameter @{'vDir'='C:\Windows'}
+
+Opens the C:\Windows folder in a Windows Explorer window.
 .NOTES
 This is an internal script function and should typically not be called directly.
 .LINK
-http://psappdeploytoolkit.com
+https://github.com/VertigoRay/PSRedstone/wiki/Functions#invoke-redstoneobjectmethod
 #>
 Function Invoke-RedstoneObjectMethod {
 	[CmdletBinding(DefaultParameterSetName='Positional')]

@@ -1,11 +1,10 @@
 <#
 .SYNOPSIS
-
 Get SeTakeOwnership, SeBackup and SeRestore privileges before executes next lines, script needs Admin privilege
-
 .NOTES
-
 Ref: https://stackoverflow.com/a/35843420/17552750
+.LINK
+https://github.com/VertigoRay/PSRedstone/wiki/Functions#invoke-redstoneelevatecurrentprocess
 #>
 function Invoke-RedstoneElevateCurrentProcess {
     [CmdletBinding()]

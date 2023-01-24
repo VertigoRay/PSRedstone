@@ -1,6 +1,8 @@
 <#
 .DESCRIPTION
 Recursively probe registry key's sub-key's and values and output a sorted array.
+.LINK
+https://github.com/VertigoRay/PSRedstone/wiki/Functions#get-redstonerecursiveregistrykey
 #>
 function Get-RedstoneRecursiveRegistryKey {
     param(
@@ -13,7 +15,7 @@ function Get-RedstoneRecursiveRegistryKey {
     [System.Collections.ArrayList] $RegKeysArray = 'KeyName', 'ValueName', 'Value'
 
     $Reg = [Microsoft.Win32.RegistryKey]::OpenRemoteBaseKey('LocalMachine', $ComputerName)
-    $RegKey= $Reg.OpenSubKey($RegPath);
+    $RegKey= $Reg.OpenSubKey($RegPath)
 
     function DigThroughKeys() {
         param (
@@ -31,11 +33,11 @@ function Get-RedstoneRecursiveRegistryKey {
             {
                 if($null -ne $Key.GetValue($value))
                 {
-                    $item = New-Object psobject;
-                    $item | Add-Member -NotePropertyName "KeyName" -NotePropertyValue $Key.Name;
-                    $item | Add-Member -NotePropertyName "ValueName" -NotePropertyValue $value.ToString();
-                    $item | Add-Member -NotePropertyName "Value" -NotePropertyValue $Key.GetValue($value);
-                    [void] $RegKeysArray.Add($item);
+                    $item = New-Object psobject
+                    $item | Add-Member -NotePropertyName "KeyName" -NotePropertyValue $Key.Name
+                    $item | Add-Member -NotePropertyName "ValueName" -NotePropertyValue $value.ToString()
+                    $item | Add-Member -NotePropertyName "Value" -NotePropertyValue $Key.GetValue($value)
+                    [void] $RegKeysArray.Add($item)
                 }
             }
         }
@@ -47,11 +49,11 @@ function Get-RedstoneRecursiveRegistryKey {
                 {
                     if($null -ne $Key.GetValue($value))
                     {
-                        $item = New-Object PSObject;
-                        $item | Add-Member -NotePropertyName "KeyName" -NotePropertyValue $Key.Name;
-                        $item | Add-Member -NotePropertyName "ValueName" -NotePropertyValue $value.ToString();
-                        $item | Add-Member -NotePropertyName "Value" -NotePropertyValue $Key.GetValue($value);
-                        [void] $RegKeysArray.Add($item);
+                        $item = New-Object PSObject
+                        $item | Add-Member -NotePropertyName "KeyName" -NotePropertyValue $Key.Name
+                        $item | Add-Member -NotePropertyName "ValueName" -NotePropertyValue $value.ToString()
+                        $item | Add-Member -NotePropertyName "Value" -NotePropertyValue $Key.GetValue($value)
+                        [void] $RegKeysArray.Add($item)
                     }
                 }
             }
@@ -60,18 +62,17 @@ function Get-RedstoneRecursiveRegistryKey {
             {
                 ForEach($subKey in $Key.GetSubKeyNames())
                 {
-                    DigThroughKeys -Key $Key.OpenSubKey($subKey);
+                    DigThroughKeys -Key $Key.OpenSubKey($subKey)
                 }
             }
         }
     }
 
-    #Replace the value following ComputerName to fit your needs. This works, and is most useful, when scanning remote computers.
     DigThroughKeys -Key $RegKey
 
     #Write the output to the console.
     $RegKeysArray | Select-Object KeyName, ValueName, Value | Sort-Object ValueName | Format-Table
 
-    $Reg.Close();
-    return $RegKeysArray;
+    $Reg.Close()
+    return $RegKeysArray
 }

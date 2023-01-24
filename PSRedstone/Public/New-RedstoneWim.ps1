@@ -1,7 +1,9 @@
 #Requires -RunAsAdministrator
 <#
 .EXAMPLE
-New-RedstoneWim -ImagePath "PSRedstone.wim" -CapturePath "PSRedstone" -Name "PSRedstone"
+New-RedstoneWim -ImagePath 'PSRedstone.wim' -CapturePath 'PSRedstone' -Name 'PSRedstone'
+.LINK
+https://github.com/VertigoRay/PSRedstone/wiki/Functions#new-redstonewim
 #>
 function New-RedstoneWim {
     [CmdletBinding(SupportsShouldProcess)]

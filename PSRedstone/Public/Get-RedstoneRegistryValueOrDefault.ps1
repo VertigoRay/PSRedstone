@@ -1,3 +1,7 @@
+<#
+.LINK
+https://github.com/VertigoRay/PSRedstone/wiki/Functions#get-redstoneregistryvalueordefault
+#>
 function Get-RedstoneRegistryValueOrDefault {
     [CmdletBinding()]
     param(

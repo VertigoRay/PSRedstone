@@ -71,6 +71,13 @@ if ((Get-Module 'Pester' -ErrorAction 'Ignore') -and ((Get-Module 'Pester' -Erro
     Remove-Module 'Pester' -Force
 }
 
+if (-not (Get-Command 'Install-Module' -ErrorAction 'Ignore' | Where-Object { $_.Version -ge '2.0' })) {
+    Write-Information '# Upgrading PowerShellGet'
+    Install-Module -Name 'PowerShellGet' -Scope 'AllUsers' -AllowClobber -Force
+    Remove-Module 'PowerShellGet'
+    Import-Module (Get-Module 'PowerShellGet' -ListAvailable | Where-Object { $_.Version -gt '2.0' }).Path
+}
+
 Write-Information '# Install all of the modules in the $installModules hashtable.'
 foreach ($module in $installModules.GetEnumerator()) {
     if ($module.Value -is [hashtable]) {

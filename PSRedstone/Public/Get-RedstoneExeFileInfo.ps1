@@ -1,7 +1,39 @@
+<#
+.SYNOPSIS
+Attempt to find the EXE in the provided Path.
+.DESCRIPTION
+This functions will go through three steps to find the provided EXE:
+
+- Determine if you provided the full path to the EXE or if it's in the current directory.
+- Determine if it can be found under any path in $env:PATH.
+- Determine if the locations was registered in the registry.
+
+If one of these is true, it'll stop looking and return the `IO.FileInfo` of the EXE.
+.OUTPUTS
+[IO.FileInfo]
+.EXAMPLE
+Get-RedstoneExeFileInfo 'notepad.exe'
+.EXAMPLE
+Get-RedstoneExeFileInfo 'chrome.exe'
+.LINK
+https://github.com/VertigoRay/PSRedstone/wiki/Functions#get-redstoneexefileinfo
+#>
 function Get-RedstoneExeFileInfo {
     [CmdletBinding()]
+    [OutputType([IO.FileInfo])]
     param(
+        [Parameter(Mandatory = $true, Position = 0, HelpMessage = 'Name of the EXE to search for.')]
         [ValidateNotNullOrEmpty()]
+        [ValidateScript({
+            if (([IO.FileInfo] $_).Extension -eq '.exe') {
+                Write-Output $true
+            } else {
+                Throw ('The Path "{0}" has an unexpected extension "{1}"; expecting ".exe".' -f @(
+                    $_
+                    ([IO.FileInfo] $_).Extension
+                ))
+            }
+        })]
         [string]
         $Path
     )
