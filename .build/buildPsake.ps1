@@ -440,7 +440,9 @@ task Test {
 }
 
 task CodeCov {
-    & ([IO.Path]::Combine($script:psScriptRootParent.FullName, 'dev', 'codecov.exe'))
+    Push-Location $script:dev.FullName
+    & ([IO.Path]::Combine($script:dev.FullName, 'codecov.exe'))
+    Pop-Location
 }
 
 task GitHubTagDelete {

@@ -12,11 +12,9 @@
     PSCodeCovIo        = '1.0.1'
     PSMinifier         = '1.1.3'
     platyPS            = @{
+        RequiredVersion = '0.14.2'
         Parameters = @{
-            Name = 'platyPS'
-            RequiredVersion = '0.14.2'
             AllowClobber = $true
-            Force = $true
             SkipPublisherCheck = $true
         }
     }
