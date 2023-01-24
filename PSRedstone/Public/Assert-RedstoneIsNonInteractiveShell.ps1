@@ -4,8 +4,8 @@ Is the current process running in a non-interactive shell?
 .DESCRIPTION
 There are two ways to determine if the current process is in a non-interactive shell:
 
-- See if the user environment is makred as interactive.
-- See if powershell was launced with the -NonInteractive
+- See if the user environment is marked as interactive.
+- See if PowerShell was launched with the -NonInteractive
 .EXAMPLE
 Assert-RedstoneIsNonInteractiveShell
 If you're typing this into PowerShell, you should see `$false`.

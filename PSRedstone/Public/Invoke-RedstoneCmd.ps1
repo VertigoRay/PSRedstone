@@ -2,9 +2,17 @@
 .SYNOPSIS
 Runs the given command in ComSpec (aka: Command Prompt).
 .DESCRIPTION
-This just runs a command in ComSpec by passing it to `Invoke-RedstoneRun`.
+This just runs a command in ComSpec by passing it to `Invoke-RedstoneRun`. If you don't *need* ComSpec to run the command, it's normally best to just use `Invoke-RedstoneRun`.
 
-If you don't *need* ComSpec to run the command, it's normally best to just use `Invoke-RedstoneRun`.
+Returns the same object as `Invoke-RedstoneRun`
+
+```
+@{
+    'Process' = $proc; # The result from Start-Process; as returned from `Invoke-RedstoneRun`.
+    'StdOut'  = $stdout;
+    'StdErr'  = $stderr;
+}
+```
 .PARAMETER Cmd
 Under normal usage, the string passed in here just gets appended to `cmd.exe /c `.
 .PARAMETER KeepOpen
@@ -24,11 +32,6 @@ Applies /A:  Causes the output of internal commands to a pipe or file to be ANSI
 Applies /U:  Causes the output of internal commands to a pipe or file to be Unicode
 .OUTPUTS
 [Hashtable] As returned from `Invoke-RedstoneRun`.
-@{
-    'Process' = $proc; # The result from Start-Process; as returned from `Invoke-RedstoneRun`.
-    'StdOut'  = $stdout;
-    'StdErr'  = $stderr;
-}
 .EXAMPLE
 Invoke-RedstoneCmd "MKLINK /D Temp C:\Temp"
 .LINK

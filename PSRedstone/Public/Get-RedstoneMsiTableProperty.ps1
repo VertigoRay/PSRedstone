@@ -33,8 +33,9 @@ Get-RedstoneMsiTableProperty -Path 'C:\Package\AppDeploy.msi' -GetSummaryInforma
 .NOTES
 This is an internal script function and should typically not be called directly.
 
-Copyright (C) 2015 - PowerShell App Deployment Toolkit Team
-Copyright (C) 2023 - Raymond Piller (VertigoRay)
+> Copyright Ⓒ 2015 - PowerShell App Deployment Toolkit Team
+>
+> Copyright Ⓒ 2023 - Raymond Piller (VertigoRay)
 .LINK
 https://github.com/VertigoRay/PSRedstone/wiki/Functions#get-redstonemsitableproperty
 #>

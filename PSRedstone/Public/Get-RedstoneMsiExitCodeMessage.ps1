@@ -13,8 +13,9 @@ Get-RedstoneMsiExitCodeMessage -MsiExitCode 1618
 This is an internal script function and should typically not be called directly.
 - https://learn.microsoft.com/en-us/previous-versions//aa368542(v=vs.85)
 
-Copyright (C) 2015 - PowerShell App Deployment Toolkit Team
-Copyright (C) 2023 - Raymond Piller (VertigoRay)
+> Copyright Ⓒ 2015 - PowerShell App Deployment Toolkit Team
+>
+> Copyright Ⓒ 2023 - Raymond Piller (VertigoRay)
 .LINK
 https://github.com/VertigoRay/PSRedstone/wiki/Functions#get-redstonemsiexitcodemessage
 #>

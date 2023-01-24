@@ -17,10 +17,11 @@ Assert-RedstoneIsMutexAvailable -MutexName 'Global\_MSIExecute' -MutexWaitTimeIn
 .EXAMPLE
 Assert-RedstoneIsMutexAvailable -MutexName 'Global\_MSIExecute' -MutexWaitTimeInMilliseconds (New-TimeSpan -Seconds 60).TotalMilliseconds
 .NOTES
-Copyright (C) 2015 - PowerShell App Deployment Toolkit Team
-Copyright (C) 2023 - Raymond Piller (VertigoRay)
-
 - [_MSIExecute Mutex](https://learn.microsoft.com/en-us/windows/win32/msi/-msiexecute-mutex)
+
+> Copyright Ⓒ 2015 - PowerShell App Deployment Toolkit Team
+>
+> Copyright Ⓒ 2023 - Raymond Piller (VertigoRay)
 .LINK
 https://github.com/VertigoRay/PSRedstone/wiki/Functions/#assert-redstoneismutexavailable
 #>

@@ -338,10 +338,38 @@ task Docs {
                 # Don't add "SYNOPSIS" header.
                 # Ref: https://apastyle.apa.org/style-grammar-guidelines/paper-format/headings#:~:text=Headings%20in%20the%20introduction
                 Write-Host ('[PSAKE Docs] Removing: {0}' -f $line) -ForegroundColor 'DarkMagenta'
-            } elseif ($line -match '\\([[\]`])') {
-                # https://regex101.com/r/a7QMx3
+            } elseif (($line.Trim() -eq '## OUTPUTS') -or $inOutputs) {
+                if ($inOutputs) {
+                    if ($line.Trim().StartsWith('## ')) {
+                        $inOutputs = $false
+                        Write-Output $line
+                    } elseif ($line.Trim().StartsWith('### ')) {
+                        Write-Host ('[PSAKE Docs] Editing:{1}{0}' -f $line, "`t") -ForegroundColor 'DarkMagenta'
+                        $newline = '`{0}`' -f $line.Trim().Substring(4)
+                        Write-Host ('{1}{1}>>{1}{0}' -f $newline, "`t") -ForegroundColor 'DarkMagenta'
+                        Write-Output $newline
+                    }
+                } else {
+                    $inOutputs = $true
+                    Write-Output $line
+                }
+            } elseif (($line.Trim() -eq '### EXAMPLE') -or $inExample) {
+                if ($inExample) {
+                    if ($line.Trim().StartsWith('```')) {
+                        Write-Host ('[PSAKE Docs] Editing:{1}{0}' -f $line, "`t") -ForegroundColor 'DarkMagenta'
+                        $newline = '```powershell'
+                        Write-Host ('{1}{1}>>{1}{0}' -f $newline, "`t") -ForegroundColor 'DarkMagenta'
+                        Write-Output $newline
+                        $inExample = $false
+                    }
+                } else {
+                    $inExample = $true
+                    Write-Output $line
+                }
+            } elseif ($line -match '\\([[\]`\>])') {
+                # https://regex101.com/r/pBXaJE/3
                 Write-Host ('[PSAKE Docs] Editing:{1}{0}' -f $line, "`t") -ForegroundColor 'DarkMagenta'
-                $newline = $line -replace '\\([[\]`])', '$1'
+                $newline = $line -replace '\\([[\]`\>)', '$1'
                 Write-Host ('{1}{1}>>{1}{0}' -f $newline, "`t") -ForegroundColor 'DarkMagenta'
                 Write-Output $newline
             } else {
