@@ -260,7 +260,7 @@ task Build -Depends BuildManifest {
 
 # .\.build\env.ps1; Remove-Item .\dev\docs -Recurse -Force; Remove-Module PSRedstone
 # Invoke-psake -buildFile .\.build\buildPsake.ps1 -TaskList Docs -Parameters @{FunctionsMD = [IO.Path]::Combine(([IO.DirectoryInfo] $PWD.Path).Parent.FullName, 'PSRedstone.wiki', 'Functions.md'); SkipCompression = $true}
-task Docs -Depends Build {
+task Docs {
     if (Get-Module $script:thisModuleName) { Remove-Module $script:thisModuleName }
     if ($FunctionsMD) {
         Write-Host ('[PSAKE Docs] FunctionsMD Passed in') -ForegroundColor 'Black' -BackgroundColor 'Cyan'
@@ -281,7 +281,7 @@ task Docs -Depends Build {
     }
     Write-Host ('[PSAKE Docs] FunctionsMD: {0}' -f ($FunctionsMD.FullName | ConvertTo-Json)) -ForegroundColor 'Black' -BackgroundColor 'Cyan'
 
-    Import-Module ([IO.Path]::Combine($script:parentModulePath, ('{0}.psd1' -f $script:thisModuleName))) -Force
+    Import-Module ([IO.Path]::Combine($script:parentModulePath, ('{0}.psd1' -f $script:thisModuleName))) -Global -Force
     Get-Module $script:thisModuleName | Format-List
 
     $markdownHelp = @{
@@ -332,15 +332,18 @@ task Docs -Depends Build {
             ''
         ) | Out-File -LiteralPath $FunctionsMD.FullName -Encoding 'utf8' -Append -Force
 
-        Write-Host "[PSAKE Docs] `tAdding:`t`t$($md.FullName | ConvertTo-Json)" -ForegroundColor 'DarkMagenta'
+        Write-Host ('[PSAKE Docs] Adding: {0}' -f ($md.FullName | ConvertTo-Json)) -ForegroundColor 'DarkMagenta'
         $allLines = foreach ($line in (Get-Content $md.FullName)) {
             if ($line.Trim() -eq '## SYNOPSIS') {
                 # Don't add "SYNOPSIS" header.
                 # Ref: https://apastyle.apa.org/style-grammar-guidelines/paper-format/headings#:~:text=Headings%20in%20the%20introduction
-            if ($line -match '\\([^\\])') {
+                Write-Host ('[PSAKE Docs] Removing: {0}' -f $line) -ForegroundColor 'DarkMagenta'
+            } elseif ($line -match '\\([[\]`])') {
                 # https://regex101.com/r/a7QMx3
-                $line -replace '\\([^\\])', '$1'
-            }
+                Write-Host ('[PSAKE Docs] Editing:{1}{0}' -f $line, "`t") -ForegroundColor 'DarkMagenta'
+                $newline = $line -replace '\\([[\]`])', '$1'
+                Write-Host ('{1}{1}>>{1}{0}' -f $newline, "`t") -ForegroundColor 'DarkMagenta'
+                Write-Output $newline
             } else {
                 Write-Output $line
             }
@@ -350,13 +353,17 @@ task Docs -Depends Build {
 
     $configs = @(
         'Push-Location "{0}"' -f $FunctionsMD.Directory.FullName
-        '& git commit -m "Functions.md v{0}"' -f $env:APPVEYOR_BUILD_VERSION
+        '& git commit -a -m "Functions.md v{0}"' -f $env:APPVEYOR_BUILD_VERSION
         '& git push'
         'Pop-Location'
     )
     foreach ($config in $configs) {
         Write-Host ('PS > {0}' -f ($config -f $global:gitFormatters)).Replace($env:GITHUB_PERSONAL_ACCESS_TOKEN, '********')
-        Invoke-Config -Config $config
+        if ($env:CI) {
+            Invoke-Config -Config $config
+        } else {
+            Write-Warning '[PSAKE Docs] Previous command skipped; not in CI.'
+        }
     }
 }
 

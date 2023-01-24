@@ -44,7 +44,7 @@ build_script:
   - ps: |
       $invokePsake = @{
         BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
-        TaskList = @('Build', 'Docs')
+        TaskList = @('Build')
       }
       Invoke-psake @invokePsake
       if (-not $psake.build_success) {
@@ -86,7 +86,7 @@ on_success:
       if ($env:APPVEYOR_REPO_TAG -eq 'true' -and -not $env:APPVEYOR_REPO_TAG_NAME.StartsWith('v')) {
         $invokePsake = @{
           BuildFile = [IO.Path]::Combine($env:APPVEYOR_BUILD_FOLDER, '.build', 'buildPsake.ps1')
-          TaskList = @('DeployPSGallery')
+          TaskList = @('DeployPSGallery', 'Docs')
         }
         Invoke-psake @invokePsake
         if (-not $psake.build_success) {
