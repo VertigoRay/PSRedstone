@@ -99,10 +99,12 @@ function Invoke-Download {
     }
 
     if ($Checksum) {
-        $hash = Get-FileHash -LiteralPath $startBitsTransfer.Destination -Algorithm $Checksum.Algorithm
+        $checksumAlgorithm, $checksumHash = $Checksum.Split(':', 2)
+
+        $hash = Get-FileHash -LiteralPath $startBitsTransfer.Destination -Algorithm $checksumAlgorithm
         Write-Verbose ('[Invoke-Download] Downloaded File Hash: {0}' -f ($hash | ConvertTo-Json))
 
-        if ($Checksum.Hash -ne $hash.Hash) {
+        if ($checksumHash -ne $hash.Hash) {
             Remove-Item -LiteralPath $startBitsTransfer.Destination -Force
             Throw ('Unexpected Hash; Downloaded file deleted!')
         }
