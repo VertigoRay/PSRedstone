@@ -1,4 +1,4 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/a9whj5lwwi4fo9yo/branch/master?svg=true)](https://ci.appveyor.com/project/VertigoRay/psredstone)
+[![Build Status](https://ci.appveyor.com/api/projects/status/a9whj5lwwi4fo9yo/branch/master?svg=true)](https://ci.appveyor.com/project/VertigoRay/psredstone)
 [![codecov](https://codecov.io/gh/VertigoRay/PSRedstone/branch/master/graph/badge.svg)](https://codecov.io/gh/VertigoRay/PSRedstone)
 [![version](https://img.shields.io/powershellgallery/v/PSRedstone.svg)](https://www.powershellgallery.com/packages/PSRedstone)
 [![downloads](https://img.shields.io/powershellgallery/dt/PSRedstone.svg?label=downloads)](https://www.powershellgallery.com/stats/packages/PSRedstone?groupby=Version)

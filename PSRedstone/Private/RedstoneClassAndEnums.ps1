@@ -1,7 +1,7 @@
 #region DEVONLY
-. "${PSScriptRoot}\..\Public\Assert-RedstoneIsElevated.ps1"
-. "${PSScriptRoot}\..\Public\Get-RedstoneRegistryValueOrDefault.ps1"
-# . "${PSScriptRoot}\..\Public\Get-RedstoneRegistryValueDoNotExpandEnvironmentNames.ps1"
+. ([IO.Path]::Combine(([IO.DirectoryInfo] $PSScriptRoot).Parent.FullName, 'Public', 'Assert-IsElevated.ps1'))
+. ([IO.Path]::Combine(([IO.DirectoryInfo] $PSScriptRoot).Parent.FullName, 'Public', 'Get-RegistryValueOrDefault.ps1'))
+# . ([IO.Path]::Combine(([IO.DirectoryInfo] $PSScriptRoot).Parent.FullName, 'Public', 'Get-RegistryValueDoNotExpandEnvironmentNames.ps1'))
 #endregion
 
 class Redstone {
@@ -312,7 +312,7 @@ class Redstone {
         $key = if ($env:PSRedstoneRegistryKeyRoot) {
             $env:PSRedstoneRegistryKeyRoot
         } else {
-            Get-RedstoneRegistryValueOrDefault $regKeyPSRedstone 'RegistryKeyRoot' $regKeyPSRedstone
+            Get-RegistryValueOrDefault $regKeyPSRedstone 'RegistryKeyRoot' $regKeyPSRedstone
         }
         $this.Settings.Registry = @{
             KeyRoot = $key
@@ -414,14 +414,14 @@ class Redstone {
         $keyOrg = if ($env:PSRedstoneRegistryKeyRootOrg) {
             $env:PSRedstoneRegistryKeyRootOrg
         } else {
-            Get-RedstoneRegistryValueOrDefault $this.Settings.Registry.KeyRoot 'RegistryKeyRootOrg' $regKeyPSRedstoneOrg
+            Get-RegistryValueOrDefault $this.Settings.Registry.KeyRoot 'RegistryKeyRootOrg' $regKeyPSRedstoneOrg
         }
 
         $regKeyPSRedstonePublisher = [IO.Path]::Combine($this.Settings.Registry.KeyRoot, 'Publisher')
         $keyPublisher = if ($env:PSRedstoneRegistryKeyRootPublisher) {
             $env:PSRedstoneRegistryKeyRootPublisher
         } else {
-            Get-RedstoneRegistryValueOrDefault $this.Settings.Registry.KeyRoot 'RegistryKeyRootPublisher' $regKeyPSRedstonePublisher
+            Get-RegistryValueOrDefault $this.Settings.Registry.KeyRoot 'RegistryKeyRootPublisher' $regKeyPSRedstonePublisher
         }
 
         $keyProduct = [IO.Path]::Combine($regKeyPSRedstonePublisher, 'Product')
@@ -434,10 +434,23 @@ class Redstone {
     }
 
     hidden [void] PSDefaultParameterValuesSetUp() {
-        $global:PSDefaultParameterValues.Set_Item('*-Redstone*:LogFile', $this.Settings.Log.File.FullName)
-        $global:PSDefaultParameterValues.Set_Item('*-Redstone*:LogFileF', $this.Settings.Log.FileF)
-        $global:PSDefaultParameterValues.Set_Item('*-Redstone*:LogFileF', $this.Settings.Log.FileF)
-        $global:PSDefaultParameterValues.Set_Item('Get-RedstoneRegistryValueOrDefault:OnlyUseDefaultSettings', (Get-RedstoneRegistryValueOrDefault 'Settings\Functions\Get-RedstoneRegistryValueOrDefault' 'OnlyUseDefaultSettings' $false -RegistryKeyRoot $this.Settings.Registry.KeyRoot))
+        $_prefix = (Get-Module 'PSRedstone').Prefix
+
+        # $global:PSDefaultParameterValues.Set_Item(('*-{0}*:LogFileF' -f $_prefix), $this.Settings.Log.FileF)
+        # $global:PSDefaultParameterValues.Set_Item(('*-{0}*:LogFileF' -f $_prefix), $this.Settings.Log.FileF)
+        foreach ($_exportedCommand in (Get-Module 'PSRedstone').ExportedCommands.Keys) {
+            if ((Get-Command $_exportedCommand).Parameters.Keys -contains 'LogFile') {
+                $global:PSDefaultParameterValues.Set_Item(('{0}:LogFile' -f $_exportedCommand), $this.Settings.Log.File.FullName)
+            }
+            if ((Get-Command $_exportedCommand).Parameters.Keys -contains 'LogFileF') {
+                $global:PSDefaultParameterValues.Set_Item(('{0}:LogFileF' -f $_exportedCommand), $this.Settings.Log.FileF)
+            }
+        }
+
+        $_onlyUseDefaultSettings = $this.GetRegOrDefault('Settings\Functions\Get-RegistryValueOrDefault', 'OnlyUseDefaultSettings', $false)
+        $global:PSDefaultParameterValues.Set_Item(('Get-{0}RegistryValueOrDefault:OnlyUseDefaultSettings' -f $_prefix), $_onlyUseDefaultSettings)
+
+        # https://github.com/VertigoRay/PSWriteLog/wiki
         $global:PSDefaultParameterValues.Set_Item('Write-Log:FilePath', $this.Settings.Log.File.FullName)
     }
 
@@ -451,7 +464,7 @@ class Redstone {
         }
 
         try {
-            $ret = Get-ItemPropertyValue -Path ('{0}\{1}' -f $this.RegistryKeyRoot, $RegistryKey) -Name $RegistryValue -ErrorAction 'Stop'
+            $ret = Get-ItemPropertyValue -Path ('Registry::{0}\{1}' -f $this.Settings.Registry.KeyRoot, $RegistryKey) -Name $RegistryValue -ErrorAction 'Stop'
             Write-Verbose "[Redstone GetRegOrDefault] Registry Set; Returning: ${ret}"
             return $ret
         } catch [System.Management.Automation.PSArgumentException] {

@@ -7,10 +7,10 @@ BeforeAll {
 
     if ($script:isElevated) {
         $imports = @(
-            '{0}\PSRedstone\Public\Dismount-RedstoneWim.ps1'
-            '{0}\PSRedstone\Public\Invoke-RedstoneForceEmptyDirectory.ps1'
-            '{0}\PSRedstone\Public\Mount-RedstoneWim.ps1'
-            '{0}\PSRedstone\Public\New-RedstoneWim.ps1'
+            '{0}\PSRedstone\Public\Dismount-Wim.ps1'
+            '{0}\PSRedstone\Public\Invoke-ForceEmptyDirectory.ps1'
+            '{0}\PSRedstone\Public\Mount-Wim.ps1'
+            '{0}\PSRedstone\Public\New-Wim.ps1'
         )
 
         foreach ($import in $imports) {
@@ -19,7 +19,7 @@ BeforeAll {
         }
     }
 
-    Write-Information ('[BeforeAll] Redstone Commands: {0}' -f (Get-Command '*-Redstone*' | Out-String))
+    Write-Information ('[BeforeAll] Redstone Commands: {0}' -f (Get-Command '*-*' | Out-String))
 
     [IO.DirectoryInfo] $capturePath = [IO.Path]::Combine($psProjectRoot.FullName, 'PSRedstone')
     Write-Information ('[BeforeAll] RedstoneWim CapturePath: [{1}] {0}' -f $capturePath.FullName, $capturePath.GetType().FullName)
@@ -64,7 +64,7 @@ Describe 'RedstoneWim' -Tag 'WIM' {
                     CapturePath = $capturePath.FullName
                     Name = 'PSRedstone'
                 }
-                Write-Information ('[Context NEW BeforeAll] New-RedstoneWim: {0}' -f ($newWim | ConvertTo-Json))
+                Write-Information ('[Context NEW BeforeAll] New-Wim: {0}' -f ($newWim | ConvertTo-Json))
             }
 
             It 'Should be elevated to create WIMs' {
@@ -75,8 +75,8 @@ Describe 'RedstoneWim' -Tag 'WIM' {
                 $imagePath.Exists | Should -Be $false
             }
 
-            It ('New-RedstoneWim Should Run') {
-                { New-RedstoneWim @newWim } | Should -Not -Throw
+            It ('New-Wim Should Run') {
+                { New-Wim @newWim } | Should -Not -Throw
             }
 
             It ('WIM Created: {0}' -f $imagePath) {
@@ -96,7 +96,7 @@ Describe 'RedstoneWim' -Tag 'WIM' {
                     ImagePath = $imagePath.FullName
                     MountPath = $mountPath.FullName
                 }
-                Write-Information ('[Context MOUNT BeforeAll] Mount-RedstoneWim: {0}' -f ($mountWim | ConvertTo-Json))
+                Write-Information ('[Context MOUNT BeforeAll] Mount-Wim: {0}' -f ($mountWim | ConvertTo-Json))
             }
 
             It 'Should be elevated to mount WIMs' {
@@ -107,8 +107,8 @@ Describe 'RedstoneWim' -Tag 'WIM' {
                 $mountPath.Exists | Should -Be $false
             }
 
-            It ('Mount-RedstoneWim Should Run') {
-                { Mount-RedstoneWim @mountWim } | Should -Not -Throw
+            It ('Mount-Wim Should Run') {
+                { Mount-Wim @mountWim } | Should -Not -Throw
             }
 
             It ('Mount path exists: {0}' -f $mountPath.FullName) {
@@ -131,7 +131,7 @@ Describe 'RedstoneWim' -Tag 'WIM' {
                 $dismountWim = @{
                     MountPath = $mountPath.FullName
                 }
-                Write-Information ('[Context DISMOUNT BeforeAll] Dismount-RedstoneWim: {0}' -f ($dismountWim | ConvertTo-Json))
+                Write-Information ('[Context DISMOUNT BeforeAll] Dismount-Wim: {0}' -f ($dismountWim | ConvertTo-Json))
             }
 
             It 'Should be elevated to dismount WIMs' {
@@ -143,8 +143,8 @@ Describe 'RedstoneWim' -Tag 'WIM' {
                 $mountPath.Exists | Should -Be $true
             }
 
-            It ('Dismount-RedstoneWim Should Run') {
-                { Dismount-RedstoneWim @dismountWim } | Should -Not -Throw
+            It ('Dismount-Wim Should Run') {
+                { Dismount-Wim @dismountWim } | Should -Not -Throw
             }
 
             It ('Mount path still exists: {0}' -f $mountPath.FullName) {
