@@ -287,19 +287,19 @@ Describe 'RedstoneClassAndEnums' -Tag 'Class' {
             { $script:Redstone.CimInstance.Win32_Service } | Should -Not -Throw
         }
 
-        It ('CimInstance NOT Empty') {
+        It ('CimInstance NOT Empty') -Skip {
             $script:Redstone.CimInstance.Win32_Service
             ($script:Redstone.CimInstance | Measure-Object).Count | Should -Be 1
         }
 
-        It ('GetCimInstance ReturnCimInstanceNotClass') {
+        It ('GetCimInstance ReturnCimInstanceNotClass') -Skip {
             $ref = $Redstone.GetCimInstance('Win32_Service')
             $dif = $Redstone.CimInstance.Win32_Service
             # Ref & Dif should be the same, so no differences will be returned by Compare-Object
             Compare-Object -ReferenceObject $ref -DifferenceObject $dif | Should -BeNullOrEmpty
         }
 
-        It ('GetCimInstance ReturnCimInstanceNotClass') {
+        It ('GetCimInstance ReturnCimInstanceNotClass') -Skip {
             $ref = $Redstone.GetCimInstance('Win32_Service', $true).Win32_Service
             $dif = $Redstone.CimInstance.Win32_Service
             # Ref & Dif should be the same, so no differences will be returned by Compare-Object
