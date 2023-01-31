@@ -169,7 +169,7 @@ function Invoke-Run {
 
         $stderrMon = [powershell]::Create()
         [void] $stderrMon.AddScript($monScript).AddParameters(@{
-            Std = 'Out'
+            Std = 'Err'
             Tmp = $stderr.FullName
             LogFile = $LogFile.FullName
         })
