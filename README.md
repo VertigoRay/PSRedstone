@@ -11,7 +11,7 @@ It includes a *Redstone* class, which is the core building block for the include
 It is designed to be lightweight and easy to deploy.
 While I use [MECM for my CM tool](https://learn.microsoft.com/en-us/mem/configmgr/), you should be able to use *PSRedstone* with [whatever tool you choose](https://www.reddit.com/r/sysadmin/comments/2go43q/comment/ckkydh4/).
 
-**Why did I name this module *Redstone*?**It should go without saying that [I'm a fan](https://namemc.com/profile/VertigoRay) of [Minecraft](https://www.minecraft.net).
+**Why did I name this module *Redstone*?** It should go without saying that [I'm a fan](https://namemc.com/profile/VertigoRay) of [Minecraft](https://www.minecraft.net).
 The simplicity of the game and how far you can push things into automation, even without any mods, is quite enthralling.
 Obviously, mining [redstone](https://minecraft.fandom.com/wiki/Redstone_Ore) is the first step to building more elaborate creations in Minecraft.
 I believe that using PSRedstone will be a good first step to building more elaborate, yet simple, deployment packages.
