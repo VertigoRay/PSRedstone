@@ -2,7 +2,7 @@ $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path).Replace(".Tests.", ".")
 . "$here\$sut"
 
-$TestDownloadZip_URL = 'http://its.cas.unt.edu/~casits/TestDownload_DONOTDELETE.zip'
+$TestDownloadZip_URL = 'https://its.cas.unt.edu/~casits/TestDownload_DONOTDELETE.zip'
 $PSDefaultParameterValues.Set_Item('Get-ArchiveAndExpand:ZipFile', (Join-Path $env:Temp (Split-Path $TestDownloadZip_URL -Leaf)))
 
 Describe $sut {

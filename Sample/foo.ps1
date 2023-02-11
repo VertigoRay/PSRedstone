@@ -1,1 +1,0 @@
-([IO.FileInfo] $MyInvocation.MyCommand.Source).BaseName

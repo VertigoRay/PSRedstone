@@ -7,9 +7,9 @@
       
 .Notes  
     Author        : Oliver Lipkau <oliver@lipkau.net>  
-    Blog        : http://oliver.lipkau.net/blog/  
+    Blog        : https://oliver.lipkau.net/blog/  
     Source        : https://github.com/lipkau/PsIni 
-                  http://gallery.technet.microsoft.com/scriptcenter/ea40c1ef-c856-434b-b8fb-ebd7a76e8d91 
+                  https://gallery.technet.microsoft.com/scriptcenter/ea40c1ef-c856-434b-b8fb-ebd7a76e8d91 
     Version        : 1.0 - 2010/03/12 - Initial release  
                   1.1 - 2012/04/19 - Bugfix/Added example to help (Thx Ingmar Verheij)  
                   1.2 - 2014/12/11 - Improved handling for missing output file (Thx SLDR) 

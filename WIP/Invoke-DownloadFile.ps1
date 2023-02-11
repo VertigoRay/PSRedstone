@@ -15,12 +15,12 @@ New-Object System.Net.NetworkCredential($username, $password_in_plain_text)
 ```
 .EXAMPLE
 # Download an image
-Invoke-DownloadFile -Uri "http://i.imgur.com/ISostpv.jpg" -OutFile "c:\temp\file.jpg"
+Invoke-DownloadFile -Uri "https://i.imgur.com/ISostpv.jpg" -OutFile "c:\temp\file.jpg"
 Pass credentials, or dont.
 .EXAMPLE
 # Download an image that needs Credentials
 $creds = New-Object System.Net.NetworkCredential($username, $password_in_plain_text)
-Invoke-DownloadFile -Uri "http://i.imgur.com/ISostpv.jpg" -OutFile "c:\temp\file.jpg" -Credentials $creds
+Invoke-DownloadFile -Uri "https://i.imgur.com/ISostpv.jpg" -OutFile "c:\temp\file.jpg" -Credentials $creds
 #>
 Function Global:Invoke-DownloadFile {
 	[CmdletBinding()]

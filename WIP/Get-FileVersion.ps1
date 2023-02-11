@@ -10,7 +10,7 @@ Continue if an error is encountered
 .EXAMPLE
 Get-FileVersion -File "$envProgramFilesX86\Adobe\Reader 11.0\Reader\AcroRd32.exe"
 .NOTES
-Taken from PSAppDeploy Toolkit: http://psappdeploytoolkit.codeplex.com
+Taken from PSAppDeploy Toolkit: https://psappdeploytoolkit.codeplex.com
 .LINK
 #>
 Function global:Get-FileVersion {

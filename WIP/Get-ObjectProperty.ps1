@@ -14,7 +14,7 @@ Get-ObjectProperty -InputObject $Record -PropertyName 'StringData' -ArgumentList
 .NOTES
 This is an internal script function and should typically not be called directly.
 .LINK
-http://psappdeploytoolkit.com
+https://psappdeploytoolkit.com
 #>
 Function Global:Get-ObjectProperty {
 	[CmdletBinding()]

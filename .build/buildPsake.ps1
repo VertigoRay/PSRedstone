@@ -211,7 +211,7 @@ task Build -Depends BuildManifest {
     #     $authenticodeSignature = @{
     #         FilePath = $file.FullName
     #         Certificate = $cert
-    #         TimeStampServer = 'http://timestamp.digicert.com'
+    #         TimeStampServer = 'https://timestamp.digicert.com'
     #     }
     #     Write-Host "[PSAKE Build] Set-AuthenticodeSignature: $($authenticodeSignature | ConvertTo-Json -Depth 1)" -ForegroundColor 'DarkMagenta'
     #     Set-AuthenticodeSignature @authenticodeSignature

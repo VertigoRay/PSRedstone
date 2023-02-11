@@ -13,11 +13,11 @@ New-Object System.Net.NetworkCredential($username, $password_in_plain_text)
 ```
 .EXAMPLE
 # Download the google home page
-Invoke-DownlaodString -Uri "http://ipinfo.io/json"
+Invoke-DownlaodString -Uri "https://ipinfo.io/json"
 .EXAMPLE
 # Download astring that needs Credentials
 $creds = New-Object System.Net.NetworkCredential($username, $PASSWORD_IN_PLAIN_TEXT)
-Invoke-DownlaodString -Uri "http://ipinfo.io/json" -Credentials $creds
+Invoke-DownlaodString -Uri "https://ipinfo.io/json" -Credentials $creds
 #>
 Function Global:Invoke-DownloadString {
 	[CmdletBinding()]

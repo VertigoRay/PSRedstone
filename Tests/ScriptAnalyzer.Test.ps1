@@ -1,8 +1,8 @@
 $script:psProjectRoot = ([IO.DirectoryInfo] $PSScriptRoot).Parent
-Write-Host ('$script:psProjectRoot: {0}' -f ($script:psProjectRoot.FullName)) -ForegroundColor Cyan
+Write-Host ('$script:psProjectRoot: {0}' -f ($script:psProjectRoot.FullName)) -ForegroundColor 'Cyan'
 
 [IO.DirectoryInfo] $modulePath = [IO.Path]::Combine($script:psProjectRoot.FullName, 'PSRedstone')
-Write-Host ('$modulePath: {0}' -f ($modulePath.FullName)) -ForegroundColor Cyan
+Write-Host ('$modulePath: {0}' -f ($modulePath.FullName)) -ForegroundColor 'Cyan'
 
 $ps1s = Get-ChildItem $modulePath -Filter '*.ps1' -Recurse -File | Where-Object {
     # I don't trust the filter; see the SyntaxJson.Tests.ps1
