@@ -21,7 +21,7 @@ if ((New-Object System.Security.Principal.WindowsPrincipal([System.Security.Prin
     # Anytime this Module is used, the version and timestamp will be stored in the registry.
     # This will allow more intelligent purging of unused versions.
     $versionUsed = @{
-        LiteralPath = 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\VertigoRay\PSRedstone\VersionsUsed'
+        LiteralPath = 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\com.github.VertigoRay\PSRedstone\VersionsUsed'
         Name = $psd1.ModuleVersion
         Value = (Get-Date -Format 'O')
         Force = $true

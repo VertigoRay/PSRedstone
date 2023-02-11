@@ -38,7 +38,7 @@ param (
 Start-Transcript -LiteralPath ([IO.Path]::Combine($env:SystemRoot, 'Logs', 'PSRedstone-Remediation.log')) -IncludeInvocationHeader
 
 [hashtable] $versionInstalled = @{
-    LiteralPath = 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\VertigoRay\PSRedstone\VersionsUsed'
+    LiteralPath = 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\com.github.VertigoRay\PSRedstone\VersionsUsed'
     Name = $MinimumVersionRequired
     Value = (Get-Date -Format 'yyyy-MM-dd' | Get-Date -Format 'O') # 2023-01-08T00:00:00.0000000
     Force = $true
