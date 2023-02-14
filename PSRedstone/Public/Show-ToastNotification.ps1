@@ -70,9 +70,6 @@ if (($PSVersionTable.PSVersion -ge '5.1')) {
         Write-Output ('Update Count: {0}' -f $updateCount)
     }
 
-    if ($ScheduleJob) { $jobTimespan = New-TimeSpan -Start ([datetime]::Now) -End $ScheduleJob }
-    if ($ScheduleReboot) { $rebootTimespan = New-TimeSpan -Start ([datetime]::Now) -End $ScheduleReboot }
-
     $toastNotification  = @{
         ToastNotifier = 'Tech Solutions: Endpoint Solutions Engineering'
         ToastTitle = 'Windows Update'
