@@ -71,7 +71,7 @@ Describe 'Invoke-PesterDetect' {
             }
 
             {
-                Invoke-PesterDetect @pesterDetect | Should -Be 'Detection SUCCESSFUL: VertigoRay Assert-Test 1.2.3'
+                Invoke-PesterDetect @pesterDetect 3>$null 6>$null | Should -Be 'Detection SUCCESSFUL: VertigoRay Assert-Test 1.2.3'
             } | Should -Not -Throw
         }
 
@@ -84,7 +84,7 @@ Describe 'Invoke-PesterDetect' {
             }
 
             {
-                Invoke-PesterDetect @pesterDetect | Should -BeNullOrEmpty
+                Invoke-PesterDetect @pesterDetect 3>$null 6>$null | Should -BeNullOrEmpty
             } | Should -Not -Throw
         }
     }
