@@ -473,7 +473,9 @@ class Redstone {
             # This is a weird way to remove the record, but I've seen in testing where $Error length is 0, and
             # I don't understand it. However, this catches that error and ensure it doesn't end up on the $Error.
             #   Ref: https://ci.appveyor.com/project/VertigoRay/psredstone/builds/46036142
-            try { $Error.RemoveAt(0) } catch { $Error.RemoveAt(0) }
+            if ($Error.Count -gt 0) {
+                $Error.RemoveAt(0)
+            }
             return $DefaultValue
         } catch [System.Management.Automation.ItemNotFoundException] {
             Write-Verbose "[Redstone GetRegOrDefault] Registry Not Set; Returning Default: ${DefaultValue}"
@@ -481,7 +483,9 @@ class Redstone {
             # This is a weird way to remove the record, but I've seen in testing where $Error length is 0, and
             # I don't understand it. However, this catches that error and ensure it doesn't end up on the $Error.
             #   Ref: https://ci.appveyor.com/project/VertigoRay/psredstone/builds/46036142
-            try { $Error.RemoveAt(0) } catch { $Error.RemoveAt(0) }
+            if ($Error.Count -gt 0) {
+                $Error.RemoveAt(0)
+            }
             return $DefaultValue
         }
     }
