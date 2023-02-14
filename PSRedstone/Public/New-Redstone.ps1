@@ -106,3 +106,5 @@ function New-Redstone {
         }
     }
 }
+
+New-Alias -Name 'New-' -Value 'New-Redstone'
