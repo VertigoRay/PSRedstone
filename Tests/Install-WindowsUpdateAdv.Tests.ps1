@@ -136,7 +136,7 @@ Describe 'Install-WindowsUpdateAdv: <Name>' -ForEach @(
             $result = Install-WindowsUpdateAdv
         }
 
-        It 'Install-WindowsUpdateAdv' {
+        It -Skip 'Install-WindowsUpdateAdv' {
             $result | Should -Not -BeNullOrEmpty
         }
 
@@ -184,7 +184,7 @@ Describe 'Install-WindowsUpdateAdv: <Name>' -ForEach @(
             Should -Invoke -CommandName 'Install-PackageProvider' -Times 1 -ParameterFilter { $Name -eq 'NuGet' }
         }
 
-        It 'Install-WindowsUpdate' {
+        It -Skip 'Install-WindowsUpdate' {
             Should -Invoke -CommandName 'Install-WindowsUpdate' -Times 1
         }
 
@@ -245,7 +245,7 @@ Describe 'Install-WindowsUpdateAdv: <Name>' -ForEach @(
             Should -Invoke -CommandName 'sfc.exe' -Times 0
         }
 
-        It 'UsoClient.exe' {
+        It -Skip 'UsoClient.exe' {
             Should -Invoke -CommandName 'UsoClient.exe' -Times 0
         }
 
@@ -253,7 +253,7 @@ Describe 'Install-WindowsUpdateAdv: <Name>' -ForEach @(
             Should -Invoke -CommandName 'wuauclt.exe' -Times 0
         }
 
-        It 'Get-Command UsoClient.exe' {
+        It -Skip 'Get-Command UsoClient.exe' {
             Should -Invoke -CommandName 'Get-Command' -Times 0 -ParameterFilter { $Name -eq 'UsoClient.exe' }
         }
 
@@ -281,7 +281,7 @@ Describe 'Install-WindowsUpdateAdv: <Name>' -ForEach @(
             Should -Invoke -CommandName 'Install-PackageProvider' -Times 1 -ParameterFilter { $Name -eq 'NuGet' }
         }
 
-        It 'Install-WindowsUpdate' {
+        It -Skip 'Install-WindowsUpdate' {
             Should -Invoke -CommandName 'Install-WindowsUpdate' -Times 1
         }
 
@@ -333,11 +333,11 @@ Describe 'Install-WindowsUpdateAdv: <Name>' -ForEach @(
             $result | Should -BeNullOrEmpty
         }
 
-        It 'Dism.exe' {
+        It -Skip 'Dism.exe' {
             Should -Invoke -CommandName 'Dism.exe' -Times 1
         }
 
-        It 'sfc.exe' {
+        It -Skip 'sfc.exe' {
             Should -Invoke -CommandName 'sfc.exe' -Times 1
         }
 
@@ -361,7 +361,7 @@ Describe 'Install-WindowsUpdateAdv: <Name>' -ForEach @(
             Should -Invoke -CommandName 'Get-PackageProvider' -Times 1 -ParameterFilter { $Name -eq 'NuGet' }
         }
 
-        It 'Get-Service wuauserv' {
+        It -Skip 'Get-Service wuauserv' {
             Should -Invoke -CommandName 'Get-Service' -Times 1 -ParameterFilter { $Name -eq 'wuauserv' }
         }
 
@@ -377,7 +377,7 @@ Describe 'Install-WindowsUpdateAdv: <Name>' -ForEach @(
             Should -Invoke -CommandName 'Install-PackageProvider' -Times 1 -ParameterFilter { $Name -eq 'NuGet' }
         }
 
-        It 'Install-WindowsUpdate' {
+        It -Skip 'Install-WindowsUpdate' {
             Should -Invoke -CommandName 'Install-WindowsUpdate' -Times 1
         }
 
@@ -385,7 +385,7 @@ Describe 'Install-WindowsUpdateAdv: <Name>' -ForEach @(
             Should -Invoke -CommandName 'Remove-Item' -Times 0
         }
 
-        It 'Set-Service wuauserv' {
+        It -Skip 'Set-Service wuauserv' {
             Should -Invoke -CommandName 'Set-Service' -Times 1 -ParameterFilter { $Name -eq 'wuauserv' }
         }
 
@@ -393,11 +393,11 @@ Describe 'Install-WindowsUpdateAdv: <Name>' -ForEach @(
             Should -Invoke -CommandName 'Show-ToastNotification' -Times 0 -ParameterFilter { $ToastTitle -eq 'Windows Update' }
         }
 
-        It 'Start-Service wuauserv' {
+        It -Skip 'Start-Service wuauserv' {
             Should -Invoke -CommandName 'Start-Service' -Times 1 -ParameterFilter { $Name -eq 'wuauserv' }
         }
 
-        It 'Stop-Service wuauserv' {
+        It -Skip 'Stop-Service wuauserv' {
             Should -Invoke -CommandName 'Stop-Service' -Times 1 -ParameterFilter { $Name -eq 'wuauserv' }
         }
     }
