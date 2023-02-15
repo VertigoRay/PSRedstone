@@ -6,6 +6,7 @@ https://github.com/VertigoRay/PSRedstone/wiki/Functions#get-translatederrorcode
 #>
 function Get-TranslatedErrorCode {
     [CmdletBinding()]
+    [OutputType([System.ComponentModel.Win32Exception])]
     param (
         [Parameter(Mandatory = $true, Position = 0)]
         [ComponentModel.Win32Exception]
