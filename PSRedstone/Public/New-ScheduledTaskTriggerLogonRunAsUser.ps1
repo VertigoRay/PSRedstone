@@ -48,6 +48,7 @@ Sets the directory that contains either the executable file or the files that ar
   #>
 function New-ScheduledTaskTriggerLogonRunAsUser {
     [CmdletBinding()]
+    [OutputType([void])]
     param(
         [Parameter(Mandatory = $false)]
         [string]

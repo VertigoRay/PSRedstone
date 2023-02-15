@@ -40,6 +40,7 @@ Ref:
 #>
 function Invoke-Touch {
     [CmdletBinding(DefaultParameterSetName = 'Now')]
+    [OutputType([IO.FileInfo])]
     param (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true, ParameterSetName = 'Now', Position = 0)]
         [Parameter(Mandatory = $true, ValueFromPipeline = $true, ParameterSetName = 'NowAccessTimeOnly', Position = 0)]

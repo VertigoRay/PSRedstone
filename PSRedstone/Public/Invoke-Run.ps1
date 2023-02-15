@@ -56,8 +56,8 @@ Get the ExitCode
 https://github.com/VertigoRay/PSRedstone/wiki/Functions#invoke-run
 #>
 function Invoke-Run {
-    [OutputType([hashtable])]
     [CmdletBinding()]
+    [OutputType([hashtable])]
     param (
         [Parameter(Mandatory = $true, Position = 0, ParameterSetName = 'Cmd')]
         [string]

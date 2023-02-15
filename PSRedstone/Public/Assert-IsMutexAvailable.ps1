@@ -26,8 +26,8 @@ Assert-IsMutexAvailable -MutexName 'Global\_MSIExecute' -MutexWaitTimeInMillisec
 https://github.com/VertigoRay/PSRedstone/wiki/Functions/#assert-ismutexavailable
 #>
 function Assert-IsMutexAvailable {
-    [OutputType([bool])]
     [CmdletBinding()]
+    [OutputType([bool])]
     Param (
         [Parameter(Mandatory = $true)]
         [ValidateLength(1,260)]

@@ -7,6 +7,7 @@ https://github.com/VertigoRay/PSRedstone/wiki/Functions#new-wim
 #>
 function New-Wim {
     [CmdletBinding(SupportsShouldProcess)]
+    [OutputType([void])]
     param (
         [Parameter(Mandatory = $true)]
         [IO.FileInfo]
@@ -55,6 +56,3 @@ function New-Wim {
 
     end {}
 }
-#region DEVONLY
-# New-Wim -ImagePath "PSRedstone.wim" -CapturePath "PSRedstone" -Name "PSRedstone"
-#endregion

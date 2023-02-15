@@ -5,6 +5,7 @@ https://github.com/VertigoRay/PSRedstone/wiki/Functions#dismount-wim
 #>
 function Dismount-Wim {
     [CmdletBinding()]
+    [OutputType([void])]
     param (
         # Specifies a path to one or more locations.
         [Parameter(

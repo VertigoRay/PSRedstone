@@ -8,6 +8,7 @@ https://github.com/VertigoRay/PSRedstone/wiki/Functions#invoke-elevatecurrentpro
 #>
 function Invoke-ElevateCurrentProcess {
     [CmdletBinding()]
+    [OutputType([void])]
     param()
 
     Write-Information ('[Invoke-ElevateCurrentProcess] > {0}' -f ($MyInvocation.BoundParameters | ConvertTo-Json -Compress))

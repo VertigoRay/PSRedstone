@@ -6,6 +6,7 @@ https://github.com/VertigoRay/PSRedstone/wiki/Functions#invoke-forceemptydirecto
 #>
 function Invoke-ForceEmptyDirectory {
     [CmdletBinding()]
+    [OutputType([void])]
     param (
         [Parameter(
             Mandatory=$true,

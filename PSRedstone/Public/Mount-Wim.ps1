@@ -7,6 +7,7 @@ https://github.com/VertigoRay/PSRedstone/wiki/Functions#mount-wim
 #>
 function Mount-Wim {
     [CmdletBinding()]
+    [OutputType([IO.DirectoryInfo])]
     param (
         # Specifies a path to one or more locations.
         [Parameter(
@@ -67,6 +68,9 @@ function Mount-Wim {
 
         Write-Verbose "[Mount-Wim] Mount-WindowImage: $($windowsImage | ConvertTo-Json)"
         Mount-WindowsImage @windowsImage
+        $MountPath.Refresh()
+
+        return $MountPath
     }
 
     end {}

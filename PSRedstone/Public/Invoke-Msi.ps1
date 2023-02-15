@@ -70,6 +70,7 @@ https://github.com/VertigoRay/PSRedstone/wiki/Functions#invoke-msi
 #>
 function Invoke-MSI {
     [CmdletBinding()]
+    [OutputType([hashtable])]
     Param (
         [Parameter(Mandatory = $false)]
         [ValidateSet('Install','Uninstall','Patch','Repair','ActiveSetup')]

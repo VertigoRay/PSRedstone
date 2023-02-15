@@ -10,8 +10,8 @@ Returns `$true` if you're  running as an administrator.
 https://github.com/VertigoRay/PSRedstone/wiki/Functions#assert-iselevated
 #>
 function Assert-IsElevated {
-    [OutputType([bool])]
     [CmdletBinding()]
+    [OutputType([bool])]
     Param()
 
     Write-Verbose ('[Assert-IsElevated] >')

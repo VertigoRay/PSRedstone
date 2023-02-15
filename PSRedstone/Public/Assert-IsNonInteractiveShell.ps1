@@ -17,8 +17,8 @@ If you're typing this into PowerShell, you should see `$false`.
 https://github.com/VertigoRay/PSRedstone/wiki/Functions#assert-isnoninteractiveshell
 #>
 function Assert-IsNonInteractiveShell {
-    [OutputType([boolean])]
     [CmdletBinding()]
+    [OutputType([bool])]
     param()
 
     # Test each Arg for match of abbreviated '-NonInteractive' command.

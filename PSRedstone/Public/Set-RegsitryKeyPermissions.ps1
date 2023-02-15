@@ -6,6 +6,7 @@ https://github.com/VertigoRay/PSRedstone/wiki/Functions#set-regsitrykeypermissio
 #>
 function Set-RegsitryKeyPermissions {
     [CmdletBinding()]
+    [OutputType([void])]
     param(
         [string]
         $RootKey,
@@ -48,7 +49,7 @@ function Set-RegsitryKeyPermissions {
     # Recursively repeat steps 2-5 for subkeys
     if ($Recurse) {
         foreach($subKey in $regKey.OpenSubKey('').GetSubKeyNames()) {
-            Set-KeyPermissions $RootKey ($Key+'\'+$subKey) $Sid $Recurse ($RecurseLevel+1)
+            Set-RegsitryKeyPermissions $RootKey ($Key+'\'+$subKey) $Sid $Recurse ($RecurseLevel+1)
         }
     }
 }
