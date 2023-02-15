@@ -55,17 +55,17 @@ function Get-MsiTableProperty {
         [Parameter(Mandatory=$false,ParameterSetName='TableInfo')]
         [ValidateNotNullOrEmpty()]
         [string]
-        $Table = $(If ([IO.Path]::GetExtension($Path) -eq '.msi') { 'Property' } Else { 'MsiPatchMetadata' })
+        $Table = $(if ([IO.Path]::GetExtension($Path) -eq '.msi') { 'Property' } else { 'MsiPatchMetadata' })
         ,
         [Parameter(Mandatory=$false,ParameterSetName='TableInfo')]
         [ValidateNotNullorEmpty()]
         [int32]
-        $TablePropertyNameColumnNum = $(If ([IO.Path]::GetExtension($Path) -eq '.msi') { 1 } Else { 2 })
+        $TablePropertyNameColumnNum = $(if ([IO.Path]::GetExtension($Path) -eq '.msi') { 1 } else { 2 })
         ,
         [Parameter(Mandatory=$false,ParameterSetName='TableInfo')]
         [ValidateNotNullorEmpty()]
         [int32]
-        $TablePropertyValueColumnNum = $(If ([IO.Path]::GetExtension($Path) -eq '.msi') { 2 } Else { 3 })
+        $TablePropertyValueColumnNum = $(if ([IO.Path]::GetExtension($Path) -eq '.msi') { 2 } else { 3 })
         ,
         [Parameter(Mandatory=$false,ParameterSetName='SummaryInfo')]
         [ValidateNotNullorEmpty()]
@@ -122,29 +122,28 @@ function Get-MsiTableProperty {
 
 
     Process {
-        Try {
-            If ($PSCmdlet.ParameterSetName -eq 'TableInfo') {
+        try {
+            if ($PSCmdlet.ParameterSetName -eq 'TableInfo') {
                 Write-Information "Read data from Windows Installer database file [${Path}] in table [${Table}]."
-            }
-            Else {
+            } else {
                 Write-Information "Read the Summary Information from the Windows Installer database file [${Path}]."
             }
 
             ## Create a Windows Installer object
             [__comobject]$Installer = New-Object -ComObject 'WindowsInstaller.Installer' -ErrorAction 'Stop'
             ## Determine if the database file is a patch (.msp) or not
-            If ([IO.Path]::GetExtension($Path) -eq '.msp') { [boolean]$IsMspFile = $true }
+            if ([IO.Path]::GetExtension($Path) -eq '.msp') { [boolean]$IsMspFile = $true }
             ## Define properties for how the MSI database is opened
             [int32]$msiOpenDatabaseModeReadOnly = 0
             [int32]$msiSuppressApplyTransformErrors = 63
             [int32]$msiOpenDatabaseMode = $msiOpenDatabaseModeReadOnly
             [int32]$msiOpenDatabaseModePatchFile = 32
-            If ($IsMspFile) { [int32]$msiOpenDatabaseMode = $msiOpenDatabaseModePatchFile }
+            if ($IsMspFile) { [int32]$msiOpenDatabaseMode = $msiOpenDatabaseModePatchFile }
             ## Open database in read only mode
             [__comobject]$Database = Invoke-ObjectMethod -InputObject $Installer -MethodName 'OpenDatabase' -ArgumentList @($Path, $msiOpenDatabaseMode)
             ## Apply a list of transform(s) to the database
-            If (($TransformPath) -and (-not $IsMspFile)) {
-                ForEach ($Transform in $TransformPath) {
+            if (($TransformPath) -and (-not $IsMspFile)) {
+                foreach ($Transform in $TransformPath) {
                     $null = Invoke-ObjectMethod -InputObject $Database -MethodName 'ApplyTransform' -ArgumentList @($Transform, $msiSuppressApplyTransformErrors)
                 }
             }
@@ -158,10 +157,10 @@ function Get-MsiTableProperty {
                 ## Create an empty object to store properties in
                 [psobject]$TableProperties = New-Object -TypeName 'PSObject'
 
-                ## Retrieve the first row from the requested table. If the first row was successfully retrieved, then save data and loop through the entire table.
+                ## Retrieve the first row from the requested table. if the first row was successfully retrieved, then save data and loop through the entire table.
                 #  https://msdn.microsoft.com/en-us/library/windows/desktop/aa371136(v=vs.85).aspx
                 [__comobject]$Record = Invoke-ObjectMethod -InputObject $View -MethodName 'Fetch'
-                While ($Record) {
+                while ($Record) {
                     #  Read string data from record and add property/value pair to custom object
                     $TableProperties | Add-Member -MemberType 'NoteProperty' -Name (Get-ObjectProperty -InputObject $Record -PropertyName 'StringData' -ArgumentList @($TablePropertyNameColumnNum)) -Value (Get-ObjectProperty -InputObject $Record -PropertyName 'StringData' -ArgumentList @($TablePropertyValueColumnNum)) -Force
                     #  Retrieve the next row in the table
@@ -193,26 +192,42 @@ function Get-MsiTableProperty {
                 [psobject]$SummaryInfoProperties = New-Object -TypeName 'PSObject' -Property $SummaryInfoProperty
                 Write-Output -InputObject $SummaryInfoProperties
             }
-        } Catch {
+        } catch {
             $resolvedError = if (Get-Command 'Resolve-Error' -ErrorAction 'Ignore') { Resolve-Error } else { $null }
             Write-Error ('Failed to get the MSI table [{0}]. {1}' -f $Table, $resolvedError)
-            If (-not $ContinueOnError) {
-                Throw ('Failed to get the MSI table [{0}]. {1}' -f $Table, $_.Exception.Message)
+            if (-not $ContinueOnError) {
+                throw ('Failed to get the MSI table [{0}]. {1}' -f $Table, $_.Exception.Message)
             }
         }
-        Finally {
-            Try {
-                If ($View) {
+        finally {
+            try {
+                if ($View) {
                     $null = Invoke-ObjectMethod -InputObject $View -MethodName 'Close' -ArgumentList @()
-                    Try { $null = [Runtime.Interopservices.Marshal]::ReleaseComObject($View) } Catch { }
+                    try {
+                        $null = [Runtime.Interopservices.Marshal]::ReleaseComObject($View)
+                    } catch {
+                        Write-Verbose ('[Get-MsiTableProperty] Unexpected Non-Fatal Error: {0}' -f $_)
+                    }
+                } elseif ($SummaryInformation) {
+                    try {
+                        $null = [Runtime.Interopservices.Marshal]::ReleaseComObject($SummaryInformation)
+                    } catch {
+                        Write-Verbose ('[Get-MsiTableProperty] Unexpected Non-Fatal Error: {0}' -f $_)
+                    }
                 }
-                ElseIf($SummaryInformation) {
-                    Try { $null = [Runtime.Interopservices.Marshal]::ReleaseComObject($SummaryInformation) } Catch { }
-                }
+            } catch {
+                Write-Verbose ('[Get-MsiTableProperty] Unexpected Non-Fatal Error: {0}' -f $_)
             }
-            Catch { }
-            Try { $null = [Runtime.Interopservices.Marshal]::ReleaseComObject($DataBase) } Catch { }
-            Try { $null = [Runtime.Interopservices.Marshal]::ReleaseComObject($Installer) } Catch { }
+            try {
+                $null = [Runtime.Interopservices.Marshal]::ReleaseComObject($DataBase)
+            } catch {
+                Write-Verbose ('[Get-MsiTableProperty] Unexpected Non-Fatal Error: {0}' -f $_)
+            }
+            try {
+                $null = [Runtime.Interopservices.Marshal]::ReleaseComObject($Installer)
+            } catch {
+                Write-Verbose ('[Get-MsiTableProperty] Unexpected Non-Fatal Error: {0}' -f $_)
+            }
         }
     }
 
