@@ -32,7 +32,7 @@ Allows access to the Redstone class without having to use `Using Module Redstone
 https://github.com/VertigoRay/PSRedstone/wiki/Functions#new-redstone
 #>
 function New-Redstone {
-    [CmdletBinding(DefaultParameterSetName='NoParams')]
+    [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName='NoParams')]
     [OutputType([System.Object[]])]
     param (
         [Parameter(

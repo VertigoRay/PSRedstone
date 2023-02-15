@@ -47,7 +47,7 @@ Sets the directory that contains either the executable file or the files that ar
     - `TASK_LOGON_GROUP` (4): Group activation. The groupId field specifies the group.
   #>
 function New-ScheduledTaskTriggerLogonRunAsUser {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     [OutputType([void])]
     param(
         [Parameter(Mandatory = $false)]

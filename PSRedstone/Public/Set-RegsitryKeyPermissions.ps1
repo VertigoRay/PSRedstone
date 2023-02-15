@@ -5,7 +5,7 @@ Ref: https://stackoverflow.com/a/35843420/17552750
 https://github.com/VertigoRay/PSRedstone/wiki/Functions#set-regsitrykeypermissions
 #>
 function Set-RegsitryKeyPermissions {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     [OutputType([void])]
     param(
         [string]

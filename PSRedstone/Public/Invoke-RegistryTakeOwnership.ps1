@@ -6,6 +6,7 @@ https://github.com/VertigoRay/PSRedstone/wiki/Functions#invoke-registrytakeowner
 #>
 function Invoke-RegistryTakeOwnership {
     [CmdletBinding()]
+    [OutputType([bool])]
     param(
         [Parameter(Mandatory = $false)]
         [string]
@@ -28,7 +29,7 @@ function Invoke-RegistryTakeOwnership {
     Write-Debug ('[Invoke-RegistryTakeOwnership] Function Invocation: {0}' -f ($MyInvocation | Out-String))
 
     if (-not $RootKey -and ($Key -match '^(Microsoft\.PowerShell\.Core\\Registry\:\:|Registry\:\:)')) {
-        $Key
+        $Key = $Key
     }
 
     switch -regex ($RootKey) {
