@@ -28,7 +28,7 @@ Function Global:Get-ObjectProperty {
 		[Parameter(Mandatory=$false,Position=2)]
 		[object[]]$ArgumentList
 	)
-	
+
 	Begin { }
 	Process {
 		## Retrieve property

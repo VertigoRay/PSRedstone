@@ -106,13 +106,13 @@ function Global:Get-ADComputerCurrent {
     } else {
         Write-Information "[Get-ADComputerCurrent] Requesting ComputerName: ${env:ComputerName}"
         $computer = Get-WmiObject -Namespace 'root\directory\ldap' -Query "SELECT * FROM DS_computer WHERE DS_cn = '${env:ComputerName}'"
-        
+
         $adComputer = @{}
         $adComputer.DS = @{}
-        
+
         if ($computer) {
             Write-Information "[Get-ADComputerCurrent] Computer Found: $($computer | ConvertTo-Json)"
-    
+
             foreach ($property in $computer.PSObject.Properties) {
                 if ($property.Value) {
                     if (($property.Name).StartsWith('DS_')) {
@@ -133,7 +133,7 @@ function Global:Get-ADComputerCurrent {
                     Write-Warning "[Get-ADComputerCurrent][ADSISearcher] $($Error[0].Exception.Message)"
                 }
             }
-            
+
             if ($computer) {
                 Write-Information "[Get-ADComputerCurrent][ADSISearcher] Computer Found: $($computer | ConvertTo-Json)"
                 $adComputer.DS.distinguishedName = $computer.Path -replace '^LDAP://', ''

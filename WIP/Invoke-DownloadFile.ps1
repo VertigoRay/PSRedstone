@@ -28,7 +28,7 @@ Function Global:Invoke-DownloadFile {
 		[Parameter(Mandatory = $true, Position = 0)]
 		[string]
 		$Uri,
-		
+
 		[Parameter(Mandatory = $true, Position = 1)]
 		[string]
 		$OutFile,
@@ -47,7 +47,7 @@ Function Global:Invoke-DownloadFile {
 	}
 
 	$webClient = New-Object System.Net.WebClient
-	
+
 	if ($Credentials) {
 		$webClient.Credentials = $Credentials
 	}

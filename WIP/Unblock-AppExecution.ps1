@@ -23,7 +23,7 @@ function Global:Unblock-AppExecution {
         [string]
         $IFEOKey = $global:Winstall.Settings.Functions.UnblockAppExecution.IFEOKey
     )
-    
+
     Write-Information "> $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
     Write-Debug "Function Invocation: $($MyInvocation | Out-String)"
 

@@ -82,7 +82,7 @@ function Global:Assert-PSSyntaxErrors {
 
     $syntax_errors = $null
     [System.Management.Automation.PSParser]::Tokenize($ps_code, [ref]$syntax_errors) | Out-Null
-    
+
     [System.Collections.ArrayList] $error_list = @()
     foreach ($err in $syntax_errors) {
         $error_list.Add(":$($err.Token.StartLine).$($err.Token.StartColumn)-:$($err.Token.EndLine).$($err.Token.EndColumn) $($err.Message)") | Out-Null

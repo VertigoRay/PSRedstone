@@ -36,12 +36,12 @@ function Rename-WinstallLogFile {
 
     $new_log = $global:Winstall.Log.Clone()
     Write-Information $('[Rename-WinstallLogFile] Winstall.Log: {0}' -f ($new_log | ConvertTo-Json))
-    
+
     $new_log.Name = '{0}{1}' -f $global:Winstall.Log.Name, $Formatter
     $new_log.FileName = '{0}.log' -f $new_log.Name
     $new_log.Path = Join-Path $new_log.Folder $new_log.FileName
     $new_log.PathF = Join-Path $new_log.Folder ('{0}{1}.log' -f $new_log.Name, '{0}')
-    
+
     Write-Information $('[Rename-WinstallLogFile] Winstall.Log: {0}' -f ($new_log | ConvertTo-Json))
 
     if (Test-Path $new_log.Path) {
@@ -52,11 +52,11 @@ function Rename-WinstallLogFile {
             PassThru = $true
         }
         Write-Information $('[Rename-WinstallLogFile] Move-Item: {0}' -f ($moveItem | ConvertTo-Json))
-        
+
         $moved = Move-Item @moveItem
         Write-Information $('[Rename-WinstallLogFile] Backed up log: {0}' -f ($moved | Out-String))
     }
-    
+
     $renameItem = @{
         LiteralPath = $new_log.Path
         Destination = $([System.IO.Path]::ChangeExtension($new_log.Path, 'lo_'))
@@ -64,13 +64,13 @@ function Rename-WinstallLogFile {
         PassThru = $true
     }
     Write-Information $('[Rename-WinstallLogFile] Rename-Item: {0}' -f ($renameItem | ConvertTo-Json))
-    
+
     $renamed = Rename-Item -Path $global:Winstall.Log.Path -NewName $new_log.Path -Force -PassThru
     Write-Information $('[Rename-WinstallLogFile] Renamed log: {0}' -f ($renamed | Out-String))
-    
+
     $PSDefaultParameterValues.Set_Item('Write-Log:LogFileName', $new_log.FileName)
     $global:Winstall.Log = $new_log.Clone()
     Write-Information $('[Rename-WinstallLogFile] Winstall.Log: {0}' -f ($new_log | ConvertTo-Json))
-    
+
     Remove-Variable 'new_log'
 }

@@ -31,7 +31,7 @@ function Remove-ItemToRecycleBin {
 
     $Path = Resolve-Path $Path -ErrorAction 'Stop'
     Write-Information ("Moving '{0}' to the Recycle Bin" -f $Path.Path)
-    
+
     if (Test-Path -Path $Path.Path -PathType Container) {
         [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory($Path.Path, 'OnlyErrorDialogs', 'SendToRecycleBin')
     } else {

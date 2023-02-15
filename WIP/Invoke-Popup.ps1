@@ -109,17 +109,17 @@ function Invoke-Popup {
         $Title = $null
         ,
         [Parameter(Mandatory=$false)]
-        [ValidateSet('Ok','OkCancel','AbortRetryIgnore','YesNoCancel','YesNo','RetryCancel','CancelTryAgainContinue')] 
+        [ValidateSet('Ok','OkCancel','AbortRetryIgnore','YesNoCancel','YesNo','RetryCancel','CancelTryAgainContinue')]
         [string]
         $ButtonType = 'Ok'
         ,
         [Parameter(Mandatory=$false)]
-        [ValidateSet('Stop','Question','Exclamation','Information')] 
+        [ValidateSet('Stop','Question','Exclamation','Information')]
         [string]
         $IconType = $null
         ,
         [Parameter(Mandatory=$false)]
-        [ValidateSet('Second','Third')] 
+        [ValidateSet('Second','Third')]
         [string]
         $DefaultButton = $null
         ,
@@ -148,7 +148,7 @@ function Invoke-Popup {
     if ($ButtonType -or $IconType -or $DefaultButton -or $SystemModal -or $RightJustified -or $RightToLeftReadingOrder) {
         $popup_params.Add($SecondsToWait) | Out-Null
         $popup_params.Add($Title) | Out-Null
-        
+
         $Type = 0
 
         switch ($ButtonType) {

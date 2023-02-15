@@ -36,7 +36,7 @@ Describe $sut {
                 It $test.Title {
                     $test.Content | Out-String | Out-File $test.Path
                     $PSSyntaxErrors = Assert-PSSyntaxErrors -Path $test.Path
-                    
+
                     if ($test.Valid) {
                         $PSSyntaxErrors.Length | Should Be 0
                     } else {

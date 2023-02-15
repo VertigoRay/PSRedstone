@@ -23,7 +23,7 @@ function Global:Get-FileVersionInfo {
     Write-Verbose "Function Invocation: $($MyInvocation | Out-String)"
 
 	$File = (Resolve-Path $File -ErrorAction 'Stop').Path
-    
+
     try {
     	$return = (Get-Command -Name $File -ErrorAction 'Stop').FileVersionInfo
     } catch {
@@ -31,5 +31,5 @@ function Global:Get-FileVersionInfo {
     }
 
     Write-Information "Return: $($return | ConvertTo-Json -Compress)"
-    return $return 
+    return $return
 }

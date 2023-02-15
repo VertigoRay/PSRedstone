@@ -7,26 +7,26 @@
 .DESCRIPTION
 
     Determine if a process is running. If so, there are several customizable actions:
-    
+
     1. Throw an error. This should be handled in the RunFile.
     2. Keep a Count of Failures, take customized action after set number of failures.
     3. Optionally create a pop-up message for the user.
         - Depending on user action, throw an error if process is cancelled.
-    
+
     Nothing is returned. This function throws an error if there's an error. Otherwise, it returns nothing an you assume it's successful.
 
 .PARAMETER Processes
 
     Required.
-    
+
     Specifies one or more processes by process name. You can type multiple process names (separated by commas) and use wildcard characters.
 
 .PARAMETER Product
 
     Optional. Default: $global:Winstall.Parameters.Product
-    
+
     This is the name of the Product being installed. This is used in a few places by default:
-    
+
     - In the `PopupText_f` parameter, to describe the Product being installed.
     - In the Popup Title parameter, to describe the Product being installed.
     - To automatically generate a [PrivateVar](https://git.cas.unt.edu/winstall/winstall/wikis/privatevars) name for completely disabling popup messages. All non-alphanumeric characters will be removed and `_ConflictingProcessPopupDisable` will be appended.
@@ -41,17 +41,17 @@
 .PARAMETER PopupAfterNumErrors
 
     Optional. Default: $global:Winstall.Settings.AssertProcessRunning.PopupAfterNumErrors
-    
+
     Default Value (Set in `Initialize-Winstall`): 0
-    
+
     If set to `0` will always popup. Otherwise, will wait until number of failures reaches this threshold.
 
 .PARAMETER PopupText
 
     Optional. Default: $global:Winstall.Settings.AssertProcessRunning.PopupText
-    
+
     Default Value (Set in `Initialize-Winstall`) `[string[]]`:
-    
+
     ```powershell
     @(
         "{0}'s install process requires the following {1} be closed before the install may continue. Please close {2} and click Retry.",
@@ -59,15 +59,15 @@
         "You can monitor the status of this install under the Installation Status section of Software Center. This message box will automatically close after {4} minutes; cancelling the install process."
     )
     ```
-    
+
     This array will have each item joined by a new line. Then, formatted (`-f`) with the `PopupText_f` parameter.
 
 .PARAMETER PopupText_f
 
     Optional. Default: $global:Winstall.Settings.AssertProcessRunning.PopupText_f
-    
+
     Default Value (Set in `Initialize-Winstall`) `[string]`:
-    
+
     ```powershell
     @'
     @(
@@ -79,23 +79,23 @@
     )
     '@
     ```
-    
+
     This is the formatter (`-f`) used with the `PopupText` parameter.
 
 .PARAMETER PopupSecondsToWait
 
     Optional. Default: $global:Winstall.Settings.AssertProcessRunning.PopupSecondsToWait
-    
+
     Default Value (Set in `Initialize-Winstall`): 300
-    
+
     Sets the `Invoke-Popup` *SecondsToWait* Parameter
 
 .PARAMETER MaxLoop
 
     Optional. Default: $global:Winstall.Settings.AssertProcessRunning.MaxLoop
-    
+
     Default Value (Set in `Initialize-Winstall`): 100
-    
+
     Sets the `Invoke-Popup` *SecondsToWait* Parameter
 
 .OUTPUTS
@@ -106,7 +106,7 @@
 
     # Simple usage in a RunFile
     Write-Progress -CurrentOperation "Checking if $($settings.ConflictingProcesses) is/are currently running ..."
-    
+
     try {
         Assert-ConflictingProcessRunning $settings.ConflictingProcesses
     } catch {
@@ -118,12 +118,12 @@
 
     # Usage in a RunFile; More Parameters
     Write-Progress -CurrentOperation "Checking if $($settings.ConflictingProcesses) is/are currently running ..."
-    
+
     $Assert_ConflictingProcessRunning = @{
         'Processes' = $settings.ConflictingProcesses;
         'Product' = 'PesterTest';
     }
-    
+
     try {
         Assert-ConflictingProcessRunning @Assert_ConfictingProcessRunning
     } catch {
@@ -135,7 +135,7 @@
 
     # Usage in a RunFile; Parameters with PrivateVar Overrides
     Write-Progress -CurrentOperation "Checking if $($settings.ConflictingProcesses) is/are currently running ..."
-    
+
     $Assert_ConflictingProcessRunning = @{
         'Processes' = $settings.ConflictingProcesses;
         'Product' = 'PesterTest';
@@ -146,7 +146,7 @@
     if ($global:Winstall.PrivateVars.PesterTestPopupSecondsToWait) {
         $Assert_ConflictingProcessRunning.Add('PopupSecondsToWait', $global:Winstall.PrivateVars.PesterTestPopupSecondsToWait)
     }
-    
+
     try {
         Assert-ConflictingProcessRunning @Assert_ConflictingProcessRunning
     } catch {
@@ -195,7 +195,7 @@ function Assert-ConflictingProcessRunning {
 
     $ConflictingProcessPopupDisable = "$($Product -replace '[^A-Za-z0-9]', '')_ConflictingProcessPopupDisable" # Deprecated
     $ConflictingProcessErrorCount = "$($Product -replace '[^A-Za-z0-9]', '')_ConflictingProcessErrorCount" # Deprecated
-    
+
     $intConflictingProcessPopupDisable = if ($global:Winstall.PrivateVars.ConflictingProcessPopupDisable) { $global:Winstall.PrivateVars.ConflictingProcessPopupDisable } else {$global:Winstall.PrivateVars.$ConflictingProcessPopupDisable}
     $intConflictingProcessErrorCount = if ($global:Winstall.PrivateVars.ConflictingProcessErrorCount) { $global:Winstall.PrivateVars.ConflictingProcessErrorCount } else {$global:Winstall.PrivateVars.$ConflictingProcessErrorCount}
 

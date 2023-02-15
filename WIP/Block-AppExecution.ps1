@@ -23,19 +23,19 @@ This is the standard text used in the message. It should include 1 string replac
 An example (and the current default):
 
 > {0} As such, {1} is currently blocked.
-> 
+>
 > You can monitor the progress in Software Center under the Installation Status tab.
-> 
+>
 > If you have any questions or concerns, please do not hesitate to contact your IT department.
 
 In order to customize this parameter for your supported departments, set the associated setting via registry. Here's the message our department might use:
 
 > {0} As such, {1} is currently blocked.
-> 
+>
 > You can monitor the progress in Software Center under the Installation Status tab.
-> 
+>
 > If you have any questions or concerns, please do not hesitate to contact Super Cool IT.
-> 
+>
 > https://scit.example.com
 > SCIT@example.com
 > x7334
@@ -118,7 +118,7 @@ function Global:Block-AppExecution {
         [string]
         $IFEOKey = $global:Winstall.Settings.Functions.UnblockAppExecution.IFEOKey
     )
-    
+
     Write-Information "> $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
     Write-Debug "Function Invocation: $($MyInvocation | Out-String)"
 
