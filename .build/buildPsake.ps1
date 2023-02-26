@@ -369,7 +369,7 @@ task Docs {
             } elseif ($line -match '\\([[\]`\>])') {
                 # https://regex101.com/r/pBXaJE/3
                 Write-Host ('[PSAKE Docs] Editing:{1}{0}' -f $line, "`t") -ForegroundColor 'DarkMagenta'
-                $newline = $line -replace '\\([[\]`\>)', '$1'
+                $newline = $line -replace '\\([[\]`\>])', '$1'
                 Write-Host ('{1}{1}>>{1}{0}' -f $newline, "`t") -ForegroundColor 'DarkMagenta'
                 Write-Output $newline
             } else {
@@ -530,7 +530,7 @@ task GitHubTagDelete {
     }
 }
 
-task DeployProGet {
+task RegisterProGet {
     $registerPSRepo = @{
         Name = 'PowerShell-ESE'
         SourceLocation = $env:PROGET_POWERSHELL_ESE_URL
@@ -540,7 +540,9 @@ task DeployProGet {
         Write-Host "[PSAKE DeployProGet] Register-PSRepository: $($registerPSRepo | ConvertTo-Json)" -ForegroundColor 'DarkMagenta'
         Register-PSRepository @registerPSRepo
     }
+}
 
+task DeployProGet -Depends RegisterProGet {
     $publishModule = @{
         Path = ([IO.Path]::Combine($script:BuildOutput, $script:thisModuleName))
         NuGetApiKey = $env:PROGET_POWERSHELL_ESE
