@@ -28,8 +28,9 @@ function Invoke-RegistryTakeOwnership {
     Write-Information ('[Invoke-RegistryTakeOwnership] > {0}' -f ($MyInvocation.BoundParameters | ConvertTo-Json -Compress))
     Write-Debug ('[Invoke-RegistryTakeOwnership] Function Invocation: {0}' -f ($MyInvocation | Out-String))
 
-    if (-not $RootKey -and ($Key -match '^(Microsoft\.PowerShell\.Core\\Registry\:\:|Registry\:\:)')) {
-        $Key = $Key
+    if (-not $RootKey -and ($Key -match '^(Microsoft\.PowerShell\.Core\\Registry\:\:|Registry\:\:)([^\\]+)\\(.*)')) {
+        $RootKey = $Matches[2]
+        $Key = $Matches[3]
     }
 
     switch -regex ($RootKey) {
