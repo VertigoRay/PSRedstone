@@ -1,7 +1,16 @@
 #Requires -RunAsAdministrator
 <#
+.SYNOPSIS
+Mount a WIM.
+.DESCRIPTION
+Mount a WIM to the provided mount path or one will be generated.
+Automatically dismount the WIM when PowerShell exists, unless explicitly told to not auto-dismount.
 .EXAMPLE
-Mount-Wim
+$mountPath = Mount-Wim -ImagePath thing.wim
+
+This will mount to a unique folder in %TEMP%, returning the mounted path.
+.EXAMPLE
+Mount-RedstoneWim -ImagePath thing.wim -MountPath [IO.Path]::Combine($PSScriptRoot, $wim.BaseName)
 .LINK
 https://github.com/VertigoRay/PSRedstone/wiki/Functions#mount-wim
 #>
@@ -9,38 +18,26 @@ function Mount-Wim {
     [CmdletBinding()]
     [OutputType([IO.DirectoryInfo])]
     param (
-        # Specifies a path to one or more locations.
-        [Parameter(
-            Mandatory=$true,
-            Position=0,
-            ParameterSetName="ParameterSetName",
-            ValueFromPipeline=$true,
-            ValueFromPipelineByPropertyName=$true,
-            HelpMessage="Path to one or more locations."
-        )]
-        [Alias("PSPath")]
+        [Parameter(Mandatory = $true, Position = 0, HelpMessage = 'Path to the WIM file.')]
+        [Alias('PSPath')]
         [ValidateNotNullOrEmpty()]
         [IO.FileInfo]
         $ImagePath,
 
-        # Specifies a path to one or more locations.
-        [Parameter(
-            Mandatory=$false,
-            Position=0,
-            ParameterSetName="ParameterSetName",
-            ValueFromPipeline=$true,
-            ValueFromPipelineByPropertyName=$true,
-            HelpMessage="Path to one or more locations."
-        )]
+        [Parameter(Mandatory = $false, Position = 1, HelpMessage = 'Path the WIM will be mounted.')]
         [ValidateNotNullOrEmpty()]
         [IO.DirectoryInfo]
-        $MountPath = ([IO.Path]::Combine($env:Temp, 'RedstoneMount')),
+        $MountPath = [IO.Path]::Combine($env:TEMP, 'RedstoneMount', (New-Guid).Guid),
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, HelpMessage = 'Image index to mount.')]
         [int]
         $ImageIndex = 1,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, HelpMessage = 'Do not auto-dismount when PowerShell exits.')]
+        [switch]
+        $DoNotAutoDismount,
+
+        [Parameter(Mandatory = $false, HelpMessage = 'Full path for the DISM log with {0} formatter to inject "DISM".')]
         [IO.FileInfo]
         $LogFileF
     )
@@ -48,6 +45,12 @@ function Mount-Wim {
     begin {
         Write-Verbose "[Mount-Wim] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
         Write-Debug "[Mount-Wim] Function Invocation: $($MyInvocation | Out-String)"
+
+        if (-not $DoNotAutoDismount.IsPresent) {
+            Register-EngineEvent 'PowerShell.Exiting' -SupportEvent -Action {
+                Dismount-Wim -MountPath $MountPath
+            }
+        }
     }
 
     process {

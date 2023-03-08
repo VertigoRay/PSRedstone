@@ -1,5 +1,13 @@
 #Requires -RunAsAdministrator
 <#
+.SYNOPSIS
+Dismount a WIM.
+.DESCRIPTION
+Dismount a WIM from the provided mount path.
+.EXAMPLE
+Dismount-Wim -MountPath $mountPath
+
+Where `$mountPath` is the path returned by `Mount-Wim`.
 .LINK
 https://github.com/VertigoRay/PSRedstone/wiki/Functions#dismount-wim
 #>
@@ -8,19 +16,12 @@ function Dismount-Wim {
     [OutputType([void])]
     param (
         # Specifies a path to one or more locations.
-        [Parameter(
-            Mandatory=$false,
-            Position=0,
-            ParameterSetName="ParameterSetName",
-            ValueFromPipeline=$true,
-            ValueFromPipelineByPropertyName=$true,
-            HelpMessage="Path to one or more locations."
-        )]
+        [Parameter(Mandatory = $true, Position = 0, HelpMessage = 'Path the WIM was mounted.')]
         [ValidateNotNullOrEmpty()]
         [IO.DirectoryInfo]
-        $MountPath = ([IO.Path]::Combine($PWD, 'RedstoneMount')),
+        $MountPath,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, HelpMessage = 'Full path for the DISM log with {0} formatter to inject "DISM".')]
         [IO.FileInfo]
         $LogFileF
     )
