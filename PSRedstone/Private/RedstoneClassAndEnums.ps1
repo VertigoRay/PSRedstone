@@ -379,11 +379,11 @@ class Redstone {
         [bool]      $this._OS.IsServerOS = [bool]($this._OS.ProductType -eq 3)
         [bool]      $this._OS.IsDomainControllerOS = [bool]($this._OS.ProductType -eq 2)
         [bool]      $this._OS.IsWorkStationOS = [bool]($this._OS.ProductType -eq 1)
-        Switch ($this._OS.ProductType) {
+        switch ($this._OS.ProductType) {
             1       { [string] $this._OS.ProductTypeName = 'Workstation' }
             2       { [string] $this._OS.ProductTypeName = 'Domain Controller' }
             3       { [string] $this._OS.ProductTypeName = 'Server' }
-            Default { [string] $this._OS.ProductTypeName = 'Unknown' }
+            default { [string] $this._OS.ProductTypeName = 'Unknown' }
         }
     }
     #endregion OS
@@ -471,37 +471,11 @@ class Redstone {
     }
 
     [PSObject] GetVar([string] $Path) {
-        $parent, $leaf = $Path.Split('.', 2)
-
-        if ($leaf) {
-            return $this.GetVars($leaf, $null, $this._Vars.$parent)
-        } else {
-            return $this._Vars.$parent
-        }
+        Get-HashtableValue -Hashtable $this._Vars -Path $Path
     }
 
     [PSObject] GetVar([string] $Path, [PSObject] $Default) {
-        $parent, $leaf = $Path.Split('.', 2)
-
-        if ($leaf) {
-            return $this.GetVars($leaf, $Default, $this._Vars.$parent)
-        } elseif ($this._Vars.Keys -contains $parent) {
-            return $this._Vars.$parent
-        } else {
-            return $Default
-        }
-    }
-
-    hidden [PSObject] GetVar([string] $Path, [PSObject] $Default, [hashtable] $ParentPath) {
-        $parent, $leaf = $Path.Split('.', 2)
-
-        if ($leaf) {
-            return $this.GetVars($leaf, $Default, $ParentPath.$parent)
-        } elseif ($ParentPath.Keys -contains $parent) {
-            return $ParentPath.$parent
-        } else {
-            return $Default
-        }
+        Get-HashtableValue -Hashtable $this._Vars -Path $Path -Default $Default
     }
     #endregion Vars
 
@@ -578,8 +552,6 @@ class Redstone {
             return $DefaultValue
         }
     }
-
-
 
     hidden [void] SetDefaultSettingsFromRegistrySubKey([hashtable] $Hash, [string] $Key) {
         foreach ($regValue in (Get-Item $Key -ErrorAction 'Ignore').Property) {

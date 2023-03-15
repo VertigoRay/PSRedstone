@@ -4,8 +4,7 @@ Get a registry value without expanding environment variables.
 .OUTPUTS
 [bool]
 .EXAMPLE
-PS > Get-RegistryValueDoNotExpandEnvironmentName HKCU:\Thing Foo
-True
+Get-RegistryValueDoNotExpandEnvironmentName 'HKCU:\Thing Foo'
 .LINK
 https://github.com/VertigoRay/PSRedstone/wiki/Functions#get-registryvaluedonotexpandenvironmentname
 #>
