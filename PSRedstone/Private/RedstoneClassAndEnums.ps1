@@ -23,6 +23,7 @@ class Redstone {
     [bool]                          $OnlyUseDefaultSettings = $false
     [hashtable]                     $Debug                  = @{}
 
+    #region Instantiation
     static Redstone() {
         # Creating some custom setters that update other properties, like Log Paths, when related properties are changed.
         Update-TypeData -TypeName 'Redstone' -MemberName 'Action' -MemberType 'ScriptProperty' -Value {
@@ -62,6 +63,10 @@ class Redstone {
                 $this.SetUpVars()
             }
             return $this._Vars
+        } -SecondValue {
+            param($value)
+            # Setter
+            $this._Vars = $value
         } -Force
         Update-TypeData -TypeName 'Redstone' -MemberName 'Product' -MemberType 'ScriptProperty' -Value {
             # Getter
@@ -187,7 +192,38 @@ class Redstone {
 
         $this.SetUpLog()
     }
+    #endregion Instantiation
 
+    #region Settings
+    hidden [void] SetUpSettings() {
+        <#
+        This is the original Settings
+        #>
+        $this.Debug = @{
+            MyInvocation = $MyInvocation
+            PSCallStack = (Get-PSCallStack)
+        }
+
+        $this.IsElevated = (New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
+        $this.Settings = @{}
+
+        $regKeyPSRedstone = 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\com.github.VertigoRay\PSRedstone'
+        $this.Settings.Registry = @{
+            KeyRoot = $this.GetSetting($regKeyPSRedstone, 'RegistryKeyRoot', $regKeyPSRedstone)
+        }
+    }
+
+    hidden [string] GetSetting([string] $Key, [string] $Name, [string] $Default) {
+        $item = Get-Item ('env:{0}' -f $Name)
+        if ($item.Value) {
+            return ($item.Value -as [string])
+        } else {
+            return ((Get-RegistryValueOrDefault $Key $Name $Default) -as [string])
+        }
+    }
+    #endregion Settings
+
+    #region CimInstance
     hidden [object] GetCimInstance($ClassName) {
         return $this.GetCimInstance($ClassName, $false, $false)
     }
@@ -214,7 +250,9 @@ class Redstone {
     [object] CimInstanceRefreshed($ClassName) {
         return $this.GetCimInstance($ClassName, $false, $true)
     }
+    #endregion CimInstance
 
+    #region Debug Overrides
     hidden [bool] Is64BitOperatingSystem() {
         if ('Is64BitOperatingSystem' -in $this.Debug.Keys) {
             return $this.Debug.Is64BitOperatingSystem
@@ -242,7 +280,9 @@ class Redstone {
         $this.Debug.Is64BitProcess = $Override
         return ($this.Debug.GetEnumerator() | Where-Object{ $_.Name -eq 'Is64BitProcess' })
     }
+    #endregion Debug Overrides
 
+    #region Env
     hidden [void] SetUpEnv() {
         # This section
 
@@ -279,7 +319,9 @@ class Redstone {
             $this._Env.SysWOW64 = "${env:SystemRoot}\System32"
         }
     }
+    #endregion Env
 
+    #region Log
     hidden [void] SetUpLog() {
         $this.Settings.Log = @{}
 
@@ -298,27 +340,9 @@ class Redstone {
         $this.Settings.Log.FileF = (Join-Path $private:Directory.FullName ('{0} {1} {2} {3}.{{0}}.log' -f $this.Publisher, $this.Product, $this.Version, $this.Action)) -as [string]
         $this.PSDefaultParameterValuesSetUp()
     }
+    #endregion Log
 
-    hidden [void] SetUpSettings() {
-        $this.Debug = @{
-            MyInvocation = $MyInvocation
-            PSCallStack = (Get-PSCallStack)
-        }
-
-        $this.IsElevated = (New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
-        $this.Settings = @{}
-
-        $regKeyPSRedstone = 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\VertigoRay\PSRedstone'
-        $key = if ($env:PSRedstoneRegistryKeyRoot) {
-            $env:PSRedstoneRegistryKeyRoot
-        } else {
-            Get-RegistryValueOrDefault $regKeyPSRedstone 'RegistryKeyRoot' $regKeyPSRedstone
-        }
-        $this.Settings.Registry = @{
-            KeyRoot = $key
-        }
-    }
-
+    #region OS
     hidden [void] SetUpOS() {
         $this._OS = @{}
         [bool]   $this._OS.Is64BitOperatingSystem = [System.Environment]::Is64BitOperatingSystem
@@ -362,7 +386,9 @@ class Redstone {
             Default { [string] $this._OS.ProductTypeName = 'Unknown' }
         }
     }
+    #endregion OS
 
+    #region Profile List
     hidden [void] SetUpProfileList() {
         Write-Debug 'GETTER: ProfileList'
         if (-not $this._ProfileList) {
@@ -408,31 +434,78 @@ class Redstone {
             }
         }
     }
+    #endregion Profile List
 
+    #region Vars
     hidden [void] SetUpVars() {
-        $regKeyPSRedstoneOrg = [IO.Path]::Combine($this.Settings.Registry.KeyRoot, 'Org')
-        $keyOrg = if ($env:PSRedstoneRegistryKeyRootOrg) {
-            $env:PSRedstoneRegistryKeyRootOrg
-        } else {
-            Get-RegistryValueOrDefault $this.Settings.Registry.KeyRoot 'RegistryKeyRootOrg' $regKeyPSRedstoneOrg
-        }
+        $this.Settings.Registry.KeyOrg = $this.GetSetting($this.Settings.Registry.KeyRoot, 'RegistryKeyOrg', [IO.Path]::Combine($this.Settings.Registry.KeyRoot, 'Org'))
+        $this.Settings.Registry.KeyOrgRecurse = $this.GetSetting($this.Settings.Registry.KeyRoot, 'RegistryKeyOrgRecurse', $false)
+        $this.Settings.Registry.KeyPublisherParent = $this.GetSetting($this.Settings.Registry.KeyRoot, 'RegistryKeyPublisherParent', [IO.Path]::Combine($this.Settings.Registry.KeyRoot, 'Software'))
+        $this.Settings.Registry.KeyPublisherRecurse = $this.GetSetting($this.Settings.Registry.KeyRoot, 'RegistryKeyPublisherRecurse', $false)
+        $this.Settings.Registry.KeyProductParent = $this.GetSetting($this.Settings.Registry.KeyRoot, 'RegistryKeyProductParent', [IO.Path]::Combine($this.Settings.Registry.KeyPublisherParent, $this._Publisher))
+        $this.Settings.Registry.KeyProductRecurse = $this.GetSetting($this.Settings.Registry.KeyRoot, 'RegistryKeyProductRecurse', $true)
 
-        $regKeyPSRedstonePublisher = [IO.Path]::Combine($this.Settings.Registry.KeyRoot, 'Publisher')
-        $keyPublisher = if ($env:PSRedstoneRegistryKeyRootPublisher) {
-            $env:PSRedstoneRegistryKeyRootPublisher
-        } else {
-            Get-RegistryValueOrDefault $this.Settings.Registry.KeyRoot 'RegistryKeyRootPublisher' $regKeyPSRedstonePublisher
+        $this.Settings.Org = @{}
+        $query = @{
+            Key = $this.Settings.Registry.KeyOrg
+            Recurse = $this.Settings.Registry.KeyOrgRecurse
         }
+        $this.Settings.Org = Get-RegistryKeyAsHashTable @query
+        $this.Vars = Get-RegistryKeyAsHashTable @query
 
-        $keyProduct = [IO.Path]::Combine($regKeyPSRedstonePublisher, 'Product')
-
-        $this.Vars = @{
-            Org = (if (Test-Path $keyOrg) { $this.GetVars($keyOrg) })
+        $this.Settings.Publisher = @{}
+        $query = @{
+            Key = [IO.Path]::Combine($this.Settings.Registry.KeyPublisherParent, $this._Publisher)
+            Recurse = $this.Settings.Registry.KeyPublisherRecurse
         }
-        $this.Vars.Add($this._Publisher, (if (Test-Path $keyPublisher) { $this.GetVars($keyPublisher, $false) }))
-        $this.Vars.Add($this._Product, (if (Test-Path $keyProduct) { $this.GetVars($keyProduct) }))
+        $this.Settings.Publisher = Get-RegistryKeyAsHashTable @query
+        $this.Vars = Get-RegistryKeyAsHashTable @query
+
+        $this.Settings.Product = @{}
+        $query = @{
+            Key = [IO.Path]::Combine($this.Settings.Registry.KeyProductParent, $this._Product)
+            Recurse = $this.Settings.Registry.KeyProductRecurse
+        }
+        $this.Settings.Product = Get-RegistryKeyAsHashTable @query
+        $this.Vars = Get-RegistryKeyAsHashTable @query
     }
 
+    [PSObject] GetVar([string] $Path) {
+        $parent, $leaf = $Path.Split('.', 2)
+
+        if ($leaf) {
+            return $this.GetVars($leaf, $null, $this._Vars.$parent)
+        } else {
+            return $this._Vars.$parent
+        }
+    }
+
+    [PSObject] GetVar([string] $Path, [PSObject] $Default) {
+        $parent, $leaf = $Path.Split('.', 2)
+
+        if ($leaf) {
+            return $this.GetVars($leaf, $Default, $this._Vars.$parent)
+        } elseif ($this._Vars.Keys -contains $parent) {
+            return $this._Vars.$parent
+        } else {
+            return $Default
+        }
+    }
+
+    hidden [PSObject] GetVar([string] $Path, [PSObject] $Default, [hashtable] $ParentPath) {
+        $parent, $leaf = $Path.Split('.', 2)
+
+        if ($leaf) {
+            return $this.GetVars($leaf, $Default, $ParentPath.$parent)
+        } elseif ($ParentPath.Keys -contains $parent) {
+            return $ParentPath.$parent
+        } else {
+            return $Default
+        }
+    }
+    #endregion Vars
+
+    #region PSDefaultParameterValues
     hidden [void] PSDefaultParameterValuesSetUp() {
         $_prefix = (Get-Module 'PSRedstone').Prefix
 
@@ -454,6 +527,22 @@ class Redstone {
         $global:PSDefaultParameterValues.Set_Item('Write-Log:FilePath', $this.Settings.Log.File.FullName)
     }
 
+    hidden [void] SetPSDefaultParameterValues([hashtable] $FunctionParameters) {
+        if ($FunctionParameters) {
+            foreach ($function in $FunctionParameters.GetEnumerator()) {
+                Write-Debug ('[Redstone::SetPSDefaultParameterValues] Function Type: [{0}]' -f $function.GetType().FullName)
+                Write-Debug ('[Redstone::SetPSDefaultParameterValues] Function: {0}: {1}' -f $function.Name, ($function.Value | ConvertTo-Json))
+                foreach ($parameter in $function.Value.GetEnumerator()) {
+                    Write-Debug ('[Redstone::SetPSDefaultParameterValues] Parameter: {0}: {1}' -f $parameter.Name, ($parameter.Value | ConvertTo-Json))
+                    Write-Debug ('[Redstone::SetPSDefaultParameterValues] PSDefaultParameterValues: {0}:{1} :: {2}' -f $function.Name, $parameter.Name, $parameter.Value)
+                    $global:PSDefaultParameterValues.Set_Item(('{0}:{1}' -f $function.Name, $parameter.Name), $parameter.Value)
+                }
+            }
+        }
+    }
+    #endregion PSDefaultParameterValues
+
+    #region Registry
     hidden [psobject] GetRegOrDefault($RegistryKey, $RegistryValue, $DefaultValue) {
         Write-Verbose "[Redstone GetRegOrDefault] > $($MyInvocation.BoundParameters | ConvertTo-Json -Compress)"
         Write-Debug "[Redstone GetRegOrDefault] Function Invocation: $($MyInvocation | Out-String)"
@@ -490,6 +579,14 @@ class Redstone {
         }
     }
 
+
+
+    hidden [void] SetDefaultSettingsFromRegistrySubKey([hashtable] $Hash, [string] $Key) {
+        foreach ($regValue in (Get-Item $Key -ErrorAction 'Ignore').Property) {
+            $Hash.Set_Item($regValue, (Get-ItemProperty -Path $Key -Name $regValue).$regValue)
+        }
+    }
+
     [string] GetRegValueDoNotExpandEnvironmentNames($Key, $Value) {
         $item = Get-Item $Key
         if ($item) {
@@ -499,6 +596,33 @@ class Redstone {
         }
     }
 
+    hidden [void] SetDefaultSettingsFromRegistry([string] $Key) {
+        <#
+        Dig through the Registry Key and import all the Keys and Values into the $global:Redstone objet.
+
+        There's a fundamental flaw that I haven't addressed yet.
+        - if there's a value and sub-key with the same name at the same key level, the sub-key won't be processed.
+        #>
+        if (Test-Path $Key) {
+            $this.SetDefaultSettingsFromRegistrySubKey($this.Settings, $Key)
+
+            foreach ($item in (Get-ChildItem $Key -Recurse -ErrorAction 'Ignore')) {
+                $private:psPath = $item.PSPath.Split(':')[-1].Replace($Key.Split(':')[-1], $null)
+                $private:node = $this.Settings
+                foreach ($child in ($private:psPath.Trim('\').Split('\'))) {
+                    if (-not $node.$child) {
+                        [hashtable] $node.$child = @{}
+                    }
+                    $node = $node.$child
+                }
+
+                $this.SetDefaultSettingsFromRegistrySubKey($node, $item.PSPath)
+            }
+        }
+    }
+    #endregion Registry
+
+    #region Special Folders
     [psobject] GetSpecialFolders() {
         $specialFolders = [ordered] @{}
         foreach ($folder in ([Environment+SpecialFolder]::GetNames([Environment+SpecialFolder]) | Sort-Object)) {
@@ -510,44 +634,9 @@ class Redstone {
     [IO.DirectoryInfo] GetSpecialFolder([string] $Name) {
         return ([Environment]::GetFolderPath($Name) -as [IO.DirectoryInfo])
     }
+    #endregion Special Folders
 
-    hidden [hashtable] GetVars($Key) {
-        return $this.GetVars($Key, $true)
-    }
-
-    hidden [hashtable] GetVars($Key, $Recurse) {
-        $vars = @{}
-        foreach ($property in (Get-Item $Key).Property) {
-            $value = Get-ItemPropertyValue -Path $Key -Name $property
-            Write-Verbose ('[Redstone GetVars] Var: {0}:{1}' -f $property, $value)
-            $vars.Add($property, $value)
-        }
-
-        if ($Recurse) {
-            foreach ($subKey in (Get-ChildItem $Key)) {
-                if ($vars.ContainsKey($subKey.PSChildName)) {
-                    Write-Warning ('[Redstone GetVars] Var Exists: {0}:{1}; Overriding with SubKey: {2}' -f @(
-                        $subKey.PSChildName
-                        $vars.($subKey.PSChildName)
-                        $subKey.PSPath
-                    ))
-                }
-                $subKeyData = @{}
-                foreach ($property in (Get-Item $subKey.PSPath).Property) {
-                    $value = Get-ItemPropertyValue -Path $subKey.PSPath -Name $property
-                    Write-Verbose ('[Redstone GetVars] Var {0}: {1}:{2}' -f @(
-                        $subKey.PSChildName
-                        $property, $value
-                    ))
-                    $subKeyData.Add($property, $value)
-                }
-                $vars.($subKey.PSChildName) = [PSCustomObject] $subKeyData
-            }
-        }
-
-        return $vars
-    }
-
+    #region Quit
     [void] Quit() {
         Write-Debug ('[Redstone.Quit 0] > {0}' -f ($MyInvocation | Out-String))
         [void] $this.Quit(0, $true , 0)
@@ -611,53 +700,7 @@ class Redstone {
             Exit $ExitCode
         }
     }
-
-    <#
-    Dig through the Registry Key and import all the Keys and Values into the $global:Redstone objet.
-
-    There's a fundamental flaw that I haven't addressed yet.
-    - if there's a value and sub-key with the same name at the same key level, the sub-key won't be processed.
-    #>
-    hidden [void] SetDefaultSettingsFromRegistry([string] $Key) {
-        if (Test-Path $Key) {
-            $this.SetDefaultSettingsFromRegistrySubKey($this.Settings, $Key)
-
-            foreach ($item in (Get-ChildItem $Key -Recurse -ErrorAction 'Ignore')) {
-                $private:psPath = $item.PSPath.Split(':')[-1].Replace($Key.Split(':')[-1], $null)
-                $private:node = $this.Settings
-                foreach ($child in ($private:psPath.Trim('\').Split('\'))) {
-                    if (-not $node.$child) {
-                        [hashtable] $node.$child = @{}
-                    }
-                    $node = $node.$child
-                }
-
-                $this.SetDefaultSettingsFromRegistrySubKey($node, $item.PSPath)
-            }
-        }
-    }
-
-    hidden [void] SetDefaultSettingsFromRegistrySubKey([hashtable] $Hash, [string] $Key) {
-        foreach ($regValue in (Get-Item $Key -ErrorAction 'Ignore').Property) {
-            $Hash.Set_Item($regValue, (Get-ItemProperty -Path $Key -Name $regValue).$regValue)
-        }
-
-
-    }
-
-    hidden [void] SetPSDefaultParameterValues([hashtable] $FunctionParameters) {
-        if ($FunctionParameters) {
-            foreach ($function in $FunctionParameters.GetEnumerator()) {
-                Write-Debug ('[Redstone::SetPSDefaultParameterValues] Function Type: [{0}]' -f $function.GetType().FullName)
-                Write-Debug ('[Redstone::SetPSDefaultParameterValues] Function: {0}: {1}' -f $function.Name, ($function.Value | ConvertTo-Json))
-                foreach ($parameter in $function.Value.GetEnumerator()) {
-                    Write-Debug ('[Redstone::SetPSDefaultParameterValues] Parameter: {0}: {1}' -f $parameter.Name, ($parameter.Value | ConvertTo-Json))
-                    Write-Debug ('[Redstone::SetPSDefaultParameterValues] PSDefaultParameterValues: {0}:{1} :: {2}' -f $function.Name, $parameter.Name, $parameter.Value)
-                    $global:PSDefaultParameterValues.Set_Item(('{0}:{1}' -f $function.Name, $parameter.Name), $parameter.Value)
-                }
-            }
-        }
-    }
+    #endregion Quit
 }
 #region DEVONLY
 # $Redstone = [Redstone]::new('Mozilla', 'Firefox', '1.2.3', 'test')
