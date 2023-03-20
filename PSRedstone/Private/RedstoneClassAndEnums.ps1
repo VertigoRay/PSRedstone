@@ -471,11 +471,11 @@ class Redstone {
     }
 
     [PSObject] GetVar([string] $Path) {
-        Get-HashtableValue -Hashtable $this._Vars -Path $Path
+        return (Get-HashtableValue -Hashtable $this._Vars -Path $Path)
     }
 
     [PSObject] GetVar([string] $Path, [PSObject] $Default) {
-        Get-HashtableValue -Hashtable $this._Vars -Path $Path -Default $Default
+        return (Get-HashtableValue -Hashtable $this._Vars -Path $Path -Default $Default)
     }
     #endregion Vars
 
