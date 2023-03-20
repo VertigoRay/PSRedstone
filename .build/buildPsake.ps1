@@ -555,6 +555,9 @@ task DeployProGet -Depends RegisterProGet {
 }
 
 task DeployPSGallery {
+    Write-Host ('[PSAKE DeployPSGallery] Get-Module PowerShellGet,PowerShellManagement: {0}' -f (Get-Module PowerShellGet,PowerShellManagement))
+    Write-Host ('[PSAKE DeployPSGallery] Get-Module PowerShellGet,PowerShellManagement -ListAvailable: {0}' -f (Get-Module PowerShellGet,PowerShellManagement -ListAvailable))
+
     <#
         Deployed with PSDeploy
             - https://github.com/RamblingCookieMonster/PSDeploy
