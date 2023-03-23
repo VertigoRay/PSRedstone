@@ -200,5 +200,16 @@ function Invoke-Run {
     } catch {
         Write-Information ('[Invoke-Run] Return: {0}' -f ($return | Out-String)) -Tags 'Redstone','Invoke-Run'
     }
+
+    if ($return.Process.ExitCode -eq 0) {
+        Write-Information '[Invoke-Run] ExitCode 0 usually means the execution was successful.'
+    } elseif ($return.Process.ExitCode -eq 1641) {
+        Write-Information '[Invoke-Run] ExitCode 1641 usually means the requested operation completed successfully; the system will be restarted so the changes can take effect.'
+    } elseif ($return.Process.ExitCode -eq 3010) {
+        Write-Information '[Invoke-Run] ExitCode 3010 usually means the requested operation is successful; changes will not be effective until the system is rebooted.'
+    } else {
+        Write-Warning ('[Invoke-Run] ExitCode {0} usually means the execution was *not* successful.' -f $return.Process.ExitCode)
+    }
+
     return $return
 }
