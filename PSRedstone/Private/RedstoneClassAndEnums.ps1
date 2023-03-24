@@ -214,7 +214,7 @@ class Redstone {
     }
 
     hidden [string] GetSetting([string] $Key, [string] $Name, [string] $Default) {
-        $item = Get-Item ('env:{0}' -f $Name)
+        $item = Get-Item ('env:{0}' -f $Name) -ErrorAction 'Ignore'
         if ($item.Value) {
             return ($item.Value -as [string])
         } else {
@@ -367,6 +367,7 @@ class Redstone {
             [string] $this._OS.MachineWorkgroup = $this.GetCimInstance('Win32_ComputerSystem').Domain | Where-Object { $_ } | ForEach-Object { $_.ToUpper() }
         }
         [string]    $this._OS.MachineDNSDomain = [System.Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties().DomainName | Where-Object { $_ } | ForEach-Object { $_.ToLower() }
+        [string]    $this._OS.MachineSid = ((Get-LocalUser | Select-Object -First 1).SID).AccountDomainSID.ToString()
         [string]    $this._OS.UserDNSDomain = $env:USERDNSDOMAIN | Where-Object { $_ } | ForEach-Object { $_.ToLower() }
         [string]    $this._OS.UserDomain = $env:USERDOMAIN | Where-Object { $_ } | ForEach-Object { $_.ToUpper() }
         [string]    $this._OS.Name = $this.GetCimInstance('Win32_OperatingSystem').Name.Trim()
