@@ -1,23 +1,24 @@
 <#
 .DESCRIPTION
-    Adjust the default parameters to your liking. Otherwise, tread carefully.
+Adjust the default parameters to your liking. Otherwise, tread carefully.
 
-    This script can be used as part of a configuration item to setup computers with PSRedstone.
-    The idea here is that you setup the latest version as the MinimumVersionRequired and never change it (unless you sure you no longer need that version).
+This script can be used as part of a configuration item to setup computers with PSRedstone.
+The idea here is that you setup the latest version as the MinimumVersionRequired and never change it (unless you sure you no longer need that version).
 
-    On first run, this script will install every version of PSRedstone from the minimum version required to the latest version.
-    It will timestamp each version in the registry with the current date at midnight.
-    This should stand out to you as a version that was likely installed and never actually used.
+On first run, this script will install every version of PSRedstone from the minimum version required to the latest version.
+It will timestamp each version in the registry with the current date at midnight.
+This should stand out to you as a version that was likely installed and never actually used.
 
-    PSRedstone will also update the timestamp of it's current version each time the module is imported.
-    This makes it very easy to tell what versions are active on the system.
-    The second parameter helps us decide when to uninstall unused versions.
+PSRedstone will also update the timestamp of it's current version each time the module is imported.
+This makes it very easy to tell what versions are active on the system.
+The second parameter helps us decide when to uninstall unused versions.
 
-    On the second run and all subsequent runs, this script will update to the lastest version of PSRestone, if needed.
-    It will also go through all versions that are currently installed and purge any versions from the system that have not been used.
+On the second run and all subsequent runs, this script will update to the lastest version of PSRestone, if needed.
+It will also go through all versions that are currently installed and purge any versions from the system that have not been used.
 
-    Why go through all this trouble? I'm glad you asked, refer to the README:
-        https://github.com/VertigoRay/PSRedstone#advanced-start
+Why go through all this trouble? I'm glad you asked, refer to the PSRedstone Wiki's Advanced Start article.
+.LINK
+https://github.com/VertigoRay/PSRedstone/wiki/Advanced-Start
 #>
 #Requires -RunAsAdministrator
 [CmdletBinding()]
