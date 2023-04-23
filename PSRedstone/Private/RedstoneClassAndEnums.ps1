@@ -123,9 +123,14 @@ class Redstone {
                 break
             }
         }
-
+        
         if (-not $this.Settings.JSON.File.Exists) {
-            Throw [System.IO.FileNotFoundException] ('Could NOT find settings file in any of these locations: {0}' -f ($settingsFiles.FullName -join ', '))
+            try {
+                Get-Varible 'settings' -ErrorAction 'Stop'
+                $this.Settings.JSON.Data = $settings
+            } catch {
+                Throw [System.IO.FileNotFoundException] ('Could NEITHER find the settings variable nor a file at any of these locations: {0}' -f ($settingsFiles.FullName -join ', '))
+            }
         }
 
         $this.SetDefaultSettingsFromRegistry($this.Settings.Registry.KeyRoot)
@@ -158,6 +163,32 @@ class Redstone {
         } else {
             Throw [System.IO.FileNotFoundException] $this.Settings.JSON.File.FullName
         }
+
+        $this.SetDefaultSettingsFromRegistry($this.Settings.Registry.KeyRoot)
+        $this.SetPSDefaultParameterValues($this.Settings.Functions)
+
+        $this.set__Publisher($this.Settings.JSON.Data.Publisher)
+        $this.set__Product($this.Settings.JSON.Data.Product)
+        $this.set__Version($this.Settings.JSON.Data.Version)
+        $this.set__Action($(
+            if ($this.Settings.JSON.Data.Action) {
+                $this.Settings.JSON.Data.Action
+            } else {
+                $scriptName = ($this.Debug.PSCallStack | Where-Object {
+                    ([IO.FileInfo] $_.ScriptName).Name -ne ([IO.FileInfo] $this.Debug.PSCallStack[0].ScriptName).Name
+                } | Select-Object -First 1).ScriptName
+                ([IO.FileInfo] $scriptName).BaseName
+            }
+        ))
+
+        $this.SetUpLog()
+    }
+    
+    Redstone([PSObject] $Settings) {
+        $this.SetUpSettings()
+
+        $this.Settings.JSON = @{}
+        $this.Settings.JSON.Data = $Settings
 
         $this.SetDefaultSettingsFromRegistry($this.Settings.Registry.KeyRoot)
         $this.SetPSDefaultParameterValues($this.Settings.Functions)
