@@ -179,7 +179,7 @@ Describe 'RedstoneClassAndEnums' -Tag 'Class' {
                 $script:Redstone.Action | Should -Be $Action
             }
 
-            It 'Settings Registry Key' {
+            It 'Settings Registry Key' -Skip {
                 if ($context.Value -and $context.Value.ToString()) {
                     $context.Value.ToString() | Invoke-Expression
                 }

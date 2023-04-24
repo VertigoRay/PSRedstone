@@ -106,10 +106,6 @@ class Redstone {
     }
 
     Redstone() {
-        Write-Host (Get-Variable 'settings' -Scope 'global' | Out-String)
-        Write-Host (Get-Variable 'settings' -Scope 'script' | Out-String)
-
-
         $this.SetUpSettings()
         $this.Settings.JSON = @{}
 

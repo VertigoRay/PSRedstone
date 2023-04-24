@@ -50,7 +50,7 @@ function New-Redstone {
             ParameterSetName = 'Settings',
             HelpMessage = 'Pre-existing settings variable.'
         )]
-        [IO.FileInfo]
+        [PSObject]
         $Settings,
 
         [Parameter(
