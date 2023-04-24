@@ -47,6 +47,15 @@ function New-Redstone {
         [Parameter(
             Mandatory = $true,
             Position = 1,
+            ParameterSetName = 'Settings',
+            HelpMessage = 'Pre-existing settings variable.'
+        )]
+        [IO.FileInfo]
+        $Settings,
+
+        [Parameter(
+            Mandatory = $true,
+            Position = 1,
             ParameterSetName = 'ManuallyDefined',
             HelpMessage = 'Name of the publisher, like "Mozilla".'
         )]
@@ -84,6 +93,13 @@ function New-Redstone {
     switch ($PSCmdlet.ParameterSetName) {
         'SettingsJson' {
             $redstone = [Redstone]::new($SettingsJson)
+            return @(
+                $redstone
+                $redstone.Settings.JSON.Data
+            )
+        }
+        'Settings' {
+            $redstone = [Redstone]::new($Settings)
             return @(
                 $redstone
                 $redstone.Settings.JSON.Data

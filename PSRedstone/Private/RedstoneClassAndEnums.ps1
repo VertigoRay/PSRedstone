@@ -106,6 +106,10 @@ class Redstone {
     }
 
     Redstone() {
+        Write-Host (Get-Variable 'settings' -Scope 'global' | Out-String)
+        Write-Host (Get-Variable 'settings' -Scope 'script' | Out-String)
+
+
         $this.SetUpSettings()
         $this.Settings.JSON = @{}
 
@@ -125,10 +129,17 @@ class Redstone {
         }
 
         if (-not $this.Settings.JSON.File.Exists) {
-            try {
-                Get-Varible 'settings' -ErrorAction 'Stop'
-                $this.Settings.JSON.Data = $settings
-            } catch {
+            if (Get-Variable 'settings' -Scope 'script' -ErrorAction 'Ignore') {
+                if ($script:settings.Keys -notcontains 'Publisher') {
+                    Throw [System.IO.FileNotFoundException] ('Settings must contain Publisher: {0}' -f ($script:settings | ConvertTo-Json))
+                }
+                if ($script:settings.Keys -notcontains 'Product') {
+                    Throw [System.IO.FileNotFoundException] ('Settings must contain Product: {0}' -f ($script:settings | ConvertTo-Json))
+                }
+                if ($script:settings.Keys -notcontains 'Version') {
+                    Throw [System.IO.FileNotFoundException] ('Settings must contain Version: {0}' -f ($script:settings | ConvertTo-Json))
+                }
+            } else {
                 Throw [System.IO.FileNotFoundException] ('Could NEITHER find the settings variable nor a file at any of these locations: {0}' -f ($settingsFiles.FullName -join ', '))
             }
         }
