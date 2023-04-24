@@ -123,7 +123,7 @@ class Redstone {
                 break
             }
         }
-        
+
         if (-not $this.Settings.JSON.File.Exists) {
             try {
                 Get-Varible 'settings' -ErrorAction 'Stop'
