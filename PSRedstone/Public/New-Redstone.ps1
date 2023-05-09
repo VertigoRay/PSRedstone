@@ -114,7 +114,11 @@ function New-Redstone {
         }
         default {
             # NoParams
-            $redstone = [Redstone]::new()
+            if (Get-Variable 'settings' -ErrorAction 'Ignore') {
+                $redstone = [Redstone]::new($settings)
+            } else {
+                $redstone = [Redstone]::new()
+            }
             return @(
                 $redstone
                 $redstone.Settings.JSON.Data
