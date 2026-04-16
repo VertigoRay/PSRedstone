@@ -97,3 +97,18 @@ if ([System.Environment]::Is64BitOperatingSystem) {
 The goal has been achieved: a simplified install script with predictable results.
 
 > ℹ: Check out the [Advanced Start](https://github.com/VertigoRay/PSRedstone/wiki/Advanced-Start) wiki for more assistance getting started.
+
+## Contributing
+
+### Issues
+
+All features and bug reports must be tracked as GitHub Issues before any work begins. Issues are the authoritative record of intent — PRs without a corresponding issue will not be merged.
+
+### Pull Requests
+
+All changes require a PR. Direct commits to the default branch are not permitted.
+
+**PR requirements:**
+- Reference the issue in the PR description (`Closes #N` or `Ref #N`)
+- Include a `CHANGELOG.md` entry — one entry per issue, referencing the issue number for full context
+- All code review comments must be acknowledged and addressed before merge — no unresolved items at merge time
